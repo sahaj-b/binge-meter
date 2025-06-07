@@ -1,16 +1,26 @@
 // async mutex type shit
 let focusLock = Promise.resolve();
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.set({
-    trackedSites: ["reddit.com", "linkedin.com", "youtube.com"],
-    dailyTime: { total: 0, date: new Date().toISOString().split("T")[0] },
+chrome.runtime.onInstalled.addListener(async () => {
+  const { trackedSites, dailyTime, overlayConfig } =
+    await chrome.storage.local.get([
+      "trackedSites",
+      "dailyTime",
+      "activeSession",
+      "overlayConfig",
+    ]);
+  await chrome.storage.local.set({
+    trackedSites: trackedSites ?? ["reddit.com", "linkedin.com", "youtube.com"],
+    dailyTime: dailyTime ?? {
+      total: 0,
+      date: new Date().toISOString().split("T")[0],
+    },
+    overlayConfig: overlayConfig ?? { visible: true, positions: {} },
     activeSession: null,
-    overlayConfig: { visible: true, positions: {} },
   });
 
   // reset daily time at 3 AM
-  chrome.alarms.create("dailyReset", {
+  await chrome.alarms.create("dailyReset", {
     when: getNext3AM(),
     periodInMinutes: 24 * 60,
   });

@@ -1,5 +1,6 @@
 let overlay: HTMLDivElement | null = null;
 let animationFrameId: number | null = null;
+let isHidden = false;
 
 type Settings = {
   thresholdWarn: number;
@@ -50,10 +51,31 @@ chrome.runtime.onMessage.addListener((message) => {
       });
       settingsCache = null;
       break;
+    case "TOGGLE_OVERLAY":
+      chrome.runtime.sendMessage({
+        type: "DEBUG",
+        message: `TOGGLE_OVERLAY received`,
+      });
+      toggleOverlay();
+      break;
     default:
       break;
   }
 });
+
+function toggleOverlay() {
+  isHidden = !isHidden;
+  if (isHidden) {
+    if (overlay) {
+      overlay.remove();
+      overlay = null;
+    }
+  } else {
+    ensureOverlay();
+    loadSize();
+    loadPosition();
+  }
+}
 
 function startTicking(startingDuration: number, startTime: number) {
   ensureOverlay();
@@ -95,16 +117,17 @@ function stopTicking() {
 }
 
 async function ensureOverlay() {
-  if (overlay) return;
+  if (isHidden || overlay) return;
 
+  // had to add !important. Thanks to Dark Reader for trying to murder my beloved colors.
   overlay = document.createElement("div");
   overlay.id = "binge-meter-overlay";
   overlay.style.cssText = `
     position: fixed;
-    background: #0f0f0fbf;
     color: white !important;
+    background: #0f0f0f80;
     padding: 10px 15px;
-    border: 1px solid #ffffff41;
+    border: 1px solid #ffffff41 !important;
     border-radius: 20px;
     font-family: monospace;
     z-index: 10000;
@@ -171,7 +194,7 @@ async function updateOverlayTime(totalMs: number) {
   overlay.style.fontSize = `${getFontSize(overlay.offsetWidth, overlay.offsetHeight)}px`;
 
   const settings = await getSettings();
-  let backgroundColor = "#242424cc";
+  let backgroundColor = null;
 
   if (totalMs >= settings.thresholdDanger) {
     backgroundColor = "#f45734cc";
@@ -179,8 +202,8 @@ async function updateOverlayTime(totalMs: number) {
     backgroundColor = "#c3c31dcc";
   }
 
-  // had to add !important. Thanks to Dark Reader for trying to murder my beloved colors.
-  overlay.style.backgroundColor = backgroundColor + " !important";
+  if (backgroundColor)
+    overlay.style.backgroundColor = backgroundColor + " !important";
 }
 
 function makeDraggable(element: HTMLElement) {
@@ -238,8 +261,8 @@ function makeResizable(element: HTMLElement) {
     if (!isResizing) return;
 
     const rect = element.getBoundingClientRect();
-    const newWidth = Math.max(100, e.clientX - rect.left);
-    const newHeight = Math.max(30, e.clientY - rect.top);
+    const newWidth = Math.max(60, e.clientX - rect.left);
+    const newHeight = Math.max(15, e.clientY - rect.top);
 
     element.style.width = `${newWidth}px`;
     element.style.height = `${newHeight}px`;
