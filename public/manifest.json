@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "BingeMeter",
+  "version": "1.0.0",
+  "description": "Tracks your time on distracting sites so you can stop being a degenerate",
+  "permissions": ["storage", "tabs", "alarms", "scripting"],
+  "host_permissions": ["https://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "src/options/options.html",
+  "action": {
+    "default_popup": "src/popup/popup.html"
+  }
+}
