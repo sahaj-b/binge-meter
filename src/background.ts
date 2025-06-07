@@ -71,16 +71,21 @@ chrome.runtime.onMessage.addListener((message, sender) => {
   if (!sender.tab?.id) return;
 
   switch (message.type) {
-    case "CONTENT_SCRIPT_FOCUS":
+    case "OVERLAY_FOCUS":
       console.log(`FOCUS received from tab: ${sender.tab.id}`);
       updateActiveSession(sender.tab.id);
       break;
 
-    case "CONTENT_SCRIPT_BLUR":
+    case "OVERLAY_BLUR":
       console.log(`BLUR received from tab: ${sender.tab.id}`);
       updateActiveSession(null);
       break;
-
+    case "REVALIDATE_ALL_OVERLAYS":
+      console.log(
+        `REVALIDATE_ALL_OVERLAYS received from tab: ${sender.tab.id}`,
+      );
+      revalidateCacheForAllTabs();
+      break;
     case "DEBUG":
       console.log(sender.tab.id, message.message);
       break;
@@ -152,6 +157,25 @@ function updateActiveSession(activeTabId: number | null) {
 
   focusLock = taskPromise;
   return taskPromise;
+}
+
+async function revalidateCacheForAllTabs() {
+  const { trackedSites } = await chrome.storage.local.get("trackedSites");
+  if (!trackedSites || trackedSites.length === 0) return;
+
+  const allTabs = await chrome.tabs.query({});
+  for (const tab of allTabs) {
+    if (
+      tab.url &&
+      tab.id &&
+      trackedSites.some((site: string) => tab.url!.includes(site))
+    ) {
+      console.log("Sending REVALIDATE_CACHE to", tab.id);
+      await chrome.tabs.sendMessage(tab.id, {
+        type: "REVALIDATE_CACHE",
+      });
+    }
+  }
 }
 
 async function injectContentScript(tabId: number) {
