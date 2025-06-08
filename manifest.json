@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "description": "Tracks your time on distracting sites so you can stop being a degenerate",
   "permissions": ["storage", "tabs", "alarms", "scripting"],
-  "host_permissions": ["https://*/*"],
+  "host_permissions": ["http://localhost:5173/", "*://*/*"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background.ts"
   },
   "options_page": "src/options/options.html",
   "action": {
