@@ -1,6 +1,6 @@
 // @ts-ignore
 import contentScriptPath from "../content/index?script";
-import { getStorageData, setStorageData } from "@/store";
+import { getStorageData, setStorageData } from "@core/store";
 
 export async function syncRegisteredScriptsForAllowedSites() {
   // sync trackedSites with registered content scripts and permitted origins

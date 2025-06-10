@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@ui/tooltip";
 import { Plus, Minus, Loader2, ShieldAlert, AlertCircle } from "lucide-react";
 import {
   toggleSiteTracking,
   checkSitePermission,
   requestSitePermission,
-} from "./browserService";
+} from "../lib/browserService";
 
 interface CurrentSiteTrackerProps {
   currentSite: string;

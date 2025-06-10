@@ -1,4 +1,4 @@
-import { getStorageData, setStorageData } from "@/store";
+import { getStorageData, setStorageData } from "@core/store";
 
 let sessionLock = Promise.resolve();
 

@@ -1,16 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "BingeMeter",
+  "name": "Binge Meter",
   "version": "1.0.0",
-  "description": "Tracks your time on distracting sites so you can stop being a degenerate",
+  "description": "Tracks and displays your time on distracting sites so you can stop doomscrolling",
   "permissions": ["storage", "tabs", "alarms", "scripting"],
   "host_permissions": ["http://localhost:5173/"],
   "optional_host_permissions": ["*://*/*"],
   "background": {
-    "service_worker": "src/background/index.ts"
+    "service_worker": "src/core/background/index.ts",
+    "scripts": ["src/core/background/index.ts"]
   },
-  "options_page": "src/options/options.html",
+  "options_page": "src/apps/options/options.html",
   "action": {
-    "default_popup": "src/popup/index.html"
+    "default_popup": "src/apps/popup/index.html"
   }
 }

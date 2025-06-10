@@ -1,4 +1,4 @@
-import { setStorageData } from "@/store";
+import { setStorageData } from "@core/store";
 import { makeDraggable, makeResizable, removeOverlayEvents } from "./events";
 import { getConfig } from "./state";
 

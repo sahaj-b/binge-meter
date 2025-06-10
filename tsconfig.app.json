@@ -24,7 +24,11 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@core/*": ["src/core/*"],
+      "@apps/*": ["src/apps/*"],
+      "@ui/*": ["src/apps/components/ui/*"],
+      "@lib/*": ["src/apps/lib/*"]
     }
   },
   "include": ["src"]
