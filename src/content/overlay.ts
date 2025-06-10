@@ -1,3 +1,5 @@
+import { setStorageData } from "@/store";
+import { makeDraggable, makeResizable, removeOverlayEvents } from "./events";
 import { getConfig } from "./state";
 
 let overlay: HTMLDivElement | null = null;
@@ -26,7 +28,7 @@ export async function ensureOverlay() {
   overlay.style.cssText = `
     position: fixed;
     color: ${config.colors.fg} !important;
-    background-color: ${config.colors.bg};
+    background: ${config.colors.bg} !important;
     border: 1px solid ${config.colors.borderColor} !important;
     border-radius: 20px;
     font-family: monospace;
@@ -51,7 +53,7 @@ export async function ensureOverlay() {
       cursor: se-resize;
       opacity: 0;
       transition: opacity 0.2s;
-      background-image: linear-gradient(-45deg,transparent 50%, #ffffff59 50% 60%, transparent 60% 100%) !important;
+      background: linear-gradient(-45deg,transparent 50%, #ffffff59 50% 60%, transparent 60% 100%) !important;
     " class="binge-meter-resize-handle"></div>
     <div class="time-display"></div>
   `;
@@ -73,6 +75,8 @@ export async function ensureOverlay() {
   await updateOverlayTime(0);
   await loadPosition();
   await loadSize();
+  makeDraggable(overlay);
+  makeResizable(overlay);
   document.body.appendChild(overlay);
 }
 
@@ -194,7 +198,7 @@ export async function savePosition() {
     left: overlay.style.left,
     top: overlay.style.top,
   };
-  await chrome.storage.local.set({ overlayConfig });
+  await setStorageData({ overlayConfig });
   chrome.runtime.sendMessage({
     type: "DEBUG",
     message: `Saving position for ${hostname}: left=${overlay.style.left}, top=${overlay.style.top}`,
@@ -216,9 +220,18 @@ export async function saveSize() {
     height: overlay.offsetHeight,
   };
 
-  await chrome.storage.local.set({ overlayConfig });
+  await setStorageData({ overlayConfig });
   chrome.runtime.sendMessage({
     type: "DEBUG",
     message: `Saving size for ${hostname}: ${overlay.offsetWidth} ${overlay.offsetHeight}`,
   });
+}
+
+export function removeOverlay() {
+  stopTicking();
+  if (overlay) {
+    overlay.remove();
+    overlay = null;
+  }
+  removeOverlayEvents();
 }

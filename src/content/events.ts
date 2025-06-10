@@ -1,4 +1,8 @@
 import { savePosition, saveSize, getFontSize } from "./overlay";
+let dragMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+let dragMouseUpHandler: (() => void) | null = null;
+let resizeMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+let resizeMouseUpHandler: (() => void) | null = null;
 
 export function makeDraggable(element: HTMLElement) {
   let isDragging = false;
@@ -6,7 +10,6 @@ export function makeDraggable(element: HTMLElement) {
   let offsetY = 0;
 
   element.addEventListener("mousedown", (e) => {
-    // don't drag if clicking on resize handle
     if (
       (e.target as HTMLElement).classList.contains("binge-meter-resize-handle")
     ) {
@@ -17,8 +20,7 @@ export function makeDraggable(element: HTMLElement) {
     offsetX = e.clientX - element.offsetLeft;
     offsetY = e.clientY - element.offsetTop;
   });
-
-  document.addEventListener("mousemove", (e) => {
+  dragMouseMoveHandler = (e) => {
     if (!isDragging) return;
 
     const rect = element.getBoundingClientRect();
@@ -33,14 +35,17 @@ export function makeDraggable(element: HTMLElement) {
 
     element.style.left = `${newX}px`;
     element.style.top = `${newY}px`;
-  });
+  };
 
-  document.addEventListener("mouseup", () => {
+  dragMouseUpHandler = () => {
     if (isDragging) {
       isDragging = false;
       savePosition();
     }
-  });
+  };
+
+  document.addEventListener("mousemove", dragMouseMoveHandler);
+  document.addEventListener("mouseup", dragMouseUpHandler);
 }
 
 export function makeResizable(element: HTMLElement) {
@@ -53,26 +58,41 @@ export function makeResizable(element: HTMLElement) {
     e.preventDefault();
     isResizing = true;
   });
-
-  document.addEventListener("mousemove", (e) => {
+  resizeMouseMoveHandler = (e) => {
     e.preventDefault();
     if (!isResizing) return;
 
     const rect = element.getBoundingClientRect();
-    const newWidth = Math.max(90, e.clientX - rect.left);
-    const newHeight = Math.max(50, e.clientY - rect.top);
+    const newWidth = Math.max(80, e.clientX - rect.left);
+    const newHeight = Math.max(30, e.clientY - rect.top);
 
     element.style.width = `${newWidth}px`;
     element.style.height = `${newHeight}px`;
 
     element.style.fontSize = `${getFontSize(newWidth, newHeight)}px`;
-  });
+  };
 
-  document.addEventListener("mouseup", () => {
+  resizeMouseUpHandler = () => {
     if (isResizing) {
       isResizing = false;
       saveSize();
-      // chrome.runtime.sendMessage({ type: "OVERLAY_RESIZE" });
     }
-  });
+  };
+
+  document.addEventListener("mousemove", resizeMouseMoveHandler);
+  document.addEventListener("mouseup", resizeMouseUpHandler);
+}
+
+export function removeOverlayEvents() {
+  if (dragMouseMoveHandler)
+    document.removeEventListener("mousemove", dragMouseMoveHandler);
+
+  if (dragMouseUpHandler)
+    document.removeEventListener("mouseup", dragMouseUpHandler);
+
+  if (resizeMouseMoveHandler)
+    document.removeEventListener("mousemove", resizeMouseMoveHandler);
+
+  if (resizeMouseUpHandler)
+    document.removeEventListener("mouseup", resizeMouseUpHandler);
 }

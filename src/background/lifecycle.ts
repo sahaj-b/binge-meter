@@ -1,31 +1,24 @@
 // @ts-ignore
-import contentScriptPath from "./content?script";
-import { defaultOverlayConfig } from "../shared";
-import { syncRegisteredScripts } from "./scripting";
+import { defaultStorageData, getStorageData, setStorageData } from "../store";
+import { syncRegisteredScriptsForAllowedSites } from "./scripting";
+import { updateActiveSession } from "./session";
 
 export function setupLifecycleEvents() {
   chrome.runtime.onInstalled.addListener(async () => {
-    const { trackedSites, dailyTime, overlayConfig } =
-      await chrome.storage.local.get([
-        "trackedSites",
-        "dailyTime",
-        "overlayConfig",
-      ]);
+    const { trackedSites, dailyTime, overlayConfig } = await getStorageData([
+      "trackedSites",
+      "dailyTime",
+      "overlayConfig",
+    ]);
 
-    await chrome.storage.local.set({
-      trackedSites: trackedSites ?? [
-        "reddit.com",
-        "linkedin.com",
-        "youtube.com",
-        "x.com",
-        "hello.com",
-      ],
+    await setStorageData({
+      trackedSites: trackedSites ?? defaultStorageData.trackedSites,
       dailyTime: dailyTime ?? {
         total: 0,
         date: new Date().toISOString().split("T")[0],
       },
       overlayConfig: {
-        ...defaultOverlayConfig,
+        ...defaultStorageData.overlayConfig,
         ...(overlayConfig || {}),
       },
       activeSession: null,
@@ -37,7 +30,7 @@ export function setupLifecycleEvents() {
       periodInMinutes: 24 * 60,
     });
 
-    await syncRegisteredScripts();
+    await syncRegisteredScriptsForAllowedSites();
   });
 
   // not needed, coz content script is registered on install
@@ -48,11 +41,12 @@ export function setupLifecycleEvents() {
   chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === "dailyReset") {
       // stop any running session before resetting time
-      import("./session").then(({ updateActiveSession }) => {
-        updateActiveSession(null).then(() => {
-          chrome.storage.local.set({
-            dailyTime: { total: 0, date: new Date().toISOString().split("T")[0] },
-          });
+      updateActiveSession(null).then(() => {
+        setStorageData({
+          dailyTime: {
+            total: 0,
+            date: new Date().toISOString().split("T")[0],
+          },
         });
       });
     }

@@ -1,12 +1,14 @@
 import { updateActiveSession } from "./session";
 import {
-  registerContentScript,
-  injectContentScriptToAllTabs,
+  addSite,
+  removeSite,
+  revalidateCacheForAllTabs,
+  toggleOverlays,
 } from "./scripting";
 
 export function setupListeners() {
   // this chrome API fuckin SUCKS. can't handle focus changes outside the browser instance (for some WMs)
-  // the OVERLAY_FOCUS/OVERLAY_BLUR messages will handle that for now
+  // the TAB_FOCUS/TAB_BLUR messages will handle that for now
   // chrome.windows.onFocusChanged.addListener(async (windowId) => {
   //     if (windowId === chrome.windows.WINDOW_ID_NONE) {
   //         handleFocusChange(null);
@@ -21,100 +23,80 @@ export function setupListeners() {
   // });
 
   // so flow is like this:
-  // content script sends OVERLAY_BLUR/OVERLAY_FOCUS msg
+  // content script sends TAB_BLUR/TAB_FOCUS msg
   // background script starts/stops sessions based on that
   // then sends back START_TICKING/STOP_TICKING msg to content script
-  // and yes this creates async mess with race conditions, so i created async mutex in handleFocusChange
-  chrome.runtime.onMessage.addListener(async (message: any, sender: any) => {
+  // and yes this creates async mess with race conditions, so i created async mutex in updateActiveSession
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
-      case "OVERLAY_FOCUS":
+      case "TAB_FOCUS":
         if (!sender.tab?.id) return;
         console.log(`FOCUS received from tab: ${sender.tab.id}`);
-        await updateActiveSession(sender.tab.id);
+        updateActiveSession(sender.tab.id);
         break;
-      case "OVERLAY_BLUR":
+      case "TAB_BLUR":
         if (!sender.tab?.id) return;
         console.log(`BLUR received from tab: ${sender.tab.id}`);
-        await updateActiveSession(null);
+        updateActiveSession(null);
         break;
       case "TOGGLE_ALL_OVERLAYS":
         console.log(`TOGGLE_ALL_OVERLAYS received`);
-        const { overlayConfig, dailyTime, activeSession, trackedSites } =
-          await chrome.storage.local.get([
-            "dailyTime",
-            "overlayConfig",
-            "activeSession",
-            "trackedSites",
-          ]);
-        const newConfig = {
-          ...overlayConfig,
-          isHidden: !overlayConfig.isHidden,
-        };
-        await chrome.storage.local.set({ overlayConfig: newConfig });
-        // send message to all tabs to toggle overlay visibility
-        console.log("Sending TOGGLE_OVERLAY to all tabs");
-        let liveTime = dailyTime.total;
-        if (activeSession) {
-          liveTime += Date.now() - activeSession.startTime;
-        }
-        const allTabs = await chrome.tabs.query({});
-        for (const tab of allTabs) {
-          if (
-            tab.id &&
-            trackedSites.some((site: string) => tab.url!.includes(site))
-          ) {
-            await chrome.tabs
-              .sendMessage(tab.id, {
-                type: "UPDATE_FRAME",
-                time: liveTime,
-              })
-              .catch((e) => {
-                console.error("Error sending UPDATE_FRAME:", e);
-              });
-            console.log(`Sent UPDATE_FRAME to tab: ${tab.id}`);
-          }
-        }
+        toggleOverlays();
         break;
       case "REVALIDATE_ALL_OVERLAYS":
         console.log(
           `REVALIDATE_ALL_OVERLAYS received from tab: ${sender.tab?.id}`,
         );
-        import("./scripting").then(({ revalidateCacheForAllTabs }) => {
-          revalidateCacheForAllTabs();
-        });
+        revalidateCacheForAllTabs();
         break;
       case "CONTENT_SCRIPT_READY":
+        console.log("yo");
         if (!sender.tab?.id) return;
-        console.log(`CONTENT_SCRIPT_READY received from tab: ${sender.tab.id}`);
-        const [activeTab] = await chrome.tabs.query({ active: true });
-        if (activeTab?.id === sender.tab.id) {
-          updateActiveSession(sender.tab.id);
-          console.log(`Starting session for active tab: ${sender.tab.id}`);
-        }
-        break;
-      case "SITE_ADDED":
-        const site = message.site;
-        await registerContentScript(site);
-        await injectContentScriptToAllTabs(site);
-        break;
-      case "SITE_REMOVED":
-        await chrome.scripting.unregisterContentScripts({
-          ids: [message.site],
+        console.log(
+          `CONTENT_SCRIPT_READY received from tab: ${sender.tab?.id}`,
+        );
+        chrome.tabs.query({ active: true }).then(([activeTab]) => {
+          if (!sender.tab?.id) return; // again. to stop ts from crying
+          if (activeTab?.id === sender.tab.id) {
+            updateActiveSession(sender.tab.id);
+            console.log(`Starting session for active tab: ${sender.tab.id}`);
+          }
         });
         break;
+      case "SITE_ADDED":
+        console.log(`SITE_ADDED received for site: ${message.site}`);
+        addSite(message.site)
+          .then(() => {
+            sendResponse({ success: true });
+          })
+          .catch((error) => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true; // indicates that response will be sent
+
+      case "SITE_REMOVED":
+        console.log(`SITE_REMOVED received for site: ${message.site}`);
+        removeSite(message.site)
+          .then(() => {
+            sendResponse({ success: true });
+          })
+          .catch((error) => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+
       case "DEBUG":
         console.log(sender.tab?.id, message.message);
         break;
+
       default:
         console.warn(`Unknown message type received: ${message.type}`);
         break;
     }
   });
 
-  // not needed, but good for instantly start session without waiting for OVERLAY_FOCUS msg
+  // not needed, but good for instantly start session without waiting for TAB_FOCUS msg
   chrome.tabs.onActivated.addListener((activeInfo) => {
-    import("./session").then(({ updateActiveSession }) => {
-      updateActiveSession(activeInfo.tabId);
-    });
+    updateActiveSession(activeInfo.tabId);
   });
 }

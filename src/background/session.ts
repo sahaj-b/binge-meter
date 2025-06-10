@@ -1,15 +1,15 @@
+import { getStorageData, setStorageData } from "@/store";
 
 let sessionLock = Promise.resolve();
 
 export function updateActiveSession(activeTabId: number | null) {
   const taskPromise = sessionLock
     .then(async () => {
-      const { dailyTime, trackedSites, activeSession } =
-        await chrome.storage.local.get([
-          "dailyTime",
-          "trackedSites",
-          "activeSession",
-        ]);
+      const { dailyTime, trackedSites, activeSession } = await getStorageData([
+        "dailyTime",
+        "trackedSites",
+        "activeSession",
+      ]);
       let newTotal = dailyTime.total;
       if (activeSession && activeSession.startTime) {
         const elapsed = Date.now() - activeSession.startTime;
@@ -18,8 +18,7 @@ export function updateActiveSession(activeTabId: number | null) {
           await chrome.tabs.sendMessage(activeSession.tabId, {
             type: "STOP_TICKING",
           });
-        } catch (e) {
-        }
+        } catch (e) {}
       }
       if (activeTabId !== null) {
         try {
@@ -29,17 +28,16 @@ export function updateActiveSession(activeTabId: number | null) {
             trackedSites.some((site: string) => tab.url!.includes(site))
           ) {
             const newSession = { tabId: activeTabId, startTime: Date.now() };
-            await chrome.storage.local.set({
+            await setStorageData({
               dailyTime: { ...dailyTime, total: newTotal },
               activeSession: newSession,
             });
             await sendStartTicking(activeTabId, newTotal, newSession.startTime);
             return;
           }
-        } catch (e) {
-        }
+        } catch (e) {}
       }
-      await chrome.storage.local.set({
+      await setStorageData({
         dailyTime: { ...dailyTime, total: newTotal },
         activeSession: null,
       });
