@@ -9,8 +9,9 @@ import {
 } from "@ui/tooltip";
 import { Plus, Minus, Loader2, ShieldAlert, AlertCircle } from "lucide-react";
 import {
-  toggleSiteTracking,
+  sendAddSiteMessage,
   checkSitePermission,
+  sendRemoveSiteMessage,
   requestSitePermission,
 } from "../lib/browserService";
 
@@ -60,7 +61,11 @@ export default function CurrentSiteTracker({
     } else {
       setIsLoading(true);
       try {
-        await toggleSiteTracking(currentSite, isCurrentSiteTracked);
+        if (isCurrentSiteTracked) {
+          sendRemoveSiteMessage(currentSite);
+        } else {
+          sendAddSiteMessage(currentSite);
+        }
         setTrackedSites((prevTrackedSites: string[]) =>
           isCurrentSiteTracked
             ? prevTrackedSites.filter((site: string) => site !== currentSite)
@@ -84,13 +89,13 @@ export default function CurrentSiteTracker({
   }
 
   return (
-    <div className="p-3 bg-input/30 border rounded-lg">
+    <div className="p-3 bg-card/30 border rounded-lg">
       <div className="flex space-x-5 items-center justify-between">
         <div className="max-w-44 w-full overflow-hidden">
           <p className="text-sm font-medium">{formatSite(currentSite)}</p>
           <p
             className={`text-xs ${
-              isCurrentSiteTracked ? "text-green-600" : "text-amber-600"
+              isCurrentSiteTracked ? "text-green-300" : "text-primary"
             }`}
           >
             {isCurrentSiteTracked ? "Tracked" : "Not tracked"}

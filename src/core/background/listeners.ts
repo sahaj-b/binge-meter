@@ -3,6 +3,7 @@ import {
   addSite,
   removeSite,
   revalidateCacheForAllTabs,
+  revalidateCacheForTab,
   toggleOverlays,
 } from "./scripting";
 
@@ -49,8 +50,11 @@ export function setupListeners() {
         );
         revalidateCacheForAllTabs();
         break;
+      case "REVALIDATE_CACHE_TAB":
+        if (!sender.tab?.id) return;
+        revalidateCacheForTab(sender.tab.id);
+        break;
       case "CONTENT_SCRIPT_READY":
-        console.log("yo");
         if (!sender.tab?.id) return;
         console.log(
           `CONTENT_SCRIPT_READY received from tab: ${sender.tab?.id}`,
@@ -63,8 +67,8 @@ export function setupListeners() {
           }
         });
         break;
-      case "SITE_ADDED":
-        console.log(`SITE_ADDED received for site: ${message.site}`);
+      case "ADD_SITE":
+        console.log(`ADD_SITE received for site: ${message.site}`);
         addSite(message.site)
           .then(() => {
             sendResponse({ success: true });
@@ -74,8 +78,8 @@ export function setupListeners() {
           });
         return true; // indicates that response will be sent
 
-      case "SITE_REMOVED":
-        console.log(`SITE_REMOVED received for site: ${message.site}`);
+      case "REMOVE_SITE":
+        console.log(`REMOVE_SITE received for site: ${message.site}`);
         removeSite(message.site)
           .then(() => {
             sendResponse({ success: true });

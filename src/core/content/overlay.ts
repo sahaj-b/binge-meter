@@ -1,31 +1,52 @@
-import { setStorageData } from "@core/store";
-import { makeDraggable, makeResizable, removeOverlayEvents } from "./events";
-import { getConfig } from "./state";
+import { Draggable, Resizable } from "./events";
+import {
+  getConfig,
+  getPositionForHost,
+  getSizeForHost,
+  type Position,
+  type Size,
+} from "./storeService";
 
-let overlay: HTMLDivElement | null = null;
-let animationFrameId: number | null = null;
-let currThresholdState: "DEFAULT" | "WARN" | "DANGER" | null = null;
+export class OverlayUI {
+  element: HTMLDivElement | null = null;
+  animationFrameId: number | null = null;
+  currThresholdState: "DEFAULT" | "WARN" | "DANGER" | null = null;
+  parentElement: HTMLElement | null = null;
+  onPosChange: ((position: Position) => void) | null = null;
+  onSizeChange: ((size: Size) => void) | null = null;
+  draggableController: Draggable | null = null;
+  resizableController: Resizable | null = null;
 
-export async function ensureOverlay() {
-  const config = await getConfig(true);
-  if (config.isHidden) {
-    if (overlay) {
-      overlay.remove();
-      overlay = null;
+  constructor(
+    parentElement: HTMLElement | null,
+    onPosChange: (position: Position) => void,
+    onSizeChange: (size: Size) => void,
+  ) {
+    this.parentElement = parentElement;
+    this.onPosChange = onPosChange;
+    this.onSizeChange = onSizeChange;
+  }
+
+  async create() {
+    const config = await getConfig(true);
+    if (config.isHidden) {
+      if (this.element) {
+        this.element.remove();
+        this.element = null;
+      }
+      return;
     }
-    return;
-  }
 
-  if (overlay) {
-    await loadSize();
-    await loadPosition();
-    return;
-  }
-  chrome.runtime.sendMessage({ type: "DEBUG", message: `Creating overlay` });
-  // had to add !important. Thanks to Dark Reader for trying to murder my beloved colors.
-  overlay = document.createElement("div");
-  overlay.id = "binge-meter-overlay";
-  overlay.style.cssText = `
+    if (this.element) {
+      this.loadSizeAndPosition();
+      return;
+    }
+
+    chrome.runtime.sendMessage({ type: "DEBUG", message: `Creating overlay` });
+    // had to add !important. Thanks to Dark Reader for trying to murder my beloved colors.
+    this.element = document.createElement("div");
+    this.element.id = "binge-meter-overlay";
+    this.element.style.cssText = `
     position: fixed;
     color: ${config.colors.fg} !important;
     background: ${config.colors.bg} !important;
@@ -42,7 +63,7 @@ export async function ensureOverlay() {
     justify-content: center;
   `;
 
-  overlay.innerHTML = `
+    this.element.innerHTML = `
     <div style="
       position: absolute;
       bottom: 1px;
@@ -58,180 +79,104 @@ export async function ensureOverlay() {
     <div class="time-display"></div>
   `;
 
-  overlay.addEventListener("mouseenter", () => {
-    const handle = overlay?.querySelector(
-      ".binge-meter-resize-handle",
-    ) as HTMLElement;
-    if (handle) handle.style.opacity = "1";
-  });
+    this.element.addEventListener("mouseenter", () => {
+      const handle = this.element?.querySelector(
+        ".binge-meter-resize-handle",
+      ) as HTMLElement;
+      if (handle) handle.style.opacity = "1";
+    });
 
-  overlay.addEventListener("mouseleave", () => {
-    const handle = overlay?.querySelector(
-      ".binge-meter-resize-handle",
-    ) as HTMLElement;
-    if (handle) handle.style.opacity = "0";
-  });
+    this.element.addEventListener("mouseleave", () => {
+      const handle = this.element?.querySelector(
+        ".binge-meter-resize-handle",
+      ) as HTMLElement;
+      if (handle) handle.style.opacity = "0";
+    });
 
-  await updateOverlayTime(0);
-  await loadPosition();
-  await loadSize();
-  makeDraggable(overlay);
-  makeResizable(overlay);
-  document.body.appendChild(overlay);
+    await this.loadSizeAndPosition();
+    await this.updateTime(0);
+    this.draggableController = new Draggable(this.element, (pos) => {
+      this.onPosChange?.(pos);
+    });
+    this.resizableController = new Resizable(this.element, (size) => {
+      this.onSizeChange?.(size);
+    });
+    document.body.appendChild(this.element);
+  }
+
+  async loadSizeAndPosition() {
+    if (!this.element) return;
+    const size = await getSizeForHost(window.location.hostname);
+    this.element.style.width = `${size.width}px`;
+    this.element.style.height = `${size.height}px`;
+
+    const position = await getPositionForHost(window.location.hostname);
+    this.element.style.left = position.left;
+    this.element.style.top = position.top;
+  }
+
+  async updateTime(totalMs: number) {
+    if (!this.element) return;
+
+    const hours = Math.floor(totalMs / (1000 * 60 * 60));
+    const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((totalMs % (1000 * 60)) / 1000);
+
+    const timeDisplay = this.element.querySelector(
+      ".time-display",
+    ) as HTMLElement;
+    if (timeDisplay) {
+      timeDisplay.textContent = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+
+    this.element.style.fontSize = `${getFontSize(this.element.offsetWidth, this.element.offsetHeight)}px`;
+
+    const overlayConfig = await getConfig();
+    let targetThresholdState: "DEFAULT" | "WARN" | "DANGER" = "DEFAULT";
+    let targetColors = overlayConfig.colors;
+
+    if (totalMs >= overlayConfig.thresholdDanger) {
+      targetThresholdState = "DANGER";
+      targetColors = overlayConfig.dangerColors;
+    } else if (totalMs >= overlayConfig.thresholdWarn) {
+      targetThresholdState = "WARN";
+      targetColors = overlayConfig.warnColors;
+    }
+
+    if (targetThresholdState !== this.currThresholdState) {
+      this.element.style.setProperty("color", targetColors.fg, "important");
+      this.element.style.setProperty(
+        "background-color",
+        targetColors.bg,
+        "important",
+      );
+      this.element.style.setProperty(
+        "border-color",
+        targetColors.borderColor,
+        "important",
+      );
+      this.currThresholdState = targetThresholdState;
+    }
+  }
+
+  destroy() {
+    if (this.element) {
+      this.element.remove();
+      this.element = null;
+    }
+    if (this.draggableController) {
+      this.draggableController.destroy();
+      this.draggableController = null;
+    }
+    if (this.resizableController) {
+      this.resizableController.destroy();
+      this.resizableController = null;
+    }
+  }
 }
-
 export function getFontSize(
   overlayWidth: number,
   overlayHeight: number,
 ): number {
   return Math.min(overlayWidth / 6.5, overlayHeight / 1.7, 60);
-}
-
-export async function updateOverlayTime(totalMs: number) {
-  if (!overlay) return;
-
-  const hours = Math.floor(totalMs / (1000 * 60 * 60));
-  const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((totalMs % (1000 * 60)) / 1000);
-
-  const timeDisplay = overlay.querySelector(".time-display") as HTMLElement;
-  if (timeDisplay) {
-    timeDisplay.textContent = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  }
-
-  overlay.style.fontSize = `${getFontSize(overlay.offsetWidth, overlay.offsetHeight)}px`;
-
-  const overlayConfig = await getConfig();
-  let targetThresholdState: "DEFAULT" | "WARN" | "DANGER" = "DEFAULT";
-  let targetColors = overlayConfig.colors;
-
-  if (totalMs >= overlayConfig.thresholdDanger) {
-    targetThresholdState = "DANGER";
-    targetColors = overlayConfig.dangerColors;
-  } else if (totalMs >= overlayConfig.thresholdWarn) {
-    targetThresholdState = "WARN";
-    targetColors = overlayConfig.warnColors;
-  }
-
-  if (targetThresholdState !== currThresholdState) {
-    overlay.style.setProperty("color", targetColors.fg, "important");
-    overlay.style.setProperty("background-color", targetColors.bg, "important");
-    overlay.style.setProperty(
-      "border-color",
-      targetColors.borderColor,
-      "important",
-    );
-    currThresholdState = targetThresholdState;
-  }
-}
-
-export function startTicking(startingDuration: number, startTime: number) {
-  ensureOverlay();
-  if (animationFrameId) {
-    cancelAnimationFrame(animationFrameId);
-    chrome.runtime.sendMessage({
-      type: "DEBUG",
-      message: `CANCELLED animation frame ${animationFrameId}`,
-    });
-  }
-  function tick() {
-    if (!startTime) return;
-    const elapsed = Date.now() - startTime;
-    const totalTime = startingDuration + elapsed;
-    updateOverlayTime(totalTime);
-    animationFrameId = requestAnimationFrame(tick);
-  }
-  tick();
-  chrome.runtime.sendMessage({
-    type: "DEBUG",
-    message: `STARTED rAF loop`,
-  });
-}
-
-export function stopTicking() {
-  chrome.runtime.sendMessage({
-    type: "DEBUG",
-    message: `STOPPING rAF loop`,
-  });
-  if (!animationFrameId) return;
-  cancelAnimationFrame(animationFrameId);
-  animationFrameId = null;
-}
-
-export async function loadSize() {
-  if (!overlay) return;
-  const overlayConfig = await getConfig(true);
-  const hostname = window.location.hostname;
-  const savedSize = overlayConfig?.sizes?.[hostname];
-  if (savedSize) {
-    overlay.style.width = `${savedSize.width}px`;
-    overlay.style.height = `${savedSize.height}px`;
-  } else {
-    overlay.style.width = `${overlayConfig.defaultSize?.width}px`;
-    overlay.style.height = `${overlayConfig.defaultSize?.height}px`;
-  }
-}
-
-export async function loadPosition() {
-  if (!overlay) return;
-  const overlayConfig = await getConfig(true);
-  const hostname = window.location.hostname;
-  const savedPos = overlayConfig?.positions?.[hostname];
-
-  if (savedPos) {
-    overlay.style.left = savedPos.left;
-    overlay.style.top = savedPos.top;
-    // overlay.style.right = "auto";
-  } else {
-    overlay.style.left = "50%";
-    overlay.style.top = "20px";
-  }
-}
-
-export async function savePosition() {
-  if (!overlay) return;
-
-  const overlayConfig = await getConfig(true);
-  const hostname = window.location.hostname;
-
-  overlayConfig.positions[hostname] = {
-    left: overlay.style.left,
-    top: overlay.style.top,
-  };
-  await setStorageData({ overlayConfig });
-  chrome.runtime.sendMessage({
-    type: "DEBUG",
-    message: `Saving position for ${hostname}: left=${overlay.style.left}, top=${overlay.style.top}`,
-  });
-}
-
-export async function saveSize() {
-  if (!overlay) return;
-
-  const overlayConfig = await getConfig(true);
-  const hostname = window.location.hostname;
-
-  if (!overlayConfig.sizes) {
-    overlayConfig.sizes = {};
-  }
-
-  overlayConfig.sizes[hostname] = {
-    width: overlay.offsetWidth,
-    height: overlay.offsetHeight,
-  };
-
-  await setStorageData({ overlayConfig });
-  chrome.runtime.sendMessage({
-    type: "DEBUG",
-    message: `Saving size for ${hostname}: ${overlay.offsetWidth} ${overlay.offsetHeight}`,
-  });
-}
-
-export function removeOverlay() {
-  stopTicking();
-  if (overlay) {
-    overlay.remove();
-    overlay = null;
-  }
-  removeOverlayEvents();
 }

@@ -1,4 +1,3 @@
-// @ts-ignore
 import { defaultStorageData, getStorageData, setStorageData } from "../store";
 import { syncRegisteredScriptsForAllowedSites } from "./scripting";
 import { updateActiveSession } from "./session";

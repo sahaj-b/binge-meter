@@ -1,31 +1,27 @@
-import { getStorageData, type StorageData } from "@core/store";
+import { getStorageData, sitePatterns, type StorageData } from "@core/store";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
   if (!site) {
     return false;
   }
   const permissionsToRequest = {
-    origins: [`*://${site}/*`],
+    origins: sitePatterns(site),
   };
   return chrome.permissions.contains(permissionsToRequest);
 }
 
-export async function requestSitePermission(site: string): Promise<boolean> {
-  if (!site) return false;
+export async function requestSitePermission(site: string) {
+  if (!site) return;
   const permissionsToRequest = {
-    origins: [`*://${site}/*`],
+    origins: sitePatterns(site),
   };
-
-  try {
-    const granted = await chrome.permissions.request(permissionsToRequest);
-    return granted;
-  } catch (error) {
-    console.error(
-      `Error during chrome.permissions.request for ${site}:`,
-      error,
-    );
-    return false;
+  if (await checkSitePermission(site)) {
+    console.log(`Permission already granted for '${site}'`);
+    return;
   }
+
+  const granted = await chrome.permissions.request(permissionsToRequest);
+  if (!granted) throw new Error(`Permission denied by user`);
 }
 
 export async function loadStorageData() {
@@ -82,14 +78,25 @@ export function openAnalyticsPage() {
   });
 }
 
-export async function toggleSiteTracking(site: string, isTracked: boolean) {
-  const messageType = isTracked ? "SITE_REMOVED" : "SITE_ADDED";
+export async function sendAddSiteMessage(site: string) {
   const response = await chrome.runtime.sendMessage({
-    type: messageType,
+    type: "ADD_SITE",
     site: site,
   });
   if (response?.success) {
-    console.log(`${isTracked ? "Removed" : "Added"} site: ${site}`);
+    console.log(`Added site: ${site}`);
+  } else {
+    throw new Error(response?.error ?? "Unknown error occurred");
+  }
+}
+
+export async function sendRemoveSiteMessage(site: string) {
+  const response = await chrome.runtime.sendMessage({
+    type: "REMOVE_SITE",
+    site: site,
+  });
+  if (response?.success) {
+    console.log(`Removed site: ${site}`);
   } else {
     throw new Error(response?.error ?? "Unknown error occurred");
   }

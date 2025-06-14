@@ -26,6 +26,8 @@ export type OverlayConfig = {
   positions: Record<string, { left: string; top: string }>;
   sizes: Record<string, { width: number; height: number }>;
   isHidden: boolean;
+  blur: number;
+  borderRadius: number;
 };
 
 const defaultOverlayConfig: OverlayConfig = {
@@ -38,6 +40,8 @@ const defaultOverlayConfig: OverlayConfig = {
   positions: {},
   sizes: {},
   isHidden: false,
+  blur: 10,
+  borderRadius: 20,
 };
 
 export const defaultTrackedSites: string[] = [
@@ -61,6 +65,7 @@ export const defaultStorageData: StorageData = {
 export async function getStorageData<K extends keyof StorageData>(
   keys: K[],
 ): Promise<Pick<StorageData, K>> {
+  console.log("LOAD STORAGE DATA", keys);
   const data = await chrome.storage.local.get(keys);
 
   return keys.reduce(
@@ -75,5 +80,12 @@ export async function getStorageData<K extends keyof StorageData>(
 export async function setStorageData(
   data: Partial<StorageData>,
 ): Promise<void> {
+  console.log("SET STORAGE DATA", data);
   await chrome.storage.local.set(data);
+}
+
+// I know this is not the best place for defining this
+// sorry T-T
+export function sitePatterns(site: string): string[] {
+  return [`*://${site}/*`, `*://www.${site}/*`];
 }

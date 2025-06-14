@@ -1,6 +1,6 @@
 // @ts-ignore
 import contentScriptPath from "../content/index?script";
-import { getStorageData, setStorageData } from "@core/store";
+import { getStorageData, setStorageData, sitePatterns } from "@core/store";
 
 export async function syncRegisteredScriptsForAllowedSites() {
   // sync trackedSites with registered content scripts and permitted origins
@@ -12,7 +12,8 @@ export async function syncRegisteredScriptsForAllowedSites() {
   const allowedOrigins = new Set(currentPermissions.origins || []);
 
   const sitesWithPermissions = trackedSites.filter((site) =>
-    allowedOrigins.has(`*://${site}/*`),
+    // allowedOrigins.has(`*://${site}/*`),
+    sitePatterns(site).some((pattern) => allowedOrigins.has(pattern)),
   );
 
   if (sitesWithPermissions.length !== trackedSites.length) {
@@ -41,7 +42,7 @@ export async function registerContentScript(site: string | string[]) {
   const scripts = sites.map(
     (s): chrome.scripting.RegisteredContentScript => ({
       id: s,
-      matches: [`*://${s}/*`],
+      matches: sitePatterns(s),
       js: [contentScriptPath],
       runAt: "document_end",
       allFrames: false,
@@ -53,9 +54,9 @@ export async function registerContentScript(site: string | string[]) {
 
 export async function injectContentScriptToAllTabs(site: string | string[]) {
   const sites = Array.isArray(site) ? site : [site];
-  const sitePatterns = sites.flatMap((s) => [`*://${s}/*`]);
+  const allSitePatterns = sites.flatMap((s) => sitePatterns(s));
   const tabs = await chrome.tabs.query({
-    url: sitePatterns,
+    url: allSitePatterns,
   });
   tabs.forEach((tab) => {
     injectContentScript(tab.id);
@@ -93,6 +94,13 @@ export async function revalidateCacheForAllTabs() {
   }
 }
 
+export async function revalidateCacheForTab(tabId: number) {
+  console.log("Sending REVALIDATE_CACHE to", tabId);
+  await chrome.tabs.sendMessage(tabId, {
+    type: "REVALIDATE_CACHE",
+  });
+}
+
 export async function removeSite(site: string) {
   const { trackedSites } = await getStorageData(["trackedSites"]);
   if (!trackedSites || !trackedSites.includes(site)) return;
@@ -121,7 +129,7 @@ export async function removeSite(site: string) {
 
 export async function checkSitePermission(site: string) {
   const permissionsToRequest = {
-    origins: [`*://${site}/*`],
+    origins: sitePatterns(site),
   };
   return chrome.permissions.contains(permissionsToRequest);
 }
@@ -139,7 +147,7 @@ export async function addSite(site: string) {
   }
 
   await registerContentScript(site);
-  const tabs = await chrome.tabs.query({ url: `*://${site}/*` });
+  const tabs = await chrome.tabs.query({ url: sitePatterns(site) });
 
   for (const tab of tabs) {
     if (tab.id) {

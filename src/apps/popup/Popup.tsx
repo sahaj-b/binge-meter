@@ -65,7 +65,7 @@ export default function Popup() {
           </p>
         </div>
 
-        <div className="flex items-center justify-between p-3 bg-input/30 border rounded-lg">
+        <div className="flex items-center justify-between p-3 bg-card/30 border rounded-lg">
           <div className="flex items-center space-x-2">
             <Label htmlFor="overlay-toggle">Show Overlay</Label>
           </div>
