@@ -48,7 +48,7 @@ export function ColorInput({
     setDebounceRef(
       setTimeout(() => {
         onChange(inputVal);
-      }, 100),
+      }, 10),
     );
   }
 

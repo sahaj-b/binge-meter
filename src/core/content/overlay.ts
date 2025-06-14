@@ -1,8 +1,11 @@
+import type { OverlayConfig } from "../store";
 import { Draggable, Resizable } from "./events";
 import {
   getConfig,
   getPositionForHost,
   getSizeForHost,
+  setPositionForHost,
+  setSizeForHost,
   type Position,
   type Size,
 } from "./storeService";
@@ -11,23 +14,28 @@ export class OverlayUI {
   element: HTMLDivElement | null = null;
   animationFrameId: number | null = null;
   currThresholdState: "DEFAULT" | "WARN" | "DANGER" | null = null;
-  parentElement: HTMLElement | null = null;
-  onPosChange: ((position: Position) => void) | null = null;
-  onSizeChange: ((size: Size) => void) | null = null;
+  parentElement: HTMLElement;
+  hostname: string;
   draggableController: Draggable | null = null;
   resizableController: Resizable | null = null;
+  onPositionSave: (position: Position) => void;
+  onSizeSave: (size: Size) => void;
 
   constructor(
-    parentElement: HTMLElement | null,
-    onPosChange: (position: Position) => void,
-    onSizeChange: (size: Size) => void,
+    parentElement: HTMLElement,
+    hostname: string,
+    onPositionSave?: (position: Position) => void,
+    onSizeSave?: (size: Size) => void,
   ) {
     this.parentElement = parentElement;
-    this.onPosChange = onPosChange;
-    this.onSizeChange = onSizeChange;
+    this.hostname = hostname;
+    this.onPositionSave = onPositionSave || (() => {});
+    this.onSizeSave = onSizeSave || (() => {});
   }
 
   async create() {
+    // this method can be also called to just revalidate the config cache
+
     const config = await getConfig(true);
     if (config.isHidden) {
       if (this.element) {
@@ -51,10 +59,10 @@ export class OverlayUI {
     color: ${config.colors.fg} !important;
     background: ${config.colors.bg} !important;
     border: 1px solid ${config.colors.borderColor} !important;
-    border-radius: 20px;
+    border-radius: ${config.borderRadius}px
     font-family: monospace;
     z-index: 10000;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(${config.blur}px);
     cursor: move;
     user-select: none;
     overflow: hidden;
@@ -94,28 +102,30 @@ export class OverlayUI {
     });
 
     await this.loadSizeAndPosition();
-    await this.updateTime(0);
-    this.draggableController = new Draggable(this.element, (pos) => {
-      this.onPosChange?.(pos);
+    await this.update(0);
+    this.draggableController = new Draggable(this.element, async (pos) => {
+      await setPositionForHost(this.hostname, pos);
+      this.onPositionSave(pos);
     });
-    this.resizableController = new Resizable(this.element, (size) => {
-      this.onSizeChange?.(size);
+    this.resizableController = new Resizable(this.element, async (size) => {
+      await setSizeForHost(this.hostname, size);
+      this.onSizeSave(size);
     });
     document.body.appendChild(this.element);
   }
 
   async loadSizeAndPosition() {
     if (!this.element) return;
-    const size = await getSizeForHost(window.location.hostname);
+    const size = await getSizeForHost(this.hostname);
     this.element.style.width = `${size.width}px`;
     this.element.style.height = `${size.height}px`;
 
-    const position = await getPositionForHost(window.location.hostname);
+    const position = await getPositionForHost(this.hostname);
     this.element.style.left = position.left;
     this.element.style.top = position.top;
   }
 
-  async updateTime(totalMs: number) {
+  async update(totalMs: number) {
     if (!this.element) return;
 
     const hours = Math.floor(totalMs / (1000 * 60 * 60));
@@ -132,9 +142,15 @@ export class OverlayUI {
     this.element.style.fontSize = `${getFontSize(this.element.offsetWidth, this.element.offsetHeight)}px`;
 
     const overlayConfig = await getConfig();
+    this.setStyles(overlayConfig);
+    this.setThresholdColors(overlayConfig, totalMs);
+  }
+
+  private setThresholdColors(overlayConfig: OverlayConfig, totalMs: number) {
+    if (!this.element) return;
+
     let targetThresholdState: "DEFAULT" | "WARN" | "DANGER" = "DEFAULT";
     let targetColors = overlayConfig.colors;
-
     if (totalMs >= overlayConfig.thresholdDanger) {
       targetThresholdState = "DANGER";
       targetColors = overlayConfig.dangerColors;
@@ -144,6 +160,7 @@ export class OverlayUI {
     }
 
     if (targetThresholdState !== this.currThresholdState) {
+      console.log(`Setting overlay colors to ${targetThresholdState}`);
       this.element.style.setProperty("color", targetColors.fg, "important");
       this.element.style.setProperty(
         "background-color",
@@ -156,6 +173,16 @@ export class OverlayUI {
         "important",
       );
       this.currThresholdState = targetThresholdState;
+    }
+  }
+
+  private setStyles(overlayConfig: OverlayConfig) {
+    if (!this.element) return;
+    if (this.element.style.borderRadius !== `${overlayConfig.borderRadius}px`) {
+      this.element.style.borderRadius = `${overlayConfig.borderRadius}px`;
+    }
+    if (this.element.style.backdropFilter !== `blur(${overlayConfig.blur}px)`) {
+      this.element.style.backdropFilter = `blur(${overlayConfig.blur}px)`;
     }
   }
 
@@ -178,5 +205,5 @@ export function getFontSize(
   overlayWidth: number,
   overlayHeight: number,
 ): number {
-  return Math.min(overlayWidth / 6.5, overlayHeight / 1.7, 60);
+  return Math.min(overlayWidth / 5.5, overlayHeight / 1.7, 60);
 }

@@ -30,7 +30,7 @@ export type OverlayConfig = {
   borderRadius: number;
 };
 
-const defaultOverlayConfig: OverlayConfig = {
+export const defaultOverlayConfig: OverlayConfig = {
   thresholdWarn: 10 * 1000,
   thresholdDanger: 20 * 1000,
   colors: { fg: "#ffffff", bg: "#0f0f0f80", borderColor: "#ffffff41" },
@@ -65,7 +65,6 @@ export const defaultStorageData: StorageData = {
 export async function getStorageData<K extends keyof StorageData>(
   keys: K[],
 ): Promise<Pick<StorageData, K>> {
-  console.log("LOAD STORAGE DATA", keys);
   const data = await chrome.storage.local.get(keys);
 
   return keys.reduce(
@@ -80,8 +79,8 @@ export async function getStorageData<K extends keyof StorageData>(
 export async function setStorageData(
   data: Partial<StorageData>,
 ): Promise<void> {
-  console.log("SET STORAGE DATA", data);
   await chrome.storage.local.set(data);
+  console.log("SAVEDDDDDDd");
 }
 
 // I know this is not the best place for defining this

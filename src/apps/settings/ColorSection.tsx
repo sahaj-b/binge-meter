@@ -1,7 +1,8 @@
 import { Label } from "@ui/label";
 import { Slider } from "@ui/slider";
 import { ColorInput } from "./ColorInput";
-import { updateHexOpacity } from "./utils";
+import { extractAlphaFromHex, updateHexOpacity } from "./utils";
+import { useEffect, useState } from "react";
 
 interface ColorSectionProps {
   title: string;
@@ -10,9 +11,7 @@ interface ColorSectionProps {
     bg: string;
     borderColor: string;
   };
-  backgroundOpacity: number;
   onColorChange: (colorKey: "fg" | "bg" | "borderColor", value: string) => void;
-  onOpacityChange: (type: "background", value: number) => void;
 }
 
 // the color handling is kinda funky
@@ -26,10 +25,14 @@ interface ColorSectionProps {
 export function ColorSection({
   title,
   colors,
-  backgroundOpacity,
   onColorChange,
-  onOpacityChange,
 }: ColorSectionProps) {
+  const [backgroundOpacity, setBackgroundOpacity] = useState(1);
+
+  useEffect(() => {
+    setBackgroundOpacity(extractAlphaFromHex(colors.bg));
+  }, [colors.bg]);
+
   return (
     <div className="p-4 border rounded-lg bg-card/60 flex-1">
       <Label className="text-sm font-medium">{title}</Label>
@@ -61,9 +64,7 @@ export function ColorSection({
           <Slider
             value={[backgroundOpacity]}
             onValueChange={(value) => {
-              const newOpacity = value[0];
-              onOpacityChange("background", newOpacity);
-              onColorChange("bg", updateHexOpacity(colors.bg, newOpacity));
+              onColorChange("bg", updateHexOpacity(colors.bg, value[0]));
             }}
             max={1}
             min={0}

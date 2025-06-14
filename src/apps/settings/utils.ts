@@ -1,3 +1,5 @@
+import { defaultOverlayConfig } from "@core/store";
+
 export type TimeInput = {
   hours: number;
   minutes: number;
@@ -37,4 +39,11 @@ export function updateHexOpacity(hex: string, opacity: number): string {
     .toString(16)
     .padStart(2, "0");
   return addAlphaToHex(hex, alphaHex);
+}
+
+export function extractOpacityFromColor(color: string): number {
+  if (color.startsWith("#") && color.length === 9) {
+    return parseInt(color.slice(-2), 16) / 255;
+  }
+  return 1;
 }

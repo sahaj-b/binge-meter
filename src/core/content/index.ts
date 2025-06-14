@@ -1,20 +1,8 @@
 import { OverlayUI } from "./overlay";
 import { revalidateCache } from "./storeService";
 import { TickerController } from "./tickerController";
-import {
-  setPositionForHost,
-  setSizeForHost,
-  type Position,
-} from "./storeService";
 
-function setPosition(position: Position) {
-  return setPositionForHost(window.location.hostname, position);
-}
-function setSize(size: { width: number; height: number }) {
-  return setSizeForHost(window.location.hostname, size);
-}
-
-const overlay = new OverlayUI(document.body, setPosition, setSize);
+const overlay = new OverlayUI(document.body, window.location.hostname);
 const ticker = new TickerController(overlay);
 
 let isSleeping = false;
@@ -34,7 +22,7 @@ chrome.runtime.onMessage.addListener(async (message: any) => {
   }
   switch (message.type) {
     case "START_TICKING":
-      await overlay.updateTime(message.startingDuration);
+      await overlay.update(message.startingDuration);
       ticker.start(message.startingDuration, message.startTime);
       break;
     case "STOP_TICKING":
@@ -53,7 +41,7 @@ chrome.runtime.onMessage.addListener(async (message: any) => {
         message: `UPDATE_FRAME received, time: ${message.time}`,
       });
       await overlay.create();
-      await overlay.updateTime(message.time);
+      await overlay.update(message.time);
       break;
     case "SLEEP":
       overlay.destroy();

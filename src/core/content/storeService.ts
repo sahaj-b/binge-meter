@@ -20,7 +20,7 @@ export async function setPositionForHost(hostname: string, position: Position) {
     ...(overlayConfig.positions || {}),
     [hostname]: position,
   };
-  setStorageData({
+  await setStorageData({
     overlayConfig: { ...overlayConfig, positions: newPositions },
   });
 }
@@ -28,7 +28,7 @@ export async function setPositionForHost(hostname: string, position: Position) {
 export async function setSizeForHost(hostname: string, size: Size) {
   const { overlayConfig } = await getStorageData(["overlayConfig"]);
   const newSizes = { ...(overlayConfig.sizes || {}), [hostname]: size };
-  setStorageData({
+  await setStorageData({
     overlayConfig: { ...overlayConfig, sizes: newSizes },
   });
 }

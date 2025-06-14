@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getStorageData, type OverlayConfig } from "@core/store";
+import {
+  getStorageData,
+  setStorageData,
+  type OverlayConfig,
+} from "@core/store";
 import { TrackedSites } from "./TrackedSites";
 import { OverlaySettings } from "./OverlaySettings";
 import { OverlayStyles } from "./OverlayStyles";
@@ -8,15 +12,60 @@ import {
   sendAddSiteMessage,
   requestSitePermission,
 } from "@lib/browserService";
+import { OverlayUI } from "@/core/content/overlay";
 
 export default function Settings() {
   const [config, setConfig] = useState<OverlayConfig | null>(null);
   const [trackedSites, setTrackedSites] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dummyTime, setDummyTime] = useState(369000);
+
+  const [overlay, setOverlay] = useState<OverlayUI | null>(null);
 
   useEffect(() => {
+    const hostname = window.location.hostname;
+    const overlay = new OverlayUI(
+      document.body,
+      hostname,
+      // callback functions to keep the state in sync after drag/resize actions
+      // took me hours to figure out the solution. AAAAAAAAAA
+      (pos) =>
+        setConfig((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            positions: { ...prev.positions, [hostname]: pos },
+          };
+        }),
+      (size) =>
+        setConfig((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            sizes: { ...prev.sizes, [hostname]: size },
+          };
+        }),
+    );
+    overlay.create().then(() => {
+      overlay.update(dummyTime);
+    });
+    setOverlay(overlay);
     loadSettings();
+    window.addEventListener("focus", loadSettings);
+
+    return () => {
+      overlay.destroy();
+      window.removeEventListener("focus", loadSettings);
+    };
   }, []);
+
+  useEffect(() => {
+    // create() functoin auto revalidates the config cache
+    console.log("YOHOOOOOOOo");
+    overlay?.create().then(() => {
+      overlay.update(dummyTime);
+    });
+  }, [config, dummyTime]);
 
   async function loadSettings() {
     try {
@@ -31,8 +80,10 @@ export default function Settings() {
   }
 
   function updateConfig(updates: Partial<OverlayConfig>) {
-    if (!config) return;
-    setConfig({ ...config, ...updates });
+    setConfig((prev) => {
+      if (!prev) return prev;
+      return { ...prev, ...updates };
+    });
   }
 
   async function handleAddSite(site: string) {
@@ -47,6 +98,20 @@ export default function Settings() {
   async function handleRemoveSite(site: string) {
     await sendRemoveSiteMessage(site);
     setTrackedSites((prev) => prev.filter((s) => s !== site));
+  }
+
+  async function handleStyleChange(updates: Partial<OverlayConfig>) {
+    // if cfg ain't loded yet, don't do anything
+    if (!config) return;
+
+    const newCfg = { ...config, ...updates };
+    setConfig(newCfg);
+    await setStorageData({ overlayConfig: newCfg });
+
+    // if user messes with warn/danger colors, update with those thresholds
+    if (updates.warnColors) setDummyTime(newCfg.thresholdWarn);
+    else if (updates.dangerColors) setDummyTime(newCfg.thresholdDanger);
+    else if (updates.colors) setDummyTime(369000);
   }
 
   if (loading || !config) {
@@ -73,7 +138,7 @@ export default function Settings() {
         />
 
         <OverlaySettings config={config} onConfigUpdate={updateConfig} />
-        <OverlayStyles config={config} onConfigUpdate={updateConfig} />
+        <OverlayStyles config={config} onStyleChange={handleStyleChange} />
       </div>
     </div>
   );

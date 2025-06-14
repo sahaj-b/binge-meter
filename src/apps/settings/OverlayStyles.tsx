@@ -1,44 +1,19 @@
-import { useState, useEffect } from "react";
 import { Label } from "@ui/label";
 import { Slider } from "@ui/slider";
 import { Button } from "@ui/button";
 import {
   type OverlayConfig,
   setStorageData,
-  defaultStorageData,
+  defaultOverlayConfig,
 } from "@core/store";
 import { ColorSection } from "./ColorSection";
-import { addAlphaToHex, updateHexOpacity } from "./utils";
-
-const defaultOverlayConfig = defaultStorageData.overlayConfig;
 
 interface OverlayStylesProps {
   config: OverlayConfig;
-  onConfigUpdate: (updates: Partial<OverlayConfig>) => void;
+  onStyleChange: (updates: Partial<OverlayConfig>) => void;
 }
 
-export function OverlayStyles({ config, onConfigUpdate }: OverlayStylesProps) {
-  const [normalBackgroundOpacity, setNormalBackgroundOpacity] = useState(1);
-  const [warnBackgroundOpacity, setWarnBackgroundOpacity] = useState(1);
-  const [dangerBackgroundOpacity, setDangerBackgroundOpacity] = useState(1);
-
-  useEffect(() => {
-    if (config) {
-      setNormalBackgroundOpacity(extractOpacityFromColor(config.colors.bg));
-      setWarnBackgroundOpacity(extractOpacityFromColor(config.warnColors.bg));
-      setDangerBackgroundOpacity(
-        extractOpacityFromColor(config.dangerColors.bg),
-      );
-    }
-  }, [config]);
-
-  const extractOpacityFromColor = (color: string): number => {
-    if (color.startsWith("#") && color.length === 9) {
-      return parseInt(color.slice(-2), 16) / 255;
-    }
-    return 1;
-  };
-
+export function OverlayStyles({ config, onStyleChange }: OverlayStylesProps) {
   async function resetToDefaults() {
     const updates = {
       blur: defaultOverlayConfig.blur,
@@ -47,48 +22,9 @@ export function OverlayStyles({ config, onConfigUpdate }: OverlayStylesProps) {
       warnColors: defaultOverlayConfig.warnColors,
       dangerColors: defaultOverlayConfig.dangerColors,
     };
-    onConfigUpdate(updates);
+    onStyleChange(updates);
     await setStorageData({ overlayConfig: { ...config, ...updates } });
   }
-
-  async function updateColors(
-    colorType: "colors" | "warnColors" | "dangerColors",
-    colorKey: "fg" | "bg" | "borderColor",
-    value: string,
-  ) {
-    let finalValue = value;
-
-    if (colorKey === "fg" || colorKey === "borderColor") {
-      const defaultAlpha = defaultOverlayConfig[colorType][colorKey].slice(-2);
-      if (defaultOverlayConfig[colorType][colorKey].length === 9) {
-        finalValue = addAlphaToHex(value, defaultAlpha);
-      }
-    } else if (colorKey === "bg") {
-      finalValue = updateHexOpacity(value, normalBackgroundOpacity);
-    }
-
-    const updates = {
-      [colorType]: {
-        ...config[colorType],
-        [colorKey]: finalValue,
-      },
-    };
-    onConfigUpdate(updates);
-    await setStorageData({ overlayConfig: { ...config, ...updates } });
-  }
-
-  const handleOpacityChange = async (
-    colorType: "colors" | "warnColors" | "dangerColors",
-    value: number,
-  ) => {
-    if (colorType === "colors") {
-      setNormalBackgroundOpacity(value);
-    } else if (colorType === "warnColors") {
-      setWarnBackgroundOpacity(value);
-    } else {
-      setDangerBackgroundOpacity(value);
-    }
-  };
 
   return (
     <div className="space-y-6 p-6 border rounded-lg bg-card/30">
@@ -112,21 +48,17 @@ export function OverlayStyles({ config, onConfigUpdate }: OverlayStylesProps) {
             </div>
             <div className="flex items-center gap-3 w-48">
               <Slider
-                value={[config.borderRadius || 8]}
+                value={[config.borderRadius]}
                 onValueChange={async (value) => {
-                  const updates = { borderRadius: value[0] };
-                  onConfigUpdate(updates);
-                  await setStorageData({
-                    overlayConfig: { ...config, ...updates },
-                  });
+                  onStyleChange({ borderRadius: value[0] });
                 }}
-                max={40}
+                max={50}
                 min={0}
                 step={1}
                 className="flex-1"
               />
               <span className="text-xs text-muted-foreground w-8">
-                {config.borderRadius || 8}px
+                {config.borderRadius}px
               </span>
             </div>
           </div>
@@ -137,21 +69,21 @@ export function OverlayStyles({ config, onConfigUpdate }: OverlayStylesProps) {
             </div>
             <div className="flex items-center gap-3 w-48">
               <Slider
-                value={[config.blur || 0]}
+                value={[config.blur]}
                 onValueChange={async (value) => {
                   const updates = { blur: value[0] };
-                  onConfigUpdate(updates);
+                  onStyleChange(updates);
                   await setStorageData({
                     overlayConfig: { ...config, ...updates },
                   });
                 }}
-                max={20}
+                max={15}
                 min={0}
-                step={1}
+                step={0.2}
                 className="flex-1"
               />
               <span className="text-xs text-muted-foreground w-8">
-                {config.blur || 0}px
+                {config.blur.toFixed(1)}px
               </span>
             </div>
           </div>
@@ -161,34 +93,28 @@ export function OverlayStyles({ config, onConfigUpdate }: OverlayStylesProps) {
           <ColorSection
             title="Normal Colors"
             colors={config.colors}
-            backgroundOpacity={normalBackgroundOpacity}
             onColorChange={(colorKey, value) =>
-              updateColors("colors", colorKey, value)
+              onStyleChange({ colors: { ...config.colors, [colorKey]: value } })
             }
-            onOpacityChange={(_, value) => handleOpacityChange("colors", value)}
           />
 
           <ColorSection
             title="Warning Colors"
             colors={config.warnColors}
-            backgroundOpacity={warnBackgroundOpacity}
             onColorChange={(colorKey, value) =>
-              updateColors("warnColors", colorKey, value)
-            }
-            onOpacityChange={(_, value) =>
-              handleOpacityChange("warnColors", value)
+              onStyleChange({
+                warnColors: { ...config.warnColors, [colorKey]: value },
+              })
             }
           />
 
           <ColorSection
             title="Danger Colors"
             colors={config.dangerColors}
-            backgroundOpacity={dangerBackgroundOpacity}
             onColorChange={(colorKey, value) =>
-              updateColors("dangerColors", colorKey, value)
-            }
-            onOpacityChange={(_, value) =>
-              handleOpacityChange("dangerColors", value)
+              onStyleChange({
+                dangerColors: { ...config.dangerColors, [colorKey]: value },
+              })
             }
           />
         </div>

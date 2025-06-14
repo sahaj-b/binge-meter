@@ -39,7 +39,7 @@ export class TickerController {
 
     const elapsed = Date.now() - this.startTime;
     const totalTime = this.startingDuration + elapsed;
-    this.overlay.updateTime(totalTime);
+    this.overlay.update(totalTime);
     this.animationFrameId = requestAnimationFrame(this.tick);
   };
 }
