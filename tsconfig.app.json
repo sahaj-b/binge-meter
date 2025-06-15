@@ -19,14 +19,11 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@core/*": ["src/core/*"],
-      "@apps/*": ["src/apps/*"],
       "@ui/*": ["src/apps/components/ui/*"],
       "@lib/*": ["src/apps/lib/*"]
     }
