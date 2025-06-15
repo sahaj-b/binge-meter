@@ -1,26 +1,15 @@
 import { Label } from "@ui/label";
 import { Switch } from "@ui/switch";
-import { type OverlayConfig, setStorageData } from "../../core/store";
 import { DurationPicker } from "../components/ui/duration-picker";
+import { useStore } from "./state";
 
-interface OverlaySettingsProps {
-  config: OverlayConfig;
-  onConfigUpdate: (updates: Partial<OverlayConfig>) => void;
-}
-
-export function OverlaySettings({
-  config,
-  onConfigUpdate,
-}: OverlaySettingsProps) {
-  function saveConfig(updatedConfig: OverlayConfig) {
-    setStorageData({ overlayConfig: updatedConfig });
-  }
-
-  const handleConfigUpdate = (updates: Partial<OverlayConfig>) => {
-    const updatedConfig = { ...config, ...updates };
-    onConfigUpdate(updates);
-    saveConfig(updatedConfig);
-  };
+export function OverlaySettings() {
+  const updateConfig = useStore((state) => state.updateConfig);
+  const isHidden = useStore((state) => state.overlayConfig?.isHidden);
+  const thresholdWarn =
+    useStore((state) => state.overlayConfig?.thresholdWarn) ?? 0;
+  const thresholdDanger =
+    useStore((state) => state.overlayConfig?.thresholdDanger) ?? 0;
   return (
     <div className="space-y-6 p-6 border rounded-lg bg-card/30">
       <div>
@@ -34,9 +23,9 @@ export function OverlaySettings({
               <Label className="text-sm font-medium">Show Overlay</Label>
             </div>
             <Switch
-              checked={!config.isHidden}
+              checked={!isHidden}
               onCheckedChange={(checked) =>
-                handleConfigUpdate({ isHidden: !checked })
+                updateConfig({ isHidden: !checked }, true)
               }
             />
           </div>
@@ -51,9 +40,9 @@ export function OverlaySettings({
               </p>
             </div>
             <DurationPicker
-              totalMilliseconds={config.thresholdWarn}
+              totalMilliseconds={thresholdWarn}
               setTotalMilliseconds={(value) =>
-                handleConfigUpdate({ thresholdWarn: value })
+                updateConfig({ thresholdWarn: value }, true)
               }
             />
           </div>
@@ -65,9 +54,9 @@ export function OverlaySettings({
               </p>
             </div>
             <DurationPicker
-              totalMilliseconds={config.thresholdDanger}
+              totalMilliseconds={thresholdDanger}
               setTotalMilliseconds={(value) =>
-                handleConfigUpdate({ thresholdDanger: value })
+                updateConfig({ thresholdDanger: value }, true)
               }
             />
           </div>

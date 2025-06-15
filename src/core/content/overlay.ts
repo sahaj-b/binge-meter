@@ -37,6 +37,7 @@ export class OverlayUI {
     // this method can be also called to just revalidate the config cache
 
     const config = await getConfig(true);
+
     if (config.isHidden) {
       if (this.element) {
         this.element.remove();
@@ -125,7 +126,11 @@ export class OverlayUI {
     this.element.style.top = position.top;
   }
 
-  async update(totalMs: number) {
+  async update(
+    totalMs: number,
+    forceUpdateColors = false,
+    overlayConfig?: OverlayConfig,
+  ) {
     if (!this.element) return;
 
     const hours = Math.floor(totalMs / (1000 * 60 * 60));
@@ -140,13 +145,16 @@ export class OverlayUI {
     }
 
     this.element.style.fontSize = `${getFontSize(this.element.offsetWidth, this.element.offsetHeight)}px`;
-
-    const overlayConfig = await getConfig();
+    overlayConfig = overlayConfig ?? (await getConfig());
     this.setStyles(overlayConfig);
-    this.setThresholdColors(overlayConfig, totalMs);
+    this.setThresholdColors(overlayConfig, totalMs, forceUpdateColors);
   }
 
-  private setThresholdColors(overlayConfig: OverlayConfig, totalMs: number) {
+  private setThresholdColors(
+    overlayConfig: OverlayConfig,
+    totalMs: number,
+    forceUpdate = false,
+  ) {
     if (!this.element) return;
 
     let targetThresholdState: "DEFAULT" | "WARN" | "DANGER" = "DEFAULT";
@@ -159,8 +167,7 @@ export class OverlayUI {
       targetColors = overlayConfig.warnColors;
     }
 
-    if (targetThresholdState !== this.currThresholdState) {
-      console.log(`Setting overlay colors to ${targetThresholdState}`);
+    if (forceUpdate || targetThresholdState !== this.currThresholdState) {
       this.element.style.setProperty("color", targetColors.fg, "important");
       this.element.style.setProperty(
         "background-color",

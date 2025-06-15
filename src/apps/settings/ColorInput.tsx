@@ -1,12 +1,14 @@
 import { Input } from "@ui/input";
 import { Label } from "@ui/label";
 import { useEffect, useState } from "react";
+import { updateHexOpacity } from "./utils";
 
 interface ColorInputProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  opacity?: number;
 }
 
 export function ColorInput({
@@ -14,6 +16,7 @@ export function ColorInput({
   value,
   onChange,
   placeholder = "#",
+  opacity = 1,
 }: ColorInputProps) {
   const [isValid, setIsValid] = useState(true);
   const [input, setInput] = useState(value);
@@ -71,7 +74,9 @@ export function ColorInput({
           type="color"
           className="w-10 h-8 p-0 border-0 rounded-md color-picker"
           value={input}
-          onChange={(e) => debouncedOnChange(e.target.value)}
+          onChange={(e) =>
+            debouncedOnChange(updateHexOpacity(e.target.value, opacity))
+          }
         />
       </div>
     </div>

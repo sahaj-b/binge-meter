@@ -1,26 +1,15 @@
-import { useEffect, useState } from "react";
-import {
-  getStorageData,
-  setStorageData,
-  type OverlayConfig,
-} from "@core/store";
+import { useEffect } from "react";
 import { TrackedSites } from "./TrackedSites";
 import { OverlaySettings } from "./OverlaySettings";
 import { OverlayStyles } from "./OverlayStyles";
-import {
-  sendRemoveSiteMessage,
-  sendAddSiteMessage,
-  requestSitePermission,
-} from "@lib/browserService";
 import { OverlayUI } from "@/core/content/overlay";
+import { useStore } from "./state";
 
 export default function Settings() {
-  const [config, setConfig] = useState<OverlayConfig | null>(null);
-  const [trackedSites, setTrackedSites] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dummyTime, setDummyTime] = useState(369000);
-
-  const [overlay, setOverlay] = useState<OverlayUI | null>(null);
+  const fetchSettings = useStore((state) => state.fetchSettings);
+  const loading = useStore((state) => state.loading);
+  const error = useStore((state) => state.error);
+  const updateConfig = useStore((state) => state.updateConfig);
 
   useEffect(() => {
     const hostname = window.location.hostname;
@@ -28,96 +17,38 @@ export default function Settings() {
       document.body,
       hostname,
       // callback functions to keep the state in sync after drag/resize actions
-      // took me hours to figure out the solution. AAAAAAAAAA
-      (pos) =>
-        setConfig((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            positions: { ...prev.positions, [hostname]: pos },
-          };
-        }),
-      (size) =>
-        setConfig((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            sizes: { ...prev.sizes, [hostname]: size },
-          };
-        }),
+      // took me hours to debug. AAAAAAAAAAA
+      (pos) => updateConfig({ positions: { [hostname]: pos } }),
+      (size) => updateConfig({ sizes: { [hostname]: size } }),
     );
-    overlay.create().then(() => {
-      overlay.update(dummyTime);
+    fetchSettings();
+    window.addEventListener("focus", fetchSettings);
+
+    const unsubscribe = useStore.subscribe((state) => {
+      if (!state.overlayConfig) return;
+      overlay.create().then(() => {
+        overlay.update(state.dummyTime, true, state.overlayConfig!);
+      });
     });
-    setOverlay(overlay);
-    loadSettings();
-    window.addEventListener("focus", loadSettings);
 
     return () => {
+      unsubscribe();
       overlay.destroy();
-      window.removeEventListener("focus", loadSettings);
+      window.removeEventListener("focus", fetchSettings);
     };
   }, []);
 
-  useEffect(() => {
-    // create() functoin auto revalidates the config cache
-    console.log("YOHOOOOOOOo");
-    overlay?.create().then(() => {
-      overlay.update(dummyTime);
-    });
-  }, [config, dummyTime]);
-
-  async function loadSettings() {
-    try {
-      const data = await getStorageData(["overlayConfig", "trackedSites"]);
-      setConfig(data.overlayConfig);
-      setTrackedSites(data.trackedSites);
-    } catch (error) {
-      console.error("Failed to load settings:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function updateConfig(updates: Partial<OverlayConfig>) {
-    setConfig((prev) => {
-      if (!prev) return prev;
-      return { ...prev, ...updates };
-    });
-  }
-
-  async function handleAddSite(site: string) {
-    if (!trackedSites.includes(site)) {
-      site = site.replace(/^(https?:\/\/)?(www\.)?/, "");
-      await requestSitePermission(site);
-      await sendAddSiteMessage(site);
-      trackedSites.push(site);
-    }
-  }
-
-  async function handleRemoveSite(site: string) {
-    await sendRemoveSiteMessage(site);
-    setTrackedSites((prev) => prev.filter((s) => s !== site));
-  }
-
-  async function handleStyleChange(updates: Partial<OverlayConfig>) {
-    // if cfg ain't loded yet, don't do anything
-    if (!config) return;
-
-    const newCfg = { ...config, ...updates };
-    setConfig(newCfg);
-    await setStorageData({ overlayConfig: newCfg });
-
-    // if user messes with warn/danger colors, update with those thresholds
-    if (updates.warnColors) setDummyTime(newCfg.thresholdWarn);
-    else if (updates.dangerColors) setDummyTime(newCfg.thresholdDanger);
-    else if (updates.colors) setDummyTime(369000);
-  }
-
-  if (loading || !config) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         Loading...
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500">{error}</div>
       </div>
     );
   }
@@ -131,14 +62,9 @@ export default function Settings() {
       </div>
 
       <div className="space-y-8">
-        <TrackedSites
-          trackedSites={trackedSites}
-          onAddSite={handleAddSite}
-          onRemoveSite={handleRemoveSite}
-        />
-
-        <OverlaySettings config={config} onConfigUpdate={updateConfig} />
-        <OverlayStyles config={config} onStyleChange={handleStyleChange} />
+        <TrackedSites />
+        <OverlaySettings />
+        <OverlayStyles />
       </div>
     </div>
   );

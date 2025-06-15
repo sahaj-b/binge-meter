@@ -1,4 +1,4 @@
-import { getStorageData, sitePatterns, type StorageData } from "@core/store";
+import { getStorageData, sitePatterns, type StorageData } from "@/core/store";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
   if (!site) {

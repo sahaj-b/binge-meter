@@ -2,53 +2,41 @@ import { useState } from "react";
 import { Button } from "@ui/button";
 import { Input } from "@ui/input";
 import { Trash2, Plus, Loader2 } from "lucide-react";
+import { useStore } from "./state";
 
-interface TrackedSitesProps {
-  trackedSites: string[];
-  onAddSite: (site: string) => Promise<void>;
-  onRemoveSite: (site: string) => Promise<void>;
-}
-
-export function TrackedSites({
-  trackedSites,
-  onAddSite,
-  onRemoveSite,
-}: TrackedSitesProps) {
+export function TrackedSites() {
   const [newSite, setNewSite] = useState("");
   const [isAddingLoading, setIsAddingLoading] = useState(false);
   const [removingLoadingSet, setRemovingLoadingSet] = useState<Set<string>>(
     new Set(),
   );
   const [error, setError] = useState<string | null>(null);
+  const trackedSites = useStore((state) => state.trackedSites);
+  const addSite = useStore((state) => state.addSite);
+  const removeSite = useStore((state) => state.removeSite);
 
-  async function addSite() {
-    if (newSite.trim() && !trackedSites.includes(newSite.trim())) {
-      setIsAddingLoading(true);
-      setError(null);
-      try {
-        await onAddSite(newSite.trim());
-        setNewSite("");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to add site");
-      } finally {
-        setIsAddingLoading(false);
-      }
-    }
+  async function handleAddSite() {
+    setIsAddingLoading(true);
+    setError(null);
+    await addSite(newSite).catch((err) => {
+      setIsAddingLoading(false);
+      setError(err instanceof Error ? err.message : "Failed to add site");
+    });
+    setNewSite("");
+    setIsAddingLoading(false);
   }
-  async function removeSite(site: string) {
+
+  async function handleRemoveSite(site: string) {
     setRemovingLoadingSet((prev) => new Set(prev).add(site));
     setError(null);
-    try {
-      await onRemoveSite(site);
-    } catch (err) {
+    await removeSite(site).catch((err) => {
       setError(err instanceof Error ? err.message : "Failed to remove site");
-    } finally {
-      setRemovingLoadingSet((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(site);
-        return newSet;
-      });
-    }
+    });
+    setRemovingLoadingSet((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(site);
+      return newSet;
+    });
   }
 
   return (
@@ -72,10 +60,14 @@ export function TrackedSites({
             className="text-sm"
             value={newSite}
             onChange={(e) => setNewSite(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addSite()}
+            onKeyDown={(e) => e.key === "Enter" && handleAddSite()}
             disabled={isAddingLoading}
           />
-          <Button onClick={addSite} size="icon" disabled={isAddingLoading}>
+          <Button
+            onClick={handleAddSite}
+            size="icon"
+            disabled={isAddingLoading}
+          >
             {isAddingLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -85,7 +77,7 @@ export function TrackedSites({
         </div>
 
         <div className="space-y-2">
-          {trackedSites.map((site) => (
+          {trackedSites?.map((site) => (
             <div
               key={site}
               className="flex items-center justify-between py-2 px-3 bg-muted/60 rounded-md"
@@ -94,7 +86,7 @@ export function TrackedSites({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => removeSite(site)}
+                onClick={() => handleRemoveSite(site)}
                 className="hover:bg-destructive/10 hover:text-destructive"
                 disabled={removingLoadingSet.has(site)}
               >

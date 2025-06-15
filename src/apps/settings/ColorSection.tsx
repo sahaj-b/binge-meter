@@ -3,31 +3,21 @@ import { Slider } from "@ui/slider";
 import { ColorInput } from "./ColorInput";
 import { extractAlphaFromHex, updateHexOpacity } from "./utils";
 import { useEffect, useState } from "react";
+import { useStore } from "./state";
 
 interface ColorSectionProps {
-  title: string;
+  type: "normal" | "warning" | "danger";
   colors: {
     fg: string;
     bg: string;
     borderColor: string;
   };
-  onColorChange: (colorKey: "fg" | "bg" | "borderColor", value: string) => void;
 }
 
-// the color handling is kinda funky
-// when loading from storage:
-// BG: extract the 'alpha' part from the hex and convert it to opacity(slider)
-// FG/border: remove the alpha part
-// when saving:
-// BG: add opacity to inputValue
-// FG/border: extract the alpha part FROM DEFAULT COLORS and append it to input value
-
-export function ColorSection({
-  title,
-  colors,
-  onColorChange,
-}: ColorSectionProps) {
+export function ColorSection({ type, colors }: ColorSectionProps) {
+  const onColorChange = useStore((state) => state.onColorChange);
   const [backgroundOpacity, setBackgroundOpacity] = useState(1);
+  const title = type.charAt(0).toUpperCase() + type.slice(1) + " Colors";
 
   useEffect(() => {
     setBackgroundOpacity(extractAlphaFromHex(colors.bg));
@@ -40,21 +30,22 @@ export function ColorSection({
         <ColorInput
           label="Text"
           value={colors.fg}
-          onChange={(value) => onColorChange("fg", value)}
+          onChange={(value) => onColorChange(type, "fg", value)}
           placeholder="#ffffff"
         />
 
         <ColorInput
           label="Background"
           value={colors.bg}
-          onChange={(value) => onColorChange("bg", value)}
+          onChange={(value) => onColorChange(type, "bg", value)}
+          opacity={backgroundOpacity}
           placeholder="#000000"
         />
 
         <ColorInput
           label="Border"
           value={colors.borderColor}
-          onChange={(value) => onColorChange("borderColor", value)}
+          onChange={(value) => onColorChange(type, "borderColor", value)}
           placeholder="#ffffff"
         />
 
@@ -64,7 +55,7 @@ export function ColorSection({
           <Slider
             value={[backgroundOpacity]}
             onValueChange={(value) => {
-              onColorChange("bg", updateHexOpacity(colors.bg, value[0]));
+              onColorChange(type, "bg", updateHexOpacity(colors.bg, value[0]));
             }}
             max={1}
             min={0}

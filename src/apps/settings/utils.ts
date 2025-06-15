@@ -1,5 +1,3 @@
-import { defaultOverlayConfig } from "@core/store";
-
 export type TimeInput = {
   hours: number;
   minutes: number;

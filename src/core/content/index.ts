@@ -22,7 +22,7 @@ chrome.runtime.onMessage.addListener(async (message: any) => {
   }
   switch (message.type) {
     case "START_TICKING":
-      await overlay.update(message.startingDuration);
+      await overlay.update(message.startingDuration, true);
       ticker.start(message.startingDuration, message.startTime);
       break;
     case "STOP_TICKING":
