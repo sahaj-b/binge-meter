@@ -1,4 +1,5 @@
-import { getStorageData, setStorageData, type OverlayConfig } from "../store";
+import { getStorageData, setStorageData } from "@/shared/store";
+import type { OverlayConfig } from "@/shared/types";
 export type Size = { width: number; height: number };
 export type Position = { left: string; top: string };
 
@@ -33,7 +34,7 @@ export async function setSizeForHost(hostname: string, size: Size) {
   });
 }
 
-export async function getConfig(fresh: Boolean = false) {
+export async function getConfig(fresh = false): Promise<OverlayConfig> {
   if (!fresh && configCache) {
     return configCache;
   }

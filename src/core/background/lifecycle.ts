@@ -1,4 +1,8 @@
-import { defaultStorageData, getStorageData, setStorageData } from "../store";
+import {
+  defaultStorageData,
+  getStorageData,
+  setStorageData,
+} from "@/shared/store";
 import { syncRegisteredScriptsForAllowedSites } from "./scripting";
 import { updateActiveSession } from "./session";
 

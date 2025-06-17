@@ -32,7 +32,7 @@ export function getValidNumber(
       if (numericValue > max) numericValue = min;
       if (numericValue < min) numericValue = max;
     }
-    
+
     // For hours, we don't pad with zeros if it's more than 2 digits
     if (max > 99) {
       return numericValue.toString();
@@ -89,7 +89,7 @@ export function millisecondsToComponents(milliseconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  
+
   return {
     hours: hours.toString().padStart(2, "0"),
     minutes: minutes.toString().padStart(2, "0"),
@@ -100,11 +100,15 @@ export function millisecondsToComponents(milliseconds: number) {
 /**
  * Convert duration components to milliseconds
  */
-export function componentsToMilliseconds(hours: string, minutes: string, seconds: string) {
+export function componentsToMilliseconds(
+  hours: string,
+  minutes: string,
+  seconds: string,
+) {
   const h = parseInt(hours, 10) || 0;
   const m = parseInt(minutes, 10) || 0;
   const s = parseInt(seconds, 10) || 0;
-  
+
   return (h * 3600 + m * 60 + s) * 1000;
 }
 
@@ -117,7 +121,7 @@ export function setDurationByType(
   type: DurationPickerType,
 ) {
   const components = millisecondsToComponents(totalMilliseconds);
-  
+
   switch (type) {
     case "hours":
       components.hours = getValidDurationHour(value);
@@ -129,16 +133,23 @@ export function setDurationByType(
       components.seconds = getValidMinuteOrSecond(value);
       break;
   }
-  
-  return componentsToMilliseconds(components.hours, components.minutes, components.seconds);
+
+  return componentsToMilliseconds(
+    components.hours,
+    components.minutes,
+    components.seconds,
+  );
 }
 
 /**
  * Get duration component value from total milliseconds
  */
-export function getDurationByType(totalMilliseconds: number, type: DurationPickerType) {
+export function getDurationByType(
+  totalMilliseconds: number,
+  type: DurationPickerType,
+) {
   const components = millisecondsToComponents(totalMilliseconds);
-  
+
   switch (type) {
     case "hours":
       return components.hours;
@@ -160,7 +171,7 @@ export function getArrowDurationByType(
   type: DurationPickerType,
 ) {
   const currentValue = getDurationByType(totalMilliseconds, type);
-  
+
   switch (type) {
     case "hours":
       return getValidArrowDurationHour(currentValue, step);

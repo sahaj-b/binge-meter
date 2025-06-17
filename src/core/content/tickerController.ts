@@ -20,14 +20,14 @@ export class TickerController {
 
     chrome.runtime.sendMessage({
       type: "DEBUG",
-      message: `STARTED rAF loop`,
+      message: "STARTED rAF loop",
     });
   }
 
   stop() {
     chrome.runtime.sendMessage({
       type: "DEBUG",
-      message: `STOPPING rAF loop`,
+      message: "STOPPING rAF loop",
     });
     if (!this.animationFrameId) return;
     cancelAnimationFrame(this.animationFrameId);

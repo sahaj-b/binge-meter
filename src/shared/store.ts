@@ -1,34 +1,9 @@
-export type StorageData = {
-  dailyTime: dailyTime;
-  overlayConfig: OverlayConfig;
-  trackedSites: string[];
-  activeSession: activeSession;
-};
-
-export type dailyTime = {
-  total: number; //ms
-  date: string;
-};
-
-export type activeSession = {
-  tabId: number;
-  startTime: number;
-} | null;
-
-export type OverlayConfig = {
-  thresholdWarn: number;
-  thresholdDanger: number;
-  // fg, bg, border
-  colors: { fg: string; bg: string; borderColor: string };
-  warnColors: { fg: string; bg: string; borderColor: string };
-  dangerColors: { fg: string; bg: string; borderColor: string };
-  defaultSize: { width: number; height: number };
-  positions: Record<string, { left: string; top: string }>;
-  sizes: Record<string, { width: number; height: number }>;
-  isHidden: boolean;
-  blur: number;
-  borderRadius: number;
-};
+import type {
+  dailyTime,
+  ProductiveRules,
+  OverlayConfig,
+  StorageData,
+} from "./types";
 
 export const defaultOverlayConfig: OverlayConfig = {
   thresholdWarn: 10 * 1000,
@@ -55,10 +30,17 @@ export const defaultDailyTime: dailyTime = {
   date: new Date().toISOString().split("T")[0],
 };
 
+export const defaultProductiveRules: ProductiveRules = {
+  urls: [],
+  ytChannels: [],
+  subreddits: [],
+};
+
 export const defaultStorageData: StorageData = {
   dailyTime: defaultDailyTime,
   overlayConfig: defaultOverlayConfig,
   trackedSites: defaultTrackedSites,
+  productiveRules: defaultProductiveRules,
   activeSession: null,
 };
 
@@ -80,11 +62,5 @@ export async function setStorageData(
   data: Partial<StorageData>,
 ): Promise<void> {
   await chrome.storage.local.set(data);
-  console.log("SAVEDDDDDDd");
-}
-
-// I know this is not the best place for defining this
-// sorry T-T
-export function sitePatterns(site: string): string[] {
-  return [`*://${site}/*`, `*://www.${site}/*`];
+  console.log("SAVED", data);
 }

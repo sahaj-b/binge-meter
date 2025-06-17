@@ -1,4 +1,4 @@
-import { getStorageData, setStorageData } from "@/core/store";
+import { getStorageData, setStorageData } from "@/shared/store";
 
 let sessionLock = Promise.resolve();
 
@@ -11,7 +11,7 @@ export function updateActiveSession(activeTabId: number | null) {
         "activeSession",
       ]);
       let newTotal = dailyTime.total;
-      if (activeSession && activeSession.startTime) {
+      if (activeSession?.startTime) {
         const elapsed = Date.now() - activeSession.startTime;
         newTotal += elapsed;
         try {

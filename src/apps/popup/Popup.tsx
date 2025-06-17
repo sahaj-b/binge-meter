@@ -117,7 +117,8 @@ const getTimeColor = (
 ) => {
   if (thresholds.danger && time >= thresholds.danger) {
     return "text-destructive";
-  } else if (thresholds.warn && time >= thresholds.warn) {
+  }
+  if (thresholds.warn && time >= thresholds.warn) {
     return "text-amber-600";
   }
   return "text-green-400";

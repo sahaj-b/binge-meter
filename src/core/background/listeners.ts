@@ -5,10 +5,13 @@ import {
   revalidateCacheForAllTabs,
   revalidateCacheForTab,
   toggleOverlays,
-} from "./scripting";
+  markDistracting,
+  markProductive,
+  handleEvaluatePage,
+} from "./messaging";
 
 export function setupListeners() {
-  // this chrome API fuckin SUCKS. can't handle focus changes outside the browser instance (for some WMs)
+  // this chrome API fuckin SUCKS. can't handle focus changes outside the browser instance (for my WM)
   // the TAB_FOCUS/TAB_BLUR messages will handle that for now
   // chrome.windows.onFocusChanged.addListener(async (windowId) => {
   //     if (windowId === chrome.windows.WINDOW_ID_NONE) {
@@ -41,7 +44,7 @@ export function setupListeners() {
         updateActiveSession(null);
         break;
       case "TOGGLE_ALL_OVERLAYS":
-        console.log(`TOGGLE_ALL_OVERLAYS received`);
+        console.log("TOGGLE_ALL_OVERLAYS received");
         toggleOverlays();
         break;
       case "REVALIDATE_ALL_OVERLAYS":
@@ -54,21 +57,11 @@ export function setupListeners() {
         if (!sender.tab?.id) return;
         revalidateCacheForTab(sender.tab.id);
         break;
-      case "CONTENT_SCRIPT_READY":
+      case "EVALUATE_PAGE":
         if (!sender.tab?.id) return;
-        console.log(
-          `CONTENT_SCRIPT_READY received from tab: ${sender.tab?.id}`,
-        );
-        chrome.tabs.query({ active: true }).then(([activeTab]) => {
-          if (!sender.tab?.id) return; // again. to stop ts from crying
-          if (activeTab?.id === sender.tab.id) {
-            updateActiveSession(sender.tab.id);
-            console.log(`Starting session for active tab: ${sender.tab.id}`);
-          }
-        });
+        handleEvaluatePage(sender.tab.id, message.metadata);
         break;
       case "ADD_SITE":
-        console.log(`ADD_SITE received for site: ${message.site}`);
         addSite(message.site)
           .then(() => {
             sendResponse({ success: true });
@@ -76,11 +69,30 @@ export function setupListeners() {
           .catch((error) => {
             sendResponse({ success: false, error: error.message });
           });
-        return true; // indicates that response will be sent
+        return true; // indicates that A RESPONSE WILL BE SENT
 
       case "REMOVE_SITE":
-        console.log(`REMOVE_SITE received for site: ${message.site}`);
         removeSite(message.site)
+          .then(() => {
+            sendResponse({ success: true });
+          })
+          .catch((error) => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+
+      case "MARK_DISTRACTING":
+        markDistracting(message.site)
+          .then(() => {
+            sendResponse({ success: true });
+          })
+          .catch((error) => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+
+      case "MARK_PRODUCTIVE":
+        markProductive(message.site)
           .then(() => {
             sendResponse({ success: true });
           })

@@ -1,5 +1,5 @@
 import { getFontSize } from "./overlay";
-import { type Position } from "./storeService";
+import type { Position } from "./storeService";
 
 export class Draggable {
   isDragging = false;

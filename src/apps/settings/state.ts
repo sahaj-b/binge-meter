@@ -2,8 +2,8 @@ import {
   defaultOverlayConfig,
   getStorageData,
   setStorageData,
-  type OverlayConfig,
-} from "@/core/store";
+} from "@/shared/store";
+import type { OverlayConfig } from "@/shared/types";
 import { create } from "zustand";
 import {
   requestSitePermission,
@@ -94,8 +94,8 @@ export const useStore = create<StoreType>()((set, get) => ({
       return {
         overlayConfig: { ...state.overlayConfig, ...updates },
       };
-    }),
-      save && (await get().saveConfig());
+    });
+    save && (await get().saveConfig());
     if (updates.thresholdWarn || updates.thresholdDanger) {
       set((state) => ({
         dummyTime: state.getDefaultDummyTime(),

@@ -36,7 +36,7 @@ export default function Settings() {
       overlay.destroy();
       window.removeEventListener("focus", fetchSettings);
     };
-  }, []);
+  }, [fetchSettings, updateConfig]);
 
   if (loading) {
     return (
@@ -47,7 +47,7 @@ export default function Settings() {
   }
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="items-center justify-center flex min-h-screen">
         <div className="text-red-500">{error}</div>
       </div>
     );
@@ -55,7 +55,7 @@ export default function Settings() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="items-center justify-between mb-8 flex ">
         <div>
           <h1 className="text-2xl font-bold">Binge Meter Settings</h1>
         </div>

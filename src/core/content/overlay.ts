@@ -1,4 +1,4 @@
-import type { OverlayConfig } from "../store";
+import type { OverlayConfig } from "@/shared/types";
 import { Draggable, Resizable } from "./events";
 import {
   getConfig,
@@ -51,7 +51,7 @@ export class OverlayUI {
       return;
     }
 
-    chrome.runtime.sendMessage({ type: "DEBUG", message: `Creating overlay` });
+    chrome.runtime.sendMessage({ type: "DEBUG", message: "Creating overlay" });
     // had to add !important. Thanks to Dark Reader for trying to murder my beloved colors.
     this.element = document.createElement("div");
     this.element.id = "binge-meter-overlay";
@@ -146,6 +146,7 @@ export class OverlayUI {
 
     this.element.style.fontSize = `${getFontSize(this.element.offsetWidth, this.element.offsetHeight)}px`;
     overlayConfig = overlayConfig ?? (await getConfig());
+    if (!overlayConfig) return;
     this.setStyles(overlayConfig);
     this.setThresholdColors(overlayConfig, totalMs, forceUpdateColors);
   }

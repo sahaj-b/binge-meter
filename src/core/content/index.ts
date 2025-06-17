@@ -1,11 +1,13 @@
+import { monkeyPatchNavigation } from "./monkeyPatchNavigation";
 import { OverlayUI } from "./overlay";
+import { getMetadata } from "./scraper";
 import { revalidateCache } from "./storeService";
 import { TickerController } from "./tickerController";
 
 const overlay = new OverlayUI(document.body, window.location.hostname);
 const ticker = new TickerController(overlay);
 
-let isSleeping = false;
+let isActivated = true;
 
 // see comments in background/listeners.ts to understand this shitshow
 window.addEventListener("blur", () => {
@@ -16,8 +18,17 @@ window.addEventListener("focus", () => {
   chrome.runtime.sendMessage({ type: "TAB_FOCUS" });
 });
 
+if ("navigation" in window) {
+  (window.navigation as any).addEventListener("navigate", handleNavigation);
+} else {
+  console.warn(
+    "Navigation API not supported in this browser. Falling back to monkey-patching history API",
+  );
+  monkeyPatchNavigation(sendEvalMsg);
+}
+
 chrome.runtime.onMessage.addListener(async (message: any) => {
-  if (isSleeping && message.type !== "WAKE_UP") {
+  if (!isActivated && message.type !== "ACTIVATE_OVERLAY") {
     return;
   }
   switch (message.type) {
@@ -43,24 +54,41 @@ chrome.runtime.onMessage.addListener(async (message: any) => {
       await overlay.create();
       await overlay.update(message.time);
       break;
-    case "SLEEP":
+    case "DEACTIVATE_OVERLAY":
       overlay.destroy();
       ticker.stop();
-      isSleeping = true;
-      console.log("I AM DEAF AF");
+      isActivated = false;
       break;
 
-    case "WAKE_UP":
-      isSleeping = false;
-      console.log("I CAN LISTEN AGAIN");
-      await sendInitMessage();
+    case "ACTIVATE_OVERLAY":
+    case "RE-INITIALIZE_OVERLAY":
+      isActivated = true;
+      await sendEvalMsg();
       break;
     default:
       break;
   }
 });
 
-export async function sendInitMessage() {
-  await chrome.runtime.sendMessage({ type: "CONTENT_SCRIPT_READY" });
+function handleNavigation(event: any) {
+  if (
+    event.navigationType === "reload" ||
+    event.destination.url === window.location.href
+  ) {
+    return;
+  }
+  event.finished.then(() => {
+    sendEvalMsg();
+  });
 }
-sendInitMessage();
+
+async function sendEvalMsg() {
+  const metadata = getMetadata();
+  await chrome.runtime.sendMessage({ type: "DEBUG", message: metadata });
+  await chrome.runtime.sendMessage({
+    type: "EVALUATE_PAGE",
+    metadata,
+  });
+}
+
+sendEvalMsg();

@@ -1,4 +1,6 @@
-import { getStorageData, sitePatterns, type StorageData } from "@/core/store";
+import { getStorageData } from "@/shared/store";
+import { sitePatterns } from "@/shared/utils";
+import type { StorageData } from "@/shared/types";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
   if (!site) {
@@ -21,7 +23,7 @@ export async function requestSitePermission(site: string) {
   }
 
   const granted = await chrome.permissions.request(permissionsToRequest);
-  if (!granted) throw new Error(`Permission denied by user`);
+  if (!granted) throw new Error("Permission denied by user");
 }
 
 export async function loadStorageData() {
