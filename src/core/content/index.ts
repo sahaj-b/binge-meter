@@ -27,11 +27,16 @@ if ("navigation" in window) {
   monkeyPatchNavigation(sendEvalMsg);
 }
 
-chrome.runtime.onMessage.addListener(async (message: any) => {
+chrome.runtime.onMessage.addListener(async (message: any, sender, sendResponse) => {
   if (!isActivated && message.type !== "ACTIVATE_OVERLAY") {
     return;
   }
   switch (message.type) {
+    case "SEND_METADATA":
+      chrome.runtime.sendMessage({ type: "DEBUG", message: "SENDING METADATA" });
+      sendResponse({ metadata: getMetadata() });
+      return true;
+
     case "START_TICKING":
       await overlay.update(message.startingDuration, true);
       ticker.start(message.startingDuration, message.startTime);

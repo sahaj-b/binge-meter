@@ -1,9 +1,15 @@
-import type { Metadata, RedditMetadata, youtubeMetadata } from "@/shared/types";
+import type {
+  Metadata,
+  PageMeta,
+  RedditMetadata,
+  youtubeMetadata,
+} from "@/shared/types";
 
 export function getMetadata(): Metadata {
   const metadata: Metadata = {
     title: document.title,
     url: window.location.href,
+    pageMeta: scrapePageMeta(),
   };
   if (
     metadata.url.includes("youtube.com/watch") ||
@@ -14,6 +20,18 @@ export function getMetadata(): Metadata {
     metadata.reddit = getRedditMetadata(metadata);
   }
   return metadata;
+}
+
+function scrapePageMeta(): PageMeta {
+  return {
+    description: getContent('meta[name="description"]'),
+    ogTitle: getContent('meta[property="og:title"]'),
+    ogDescription: getContent('meta[property="og:description"]'),
+    ogType: getContent('meta[property="og:type"]'),
+    ogSiteName: getContent('meta[property="og:site_name"]'),
+    keywords: getContent('meta[name="keywords"]'),
+    h1: document.querySelector("h1")?.textContent?.trim() || null,
+  };
 }
 
 function getYoutubeMetadata(metadata: Metadata): youtubeMetadata {
@@ -41,4 +59,11 @@ function getRedditMetadata(metadata: Metadata): RedditMetadata {
     subreddit: metadata.url.match(/\/r\/([^/]+)/)?.[1],
     postTitle: metadata.title,
   };
+}
+
+function getContent(selector: string, attribute = "content"): string | null {
+  const element = document.querySelector<HTMLMetaElement>(selector);
+  return element
+    ? element.getAttribute(attribute) || element.textContent
+    : null;
 }

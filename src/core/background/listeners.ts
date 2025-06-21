@@ -5,9 +5,9 @@ import {
   revalidateCacheForAllTabs,
   revalidateCacheForTab,
   toggleOverlays,
-  markDistracting,
-  markProductive,
   handleEvaluatePage,
+  addProductiveRule,
+  removeProductiveRule,
 } from "./messaging";
 
 export function setupListeners() {
@@ -81,8 +81,8 @@ export function setupListeners() {
           });
         return true;
 
-      case "MARK_DISTRACTING":
-        markDistracting(message.site)
+      case "REMOVE_PRODUCTIVE_RULE":
+        removeProductiveRule(message.rule)
           .then(() => {
             sendResponse({ success: true });
           })
@@ -91,8 +91,8 @@ export function setupListeners() {
           });
         return true;
 
-      case "MARK_PRODUCTIVE":
-        markProductive(message.site)
+      case "ADD_PRODUCTIVE_RULE":
+        addProductiveRule(message.rule)
           .then(() => {
             sendResponse({ success: true });
           })
@@ -112,7 +112,8 @@ export function setupListeners() {
   });
 
   // not needed, but good for instantly start session without waiting for TAB_FOCUS msg
-  chrome.tabs.onActivated.addListener((activeInfo) => {
-    updateActiveSession(activeInfo.tabId);
-  });
+  // but it saves on EVERY tab activation, so it can be a bit spammy
+  // chrome.tabs.onActivated.addListener((activeInfo) => {
+  //   updateActiveSession(activeInfo.tabId);
+  // });
 }

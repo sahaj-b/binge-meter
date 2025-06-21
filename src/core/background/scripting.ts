@@ -17,22 +17,28 @@ export async function syncRegisteredScriptsForAllowedSites() {
     sitePatterns(site).some((pattern) => allowedOrigins.has(pattern)),
   );
 
-  if (sitesWithPermissions.length !== trackedSites.length) {
+  if (sitesWithPermissions.length < trackedSites.length) {
     await setStorageData({ trackedSites: sitesWithPermissions });
   }
+  console.log("sitesWithPermissions", sitesWithPermissions);
+  console.log("trackedSites", trackedSites);
 
   const registered = await chrome.scripting.getRegisteredContentScripts();
+  console.log("registered", registered);
   const registeredIds = registered.map((s) => s.id);
+  console.log("registeredIds", registeredIds);
 
   const scriptsToRegister = sitesWithPermissions.filter(
     (site) => !registeredIds.includes(site),
   );
+  console.log("scriptsToRegister", scriptsToRegister);
   await injectContentScriptToAllTabs(scriptsToRegister);
   await registerContentScript(scriptsToRegister);
 
   const idsToUnregister = registeredIds.filter(
     (site) => !sitesWithPermissions.includes(site),
   );
+  console.log("idsToUnregister", idsToUnregister);
   if (idsToUnregister.length > 0) {
     await chrome.scripting.unregisterContentScripts({ ids: idsToUnregister });
   }
@@ -54,6 +60,7 @@ export async function registerContentScript(site: string | string[]) {
 }
 
 export async function injectContentScriptToAllTabs(site: string | string[]) {
+  if (!site.length) return;
   const sites = Array.isArray(site) ? site : [site];
   const allSitePatterns = sites.flatMap((s) => sitePatterns(s));
   const tabs = await chrome.tabs.query({
@@ -64,6 +71,7 @@ export async function injectContentScriptToAllTabs(site: string | string[]) {
 
 export async function injectContentScript(tabId?: number) {
   if (!tabId) return;
+  console.log("trying to inject content script in", tabId);
   try {
     await chrome.scripting.executeScript({
       target: { tabId },

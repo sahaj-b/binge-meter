@@ -1,10 +1,15 @@
 import { getStorageData, setStorageData } from "@/shared/store";
 import { sitePatterns } from "@/shared/utils";
-import type { Message, Metadata, ProductiveRulesInput } from "@/shared/types";
+import type {
+  Message,
+  Metadata,
+  ProductiveRules,
+  ProductiveRulesInput,
+} from "@/shared/types";
 
 import { injectContentScript, registerContentScript } from "./scripting";
 import { updateActiveSession } from "./session";
-import { isDistracting } from "./classification";
+import { getClassification } from "./classification";
 
 export async function checkSitePermission(site: string) {
   const permissionsToRequest = {
@@ -104,51 +109,15 @@ export async function toggleOverlays() {
   );
 }
 
-export async function markDistracting(url: string) {
-  const [activeTab] = await chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  });
-  if (activeTab.url?.includes(url)) updateActiveSession(null);
-
-  await sendMsgToAllTabs(url, { type: "DEACTIVATE_OVERLAY" });
-
-  const { productiveRules } = await getStorageData(["productiveRules"]);
-  await setStorageData({
-    productiveRules: {
-      ...productiveRules,
-      urls: productiveRules.urls.filter((u) => u !== url),
-    },
-  });
-}
-
-export async function markProductive(url: string) {
-  const [activeTab] = await chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  });
-  if (activeTab.id && activeTab.url?.includes(url))
-    updateActiveSession(activeTab.id);
-
-  await sendMsgToAllTabs(url, { type: "ACTIVATE_OVERLAY" });
-
-  const { productiveRules } = await getStorageData(["productiveRules"]);
-  await setStorageData({
-    productiveRules: {
-      ...productiveRules,
-      urls: [...productiveRules.urls, url],
-    },
-  });
-}
-
 export async function handleEvaluatePage(
   tabId: number,
   metadata: Metadata | null,
 ) {
   console.log(`Evaluating page for tab ${tabId}`, metadata);
-  const distracting = metadata ? await isDistracting(metadata) : false;
-  console.log(`Page is ${distracting ? "distracting" : "PRODUCTIVE"}`);
-  if (distracting) {
+  const classification =
+    (metadata && (await getClassification(metadata))) || false;
+  console.log(`Page is ${classification}`);
+  if (classification === "distracting") {
     await chrome.tabs
       .query({ active: true, currentWindow: true })
       .then(([activeTab]) => {
@@ -163,21 +132,32 @@ export async function handleEvaluatePage(
 
 export async function addProductiveRule(rule: ProductiveRulesInput) {
   const { productiveRules } = await getStorageData(["productiveRules"]);
+  let changed = false;
 
   for (const [key, value] of Object.entries(rule)) {
-    const k = key as keyof ProductiveRulesInput;
-    if (productiveRules[k] !== undefined && Array.isArray(productiveRules[k])) {
-      productiveRules[k].push(value);
+    const singularKey = key as keyof ProductiveRulesInput;
+    const pluralKey = (singularKey + "s") as keyof ProductiveRules;
+
+    if (
+      productiveRules[pluralKey] &&
+      Array.isArray(productiveRules[pluralKey])
+    ) {
+      productiveRules[pluralKey].push(value);
+      changed = true;
     }
   }
 
+  if (!changed) throw new Error("No valid rule provided to add");
+
   await setStorageData({ productiveRules });
 
-  const ruleKeys = Object.keys(rule);
-
-  if (ruleKeys.length === 1 && ruleKeys[0] === "urls") {
-    for (const url of rule.urls!) {
-      await sendMsgToAllTabs(url, { type: "ACTIVATE_OVERLAY" });
+  if (rule.url) {
+    const tabs = await chrome.tabs.query({ url: rule.url });
+    for (const tab of tabs) {
+      if (tab.id)
+        await chrome.tabs.sendMessage(tab.id, {
+          type: "RE-INITIALIZE_OVERLAY",
+        });
     }
   } else {
     await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
@@ -186,22 +166,28 @@ export async function addProductiveRule(rule: ProductiveRulesInput) {
 
 export async function removeProductiveRule(rule: ProductiveRulesInput) {
   const { productiveRules } = await getStorageData(["productiveRules"]);
+  let changed = false;
 
   for (const [key, value] of Object.entries(rule)) {
-    const k = key as keyof ProductiveRulesInput;
-    if (productiveRules[k] !== undefined && Array.isArray(productiveRules[k])) {
-      productiveRules[k] = productiveRules[k].filter((item) => item !== value);
+    const singularKey = key as keyof ProductiveRulesInput;
+    const pluralKey = (singularKey + "s") as keyof ProductiveRules;
+    if (
+      productiveRules[pluralKey] &&
+      Array.isArray(productiveRules[pluralKey])
+    ) {
+      const index = productiveRules[pluralKey].indexOf(value);
+      if (index !== -1) {
+        productiveRules[pluralKey].splice(index, 1);
+        changed = true;
+      }
     }
   }
+  if (!changed) throw new Error("No matching rule found to remove");
 
   await setStorageData({ productiveRules });
 
-  const ruleKeys = Object.keys(rule);
-
-  if (ruleKeys.length === 1 && ruleKeys[0] === "urls") {
-    for (const url of rule.urls!) {
-      await sendMsgToAllTabs(url, { type: "DEACTIVATE_OVERLAY" });
-    }
+  if (rule.url) {
+    await sendMsgToAllTabs(rule.url!, { type: "DEACTIVATE_OVERLAY" });
   } else {
     await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
   }

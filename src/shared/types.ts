@@ -12,12 +12,11 @@ export type ProductiveRules = {
   subreddits: string[];
 };
 
+type SingularizeKey<T extends string> = T extends `${infer U}s` ? U : T;
+
 export type ProductiveRulesInput = Partial<{
-  [K in keyof ProductiveRules]: ProductiveRules[K] extends (infer U)[]
-    ? U
-    : ProductiveRules[K];
-}>;
-// {urls: string, ytChannels: string, subreddits: string}
+  [K in keyof ProductiveRules as SingularizeKey<K>]: ProductiveRules[K][number];
+}>; // {url?: string, ytChannel?: string, subreddit?: string, etc..}
 
 export type dailyTime = {
   total: number; //ms
@@ -49,6 +48,16 @@ export type Message = {
   site?: string;
   metadata?: any;
   time?: number;
+  rule?: string;
+};
+export type PageMeta = {
+  description?: string | null;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogType?: string | null;
+  ogSiteName?: string | null;
+  keywords?: string | null;
+  h1?: string | null;
 };
 
 export type youtubeMetadata = {
@@ -65,8 +74,9 @@ export type RedditMetadata = {
 };
 
 export type Metadata = {
-  title: string;
   url: string;
+  title?: string;
+  pageMeta?: PageMeta | null;
   youtube?: youtubeMetadata | null;
   reddit?: RedditMetadata | null;
 };

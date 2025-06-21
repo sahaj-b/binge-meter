@@ -3,14 +3,16 @@ import { Button } from "@ui/button";
 import { Switch } from "@ui/switch";
 import { Label } from "@ui/label";
 import { Settings, BarChart3 } from "lucide-react";
+import type { Metadata, ProductiveRules } from "@/shared/types";
 import {
   loadStorageData,
-  getCurrentTabSite,
   sendToggleMessage,
   openSettingsPage,
   openAnalyticsPage,
+  getCurrentTab,
 } from "../lib/browserService";
 import CurrentSiteTracker from "./CurrentSiteTracker";
+import { ClassificationSection } from "./ClassificationSection";
 
 export default function Popup() {
   const [dailyTime, setDailyTime] = useState(0);
@@ -21,8 +23,11 @@ export default function Popup() {
     warn: number | null;
     danger: number | null;
   });
+  const [metadata, setMetadata] = useState<Metadata | null>(null);
+  useState<ProductiveRules | null>(null);
 
   useEffect(() => {
+    let trackedSites: string[] = [];
     async function initializeData() {
       try {
         const data = await loadStorageData();
@@ -30,22 +35,52 @@ export default function Popup() {
         setOverlayHidden(data.overlayHidden);
         setThresholds(data.thresholds);
         setTrackedSites(data.trackedSites);
+        trackedSites = data.trackedSites || [];
       } catch (error) {
         console.error("Failed to load data:", error);
       }
     }
 
     async function initializeCurrentTab() {
+      console.log("Initializing current tab...");
       try {
-        const site = await getCurrentTabSite();
+        const tab = await getCurrentTab();
+        if (!tab.url) {
+          console.warn("No active tab found or tab URL is empty.");
+          return;
+        }
+        const url = new URL(tab.url || "");
+        const site = url.hostname;
         setCurrentSite(site);
+
+        if (site && trackedSites.includes(site)) {
+          const path = url.pathname;
+          console.log("Tracked site found:", site + path);
+          if (
+            (site.endsWith("youtube.com") &&
+              (path.startsWith("/watch") || path.startsWith("/@"))) ||
+            (site.endsWith("reddit.com") && path.startsWith("/r/"))
+          ) {
+            console.log("Sending message to content script for metadata");
+            if (tab.id) {
+              const response = await chrome.tabs.sendMessage(tab.id, {
+                type: "SEND_METADATA",
+              });
+              console.log("RESPONSE", response);
+              if (response?.metadata) {
+                setMetadata(response.metadata);
+              }
+            }
+          }
+        }
       } catch (error) {
         console.error("Failed to get current tab:", error);
       }
     }
 
-    initializeData();
-    initializeCurrentTab();
+    initializeData().then(() => {
+      initializeCurrentTab();
+    });
   }, []);
 
   function handleToggleOverlay() {
@@ -81,6 +116,10 @@ export default function Popup() {
           trackedSites={trackedSites}
           setTrackedSites={setTrackedSites}
         />
+
+        {trackedSites.includes(currentSite) && (
+          <ClassificationSection metadata={metadata} currentSite={currentSite} />
+        )}
 
         <div className="flex space-x-4 items-center justify-center">
           <Button

@@ -28,11 +28,13 @@ export async function requestSitePermission(site: string) {
 
 export async function loadStorageData() {
   try {
-    const { trackedSites, dailyTime, overlayConfig } = (await getStorageData([
-      "dailyTime",
-      "overlayConfig",
-      "trackedSites",
-    ])) as StorageData;
+    const { trackedSites, dailyTime, overlayConfig, productiveRules } =
+      (await getStorageData([
+        "dailyTime",
+        "overlayConfig",
+        "trackedSites",
+        "productiveRules",
+      ])) as StorageData;
 
     return {
       dailyTime: dailyTime?.total ?? 0,
@@ -42,6 +44,7 @@ export async function loadStorageData() {
         danger: overlayConfig?.thresholdDanger ?? null,
       },
       trackedSites: trackedSites ?? [],
+      productiveRules: productiveRules ?? [],
     };
   } catch (error) {
     console.error("Failed to load data:", error);
@@ -49,17 +52,13 @@ export async function loadStorageData() {
   }
 }
 
-export async function getCurrentTabSite() {
+export async function getCurrentTab() {
   try {
     const [tab] = await chrome.tabs.query({
       active: true,
       currentWindow: true,
     });
-    if (tab.url) {
-      const url = new URL(tab.url);
-      return url.hostname;
-    }
-    return "";
+    return tab;
   } catch (error) {
     console.error("Failed to get current tab:", error);
     throw error;
@@ -102,4 +101,48 @@ export async function sendRemoveSiteMessage(site: string) {
   } else {
     throw new Error(response?.error ?? "Unknown error occurred");
   }
+}
+
+export async function markPageAsProductive(target: string) {
+  // Determine the type of rule based on the target
+  let rule: any = {};
+
+  if (target.startsWith("http")) {
+    rule = { url: target };
+  } else if (target.startsWith("UC") || target.length === 24) {
+    // YouTube channel ID format
+    rule = { ytChannel: target };
+  } else {
+    // Assume it's a subreddit name
+    rule = { subreddit: target };
+  }
+
+  const response = await chrome.runtime.sendMessage({
+    type: "ADD_PRODUCTIVE_RULE",
+    rule,
+  });
+  if (!response?.success)
+    throw new Error(response?.error ?? "Unknown error occurred");
+}
+
+export async function markPageAsDistracting(target: string) {
+  // Determine the type of rule based on the target
+  let rule: any = {};
+
+  if (target.startsWith("http")) {
+    rule = { url: target };
+  } else if (target.startsWith("UC") || target.length === 24) {
+    // YouTube channel ID format
+    rule = { ytChannel: target };
+  } else {
+    // Assume it's a subreddit name
+    rule = { subreddit: target };
+  }
+
+  const response = await chrome.runtime.sendMessage({
+    type: "REMOVE_PRODUCTIVE_RULE",
+    rule,
+  });
+  if (!response?.success)
+    throw new Error(response?.error ?? "Unknown error occurred");
 }
