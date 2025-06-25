@@ -73,7 +73,9 @@ export async function addSite(site: string) {
   for (const tab of tabs) {
     if (tab.id) {
       try {
-        await chrome.tabs.sendMessage(tab.id, { type: "ACTIVATE_OVERLAY" });
+        await chrome.tabs.sendMessage(tab.id, {
+          type: "RE-INITIALIZE_OVERLAY",
+        });
         console.log(
           `Sent ACTIVATE_OVERLAY to already-injected script in tab ${tab.id}`,
         );
@@ -115,7 +117,7 @@ export async function handleEvaluatePage(
 ) {
   console.log(`Evaluating page for tab ${tabId}`, metadata);
   const classification =
-    (metadata && (await getClassification(metadata))) || false;
+    (metadata && (await getClassification(metadata))) || "distracting";
   console.log(`Page is ${classification}`);
   if (classification === "distracting") {
     await chrome.tabs
@@ -148,20 +150,12 @@ export async function addProductiveRule(rule: ProductiveRulesInput) {
   }
 
   if (!changed) throw new Error("No valid rule provided to add");
-
+  console.log("SETTING", productiveRules);
   await setStorageData({ productiveRules });
 
-  if (rule.url) {
-    const tabs = await chrome.tabs.query({ url: rule.url });
-    for (const tab of tabs) {
-      if (tab.id)
-        await chrome.tabs.sendMessage(tab.id, {
-          type: "RE-INITIALIZE_OVERLAY",
-        });
-    }
-  } else {
-    await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
-  }
+  if (rule.url)
+    await sendMsgToAllTabs(rule.url, { type: "RE-INITIALIZE_OVERLAY" });
+  else await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
 }
 
 export async function removeProductiveRule(rule: ProductiveRulesInput) {
@@ -184,13 +178,12 @@ export async function removeProductiveRule(rule: ProductiveRulesInput) {
   }
   if (!changed) throw new Error("No matching rule found to remove");
 
+  console.log("SETTING", productiveRules);
   await setStorageData({ productiveRules });
 
-  if (rule.url) {
-    await sendMsgToAllTabs(rule.url!, { type: "DEACTIVATE_OVERLAY" });
-  } else {
-    await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
-  }
+  if (rule.url)
+    await sendMsgToAllTabs(rule.url, { type: "RE-INITIALIZE_OVERLAY" });
+  else await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
 }
 
 export async function sendMsgToAllTabs(url: string, message: any) {
@@ -199,6 +192,7 @@ export async function sendMsgToAllTabs(url: string, message: any) {
     if (tab.id) {
       try {
         await chrome.tabs.sendMessage(tab.id, message);
+        console.log(`Sent ${message.type} to tab ${tab.id}`);
       } catch (e) {
         console.error(`Error sending ${message.type} to tab ${tab.id}:`, e);
       }

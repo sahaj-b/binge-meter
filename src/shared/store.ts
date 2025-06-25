@@ -62,5 +62,5 @@ export async function setStorageData(
   data: Partial<StorageData>,
 ): Promise<void> {
   await chrome.storage.local.set(data);
-  console.log("SAVED", data);
+  // console.log("SAVED", data);
 }

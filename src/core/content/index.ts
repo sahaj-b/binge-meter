@@ -1,4 +1,4 @@
-import { monkeyPatchNavigation } from "./monkeyPatchNavigation";
+import { setupNavigation } from "./navigation";
 import { OverlayUI } from "./overlay";
 import { getMetadata } from "./scraper";
 import { revalidateCache } from "./storeService";
@@ -18,26 +18,39 @@ window.addEventListener("focus", () => {
   chrome.runtime.sendMessage({ type: "TAB_FOCUS" });
 });
 
-if ("navigation" in window) {
-  (window.navigation as any).addEventListener("navigate", handleNavigation);
-} else {
-  console.warn(
-    "Navigation API not supported in this browser. Falling back to monkey-patching history API",
-  );
-  monkeyPatchNavigation(sendEvalMsg);
-}
+setupNavigation((url) => {
+  chrome.runtime.sendMessage({ type: "URL_ONLY_EVALUATE", url });
+}, sendEvalMsg);
 
-chrome.runtime.onMessage.addListener(async (message: any, sender, sendResponse) => {
-  if (!isActivated && message.type !== "ACTIVATE_OVERLAY") {
+chrome.runtime.onMessage.addListener(async (message: any, _, sendResponse) => {
+  if (
+    !isActivated &&
+    message.type !== "RE-INITIALIZE_OVERLAY" &&
+    message.type !== "SEND_METADATA"
+  )
     return;
-  }
+  chrome.runtime.sendMessage({
+    type: "DEBUG",
+    message: message.type,
+  });
   switch (message.type) {
-    case "SEND_METADATA":
-      chrome.runtime.sendMessage({ type: "DEBUG", message: "SENDING METADATA" });
-      sendResponse({ metadata: getMetadata() });
+    case "SEND_METADATA": {
+      console.log("SEND_METADATA RECEIVED");
+      chrome.runtime.sendMessage({
+        type: "DEBUG",
+        message: "SEND_METADATA RECEIVED",
+      });
+      const metadata = await getMetadata();
+      chrome.runtime.sendMessage({
+        type: "DEBUG",
+        message: "SENDING METADATA" + JSON.stringify(metadata),
+      });
+      sendResponse({ metadata: metadata });
       return true;
+    }
 
     case "START_TICKING":
+      await overlay.create();
       await overlay.update(message.startingDuration, true);
       ticker.start(message.startingDuration, message.startTime);
       break;
@@ -67,6 +80,7 @@ chrome.runtime.onMessage.addListener(async (message: any, sender, sendResponse) 
 
     case "ACTIVATE_OVERLAY":
     case "RE-INITIALIZE_OVERLAY":
+      chrome.runtime.sendMessage({ type: "DEBUG", message: "RE-INITIALIZING" });
       isActivated = true;
       await sendEvalMsg();
       break;
@@ -75,21 +89,8 @@ chrome.runtime.onMessage.addListener(async (message: any, sender, sendResponse) 
   }
 });
 
-function handleNavigation(event: any) {
-  if (
-    event.navigationType === "reload" ||
-    event.destination.url === window.location.href
-  ) {
-    return;
-  }
-  event.finished.then(() => {
-    sendEvalMsg();
-  });
-}
-
 async function sendEvalMsg() {
-  const metadata = getMetadata();
-  await chrome.runtime.sendMessage({ type: "DEBUG", message: metadata });
+  const metadata = await getMetadata();
   await chrome.runtime.sendMessage({
     type: "EVALUATE_PAGE",
     metadata,

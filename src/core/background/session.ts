@@ -14,11 +14,11 @@ export function updateActiveSession(activeTabId: number | null) {
       if (activeSession?.startTime) {
         const elapsed = Date.now() - activeSession.startTime;
         newTotal += elapsed;
-        try {
-          await chrome.tabs.sendMessage(activeSession.tabId, {
+        await chrome.tabs
+          .sendMessage(activeSession.tabId, {
             type: "STOP_TICKING",
-          });
-        } catch (e) {}
+          })
+          .catch();
       }
       if (activeTabId !== null) {
         try {
@@ -33,10 +33,12 @@ export function updateActiveSession(activeTabId: number | null) {
               activeSession: newSession,
             });
             await sendStartTicking(activeTabId, newTotal, newSession.startTime);
+            console.log("STARTING SESSION FOR TAB", activeTabId);
             return;
           }
         } catch (e) {}
       }
+      console.log("STOPPING SESSION");
       await setStorageData({
         dailyTime: { ...dailyTime, total: newTotal },
         activeSession: null,
@@ -54,9 +56,11 @@ export async function sendStartTicking(
   startDuration: number,
   startTime: number,
 ) {
-  await chrome.tabs.sendMessage(tabid, {
-    type: "START_TICKING",
-    startingDuration: startDuration,
-    startTime: startTime,
-  });
+  await chrome.tabs
+    .sendMessage(tabid, {
+      type: "START_TICKING",
+      startingDuration: startDuration,
+      startTime: startTime,
+    })
+    .catch();
 }

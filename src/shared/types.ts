@@ -48,7 +48,7 @@ export type Message = {
   site?: string;
   metadata?: any;
   time?: number;
-  rule?: string;
+  rule?: ProductiveRulesInput;
 };
 export type PageMeta = {
   description?: string | null;
@@ -60,12 +60,11 @@ export type PageMeta = {
   h1?: string | null;
 };
 
-export type youtubeMetadata = {
+export type YoutubeMetadata = {
   videoId?: string | null;
   videoTitle?: string | null;
   channelId?: string | null;
   channelName?: string | null;
-  descriptionSnippet?: string | null;
 };
 
 export type RedditMetadata = {
@@ -77,6 +76,6 @@ export type Metadata = {
   url: string;
   title?: string;
   pageMeta?: PageMeta | null;
-  youtube?: youtubeMetadata | null;
+  youtube?: YoutubeMetadata | null;
   reddit?: RedditMetadata | null;
 };

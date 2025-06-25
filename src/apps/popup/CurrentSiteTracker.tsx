@@ -7,7 +7,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@ui/tooltip";
-import { Plus, Minus, Loader2, ShieldAlert, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Loader2,
+  ShieldAlert,
+  AlertCircle,
+  HelpCircle,
+} from "lucide-react";
 import {
   sendAddSiteMessage,
   checkSitePermission,
@@ -93,13 +100,32 @@ export default function CurrentSiteTracker({
       <div className="flex space-x-5 items-center justify-between">
         <div className="max-w-44 w-full overflow-hidden">
           <p className="text-sm font-medium">{formatSite(currentSite)}</p>
-          <p
-            className={`text-xs ${
-              isCurrentSiteTracked ? "text-green-300" : "text-primary"
-            }`}
-          >
-            {isCurrentSiteTracked ? "Tracked" : "Not tracked"}
-          </p>
+          <div className="flex items-center gap-1">
+            <p
+              className={`text-xs text-nowrap ${
+                isCurrentSiteTracked ? "text-green-400" : "text-primary"
+              }`}
+            >
+              {isCurrentSiteTracked ? "Tracked" : "Not tracked"}
+            </p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle
+                    size={12}
+                    className="text-muted-foreground hover:text-foreground cursor-help"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {isCurrentSiteTracked
+                      ? "Extension is active on this site"
+                      : "Extension is inactive on this site"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           {error && (
             <div className="flex items-start mt-1 text-xs text-destructive leading-tight">
               <AlertCircle size={12} className="mr-1 shrink-0 mt-0.5" />

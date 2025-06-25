@@ -17,7 +17,7 @@ import { ClassificationSection } from "./ClassificationSection";
 export default function Popup() {
   const [dailyTime, setDailyTime] = useState(0);
   const [overlayHidden, setOverlayHidden] = useState(false);
-  const [currentSite, setCurrentSite] = useState("");
+  const [activeURL, setActiveURL] = useState<URL | null>(null);
   const [trackedSites, setTrackedSites] = useState<string[]>([]);
   const [thresholds, setThresholds] = useState({ warn: 0, danger: 0 } as {
     warn: number | null;
@@ -51,7 +51,7 @@ export default function Popup() {
         }
         const url = new URL(tab.url || "");
         const site = url.hostname;
-        setCurrentSite(site);
+        setActiveURL(url);
 
         if (site && trackedSites.includes(site)) {
           const path = url.pathname;
@@ -61,8 +61,8 @@ export default function Popup() {
               (path.startsWith("/watch") || path.startsWith("/@"))) ||
             (site.endsWith("reddit.com") && path.startsWith("/r/"))
           ) {
-            console.log("Sending message to content script for metadata");
             if (tab.id) {
+              console.log("sending SEND_METADATA to tab", tab.id);
               const response = await chrome.tabs.sendMessage(tab.id, {
                 type: "SEND_METADATA",
               });
@@ -92,7 +92,7 @@ export default function Popup() {
     <div className="p-6">
       <div className="space-y-6">
         <div className="text-center">
-          <p className="text-sm mb-2">Today's Binge Time</p>
+          <p className="text-xl mb-2">Today's Binge Time</p>
           <p
             className={`text-3xl font-bold ${getTimeColor(dailyTime, thresholds)}`}
           >
@@ -112,13 +112,15 @@ export default function Popup() {
         </div>
 
         <CurrentSiteTracker
-          currentSite={currentSite}
+          currentSite={activeURL?.hostname || ""}
           trackedSites={trackedSites}
           setTrackedSites={setTrackedSites}
         />
 
-        {trackedSites.includes(currentSite) && (
-          <ClassificationSection metadata={metadata} currentSite={currentSite} />
+        {trackedSites.includes(activeURL?.hostname || "") && (
+          <ClassificationSection
+            metadata={metadata ?? { url: activeURL?.href ?? "" }}
+          />
         )}
 
         <div className="flex space-x-4 items-center justify-center">
@@ -155,10 +157,10 @@ const getTimeColor = (
   thresholds: { warn: number | null; danger: number | null },
 ) => {
   if (thresholds.danger && time >= thresholds.danger) {
-    return "text-destructive";
+    return "text-destructive/80";
   }
   if (thresholds.warn && time >= thresholds.warn) {
-    return "text-amber-600";
+    return "text-primary";
   }
   return "text-green-400";
 };

@@ -11,7 +11,7 @@ import {
 } from "./messaging";
 
 export function setupListeners() {
-  // this chrome API fuckin SUCKS. can't handle focus changes outside the browser instance (for my WM)
+  // this chrome API fuckin SUCKS. can't handle focus changes outside the browser instance (for my WM atleast)
   // the TAB_FOCUS/TAB_BLUR messages will handle that for now
   // chrome.windows.onFocusChanged.addListener(async (windowId) => {
   //     if (windowId === chrome.windows.WINDOW_ID_NONE) {
@@ -30,17 +30,15 @@ export function setupListeners() {
   // content script sends TAB_BLUR/TAB_FOCUS msg
   // background script starts/stops sessions based on that
   // then sends back START_TICKING/STOP_TICKING msg to content script
-  // and yes this creates async mess with race conditions, so i created async mutex in updateActiveSession
+  // and yes this creates async mess with race conditions. async mutex in updateActiveSession saves the day
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case "TAB_FOCUS":
         if (!sender.tab?.id) return;
-        console.log(`FOCUS received from tab: ${sender.tab.id}`);
         updateActiveSession(sender.tab.id);
         break;
       case "TAB_BLUR":
         if (!sender.tab?.id) return;
-        console.log(`BLUR received from tab: ${sender.tab.id}`);
         updateActiveSession(null);
         break;
       case "TOGGLE_ALL_OVERLAYS":
@@ -61,7 +59,16 @@ export function setupListeners() {
         if (!sender.tab?.id) return;
         handleEvaluatePage(sender.tab.id, message.metadata);
         break;
-      case "ADD_SITE":
+      case "URL_ONLY_EVALUATE":
+        if (!sender.tab?.id || !message.url) return;
+        chrome.runtime.sendMessage({
+          type: "DEBUG",
+          message: "URL_ONLY_EVALUATE received",
+        });
+        // TODO: pass no-AI parameter to this
+        handleEvaluatePage(sender.tab.id, { url: message.url });
+        break;
+      case "ADD_TRACKED_SITE":
         addSite(message.site)
           .then(() => {
             sendResponse({ success: true });
@@ -71,7 +78,7 @@ export function setupListeners() {
           });
         return true; // indicates that A RESPONSE WILL BE SENT
 
-      case "REMOVE_SITE":
+      case "REMOVE_TRACKED_SITE":
         removeSite(message.site)
           .then(() => {
             sendResponse({ success: true });
@@ -112,7 +119,7 @@ export function setupListeners() {
   });
 
   // not needed, but good for instantly start session without waiting for TAB_FOCUS msg
-  // but it saves on EVERY tab activation, so it can be a bit spammy
+  // HELL NAWWW it saves on EVERY tab activation
   // chrome.tabs.onActivated.addListener((activeInfo) => {
   //   updateActiveSession(activeInfo.tabId);
   // });

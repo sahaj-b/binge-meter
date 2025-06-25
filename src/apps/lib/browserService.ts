@@ -1,6 +1,6 @@
 import { getStorageData } from "@/shared/store";
 import { sitePatterns } from "@/shared/utils";
-import type { StorageData } from "@/shared/types";
+import type { Message, StorageData } from "@/shared/types";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
   if (!site) {
@@ -81,9 +81,9 @@ export function openAnalyticsPage() {
 
 export async function sendAddSiteMessage(site: string) {
   const response = await chrome.runtime.sendMessage({
-    type: "ADD_SITE",
+    type: "ADD_TRACKED_SITE",
     site: site,
-  });
+  } satisfies Message);
   if (response?.success) {
     console.log(`Added site: ${site}`);
   } else {
@@ -93,9 +93,9 @@ export async function sendAddSiteMessage(site: string) {
 
 export async function sendRemoveSiteMessage(site: string) {
   const response = await chrome.runtime.sendMessage({
-    type: "REMOVE_SITE",
+    type: "REMOVE_TRACKED_SITE",
     site: site,
-  });
+  } satisfies Message);
   if (response?.success) {
     console.log(`Removed site: ${site}`);
   } else {
@@ -103,46 +103,32 @@ export async function sendRemoveSiteMessage(site: string) {
   }
 }
 
-export async function markPageAsProductive(target: string) {
-  // Determine the type of rule based on the target
-  let rule: any = {};
-
-  if (target.startsWith("http")) {
-    rule = { url: target };
-  } else if (target.startsWith("UC") || target.length === 24) {
-    // YouTube channel ID format
-    rule = { ytChannel: target };
-  } else {
-    // Assume it's a subreddit name
-    rule = { subreddit: target };
-  }
-
+export async function markURLAs(url: string, markDistracting: boolean) {
   const response = await chrome.runtime.sendMessage({
-    type: "ADD_PRODUCTIVE_RULE",
-    rule,
-  });
+    type: markDistracting ? "REMOVE_PRODUCTIVE_RULE" : "ADD_PRODUCTIVE_RULE",
+    rule: { url },
+  } satisfies Message);
   if (!response?.success)
     throw new Error(response?.error ?? "Unknown error occurred");
 }
 
-export async function markPageAsDistracting(target: string) {
-  // Determine the type of rule based on the target
-  let rule: any = {};
-
-  if (target.startsWith("http")) {
-    rule = { url: target };
-  } else if (target.startsWith("UC") || target.length === 24) {
-    // YouTube channel ID format
-    rule = { ytChannel: target };
-  } else {
-    // Assume it's a subreddit name
-    rule = { subreddit: target };
-  }
-
+export async function markChannelAs(channel: string, markDistracting: boolean) {
   const response = await chrome.runtime.sendMessage({
-    type: "REMOVE_PRODUCTIVE_RULE",
-    rule,
-  });
+    type: markDistracting ? "REMOVE_PRODUCTIVE_RULE" : "ADD_PRODUCTIVE_RULE",
+    rule: { ytChannel: channel },
+  } satisfies Message);
+  if (!response?.success)
+    throw new Error(response?.error ?? "Unknown error occurred");
+}
+
+export async function markSubredditAs(
+  subreddit: string,
+  markDistracting: boolean,
+) {
+  const response = await chrome.runtime.sendMessage({
+    type: markDistracting ? "REMOVE_PRODUCTIVE_RULE" : "ADD_PRODUCTIVE_RULE",
+    rule: { subreddit },
+  } satisfies Message);
   if (!response?.success)
     throw new Error(response?.error ?? "Unknown error occurred");
 }
