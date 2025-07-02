@@ -11,11 +11,11 @@ let isActivated = true;
 
 // see comments in background/listeners.ts to understand this shitshow
 window.addEventListener("blur", () => {
-  chrome.runtime.sendMessage({ type: "TAB_BLUR" });
+  if (isActivated) chrome.runtime.sendMessage({ type: "TAB_BLUR" });
 });
 
 window.addEventListener("focus", () => {
-  chrome.runtime.sendMessage({ type: "TAB_FOCUS" });
+  if (isActivated) chrome.runtime.sendMessage({ type: "TAB_FOCUS" });
 });
 
 setupNavigation((url) => {

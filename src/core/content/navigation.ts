@@ -61,13 +61,15 @@ export function setupNavigation(
   // monkey patching
 
   history.pushState = function (...args) {
-    originalPushState.apply(this, args);
+    console.log("PUSHING STATE");
     handleStateChange();
+    originalPushState.apply(this, args);
   };
 
   history.replaceState = function (...args) {
-    originalReplaceState.apply(this, args);
+    console.log("REPLACING STATE");
     handleStateChange();
+    originalReplaceState.apply(this, args);
   };
 
   window.addEventListener("popstate", handleStateChange);

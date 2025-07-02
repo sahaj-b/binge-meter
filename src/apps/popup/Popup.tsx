@@ -13,6 +13,7 @@ import {
 } from "../lib/browserService";
 import CurrentSiteTracker from "./CurrentSiteTracker";
 import { ClassificationSection } from "./ClassificationSection";
+import { getStorageData } from "@/shared/store";
 
 export default function Popup() {
   const [dailyTime, setDailyTime] = useState(0);
@@ -81,6 +82,9 @@ export default function Popup() {
     initializeData().then(() => {
       initializeCurrentTab();
     });
+    setTimeout(async () => {
+      setDailyTime((await getStorageData(["dailyTime"])).dailyTime.total);
+    }, 500);
   }, []);
 
   function handleToggleOverlay() {
