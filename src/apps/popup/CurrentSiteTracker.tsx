@@ -24,20 +24,18 @@ import {
 
 interface CurrentSiteTrackerProps {
   currentSite: string;
-  trackedSites: string[];
+  isCurrentSiteTracked: boolean;
   setTrackedSites: Dispatch<SetStateAction<string[]>>;
 }
 
 export default function CurrentSiteTracker({
   currentSite,
-  trackedSites,
+  isCurrentSiteTracked,
   setTrackedSites,
 }: CurrentSiteTrackerProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState(true);
-
-  const isCurrentSiteTracked = trackedSites.includes(currentSite);
 
   useEffect(() => {
     if (currentSite) {

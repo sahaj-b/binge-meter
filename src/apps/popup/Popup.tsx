@@ -25,6 +25,9 @@ export default function Popup() {
     danger: number | null;
   });
   const [metadata, setMetadata] = useState<Metadata | null>(null);
+
+  let currentSite = getSiteFromURL(activeURL);
+  let isCurrentSiteTracked = trackedSites.includes(currentSite);
   useState<ProductiveRules | null>(null);
 
   useEffect(() => {
@@ -36,7 +39,7 @@ export default function Popup() {
         setOverlayHidden(data.overlayHidden);
         setThresholds(data.thresholds);
         setTrackedSites(data.trackedSites);
-        trackedSites = data.trackedSites || [];
+        trackedSites = data.trackedSites;
       } catch (error) {
         console.error("Failed to load data:", error);
       }
@@ -54,7 +57,10 @@ export default function Popup() {
         const site = url.hostname;
         setActiveURL(url);
 
-        if (site && trackedSites.includes(site)) {
+        currentSite = getSiteFromURL(url);
+        isCurrentSiteTracked = trackedSites.includes(currentSite);
+
+        if (isCurrentSiteTracked) {
           const path = url.pathname;
           console.log("Tracked site found:", site + path);
           if (
@@ -117,11 +123,11 @@ export default function Popup() {
 
         <CurrentSiteTracker
           currentSite={activeURL?.hostname || ""}
-          trackedSites={trackedSites}
+          isCurrentSiteTracked={isCurrentSiteTracked}
           setTrackedSites={setTrackedSites}
         />
 
-        {trackedSites.includes(activeURL?.hostname || "") && (
+        {isCurrentSiteTracked && (
           <ClassificationSection
             metadata={metadata ?? { url: activeURL?.href ?? "" }}
           />
@@ -168,3 +174,8 @@ const getTimeColor = (
   }
   return "text-green-400";
 };
+
+function getSiteFromURL(url: URL | null) {
+  const site = url?.hostname || "";
+  return site.startsWith("www.") ? site.slice(4) : site;
+}

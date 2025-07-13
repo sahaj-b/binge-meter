@@ -56,7 +56,7 @@ export function TrackedSites() {
       <div className="space-y-3">
         <div className="flex gap-2">
           <Input
-            placeholder="reddit.com"
+            placeholder="youtube.com (no www.)"
             className="text-sm"
             value={newSite}
             onChange={(e) => setNewSite(e.target.value)}
