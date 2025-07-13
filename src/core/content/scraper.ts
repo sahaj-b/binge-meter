@@ -56,7 +56,8 @@ async function scrapeWatchPage(metadata: Metadata): Promise<YoutubeMetadata> {
 
   try {
     const channelLinkElement = await waitForElement(
-      "#channel-name a.yt-simple-endpoint",
+      "#above-the-fold #channel-name a.yt-simple-endpoint",
+      // OR "#owner #channel-name a.yt-simple-endpoint",
     );
 
     ytMetadata.channelName = channelLinkElement?.textContent?.trim() || null;

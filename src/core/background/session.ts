@@ -18,7 +18,13 @@ export function updateActiveSession(activeTabId: number | null) {
           .sendMessage(activeSession.tabId, {
             type: "STOP_TICKING",
           })
-          .catch();
+          .catch((err) => {
+            console.error(
+              "Error while sending STOP_TICKING to",
+              activeTabId,
+              err,
+            );
+          });
       }
       if (activeTabId !== null) {
         try {
@@ -32,8 +38,24 @@ export function updateActiveSession(activeTabId: number | null) {
               dailyTime: { ...dailyTime, total: newTotal },
               activeSession: newSession,
             });
-            await sendStartTicking(activeTabId, newTotal, newSession.startTime);
             console.log("STARTING SESSION FOR TAB", activeTabId);
+            await chrome.tabs
+              .sendMessage(activeTabId, {
+                type: "START_TICKING",
+                startingDuration: newTotal,
+                startTime: newSession.startTime,
+              })
+              .catch((err) => {
+                console.error(
+                  "Error while sending START_TICKING to",
+                  activeTabId,
+                  err,
+                );
+                setStorageData({
+                  dailyTime: { ...dailyTime, total: newTotal },
+                  activeSession: null,
+                });
+              });
             return;
           }
         } catch (e) {}
@@ -45,22 +67,8 @@ export function updateActiveSession(activeTabId: number | null) {
       });
     })
     .catch((err) => {
-      console.error("SHIT, error in the promise chain:", err);
+      console.error("Error in the PROMISE CHAIN:", err);
     });
   sessionLock = taskPromise;
   return taskPromise;
-}
-
-export async function sendStartTicking(
-  tabid: number,
-  startDuration: number,
-  startTime: number,
-) {
-  await chrome.tabs
-    .sendMessage(tabid, {
-      type: "START_TICKING",
-      startingDuration: startDuration,
-      startTime: startTime,
-    })
-    .catch();
 }

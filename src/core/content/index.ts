@@ -9,6 +9,8 @@ const ticker = new TickerController(overlay);
 
 let isActivated = true;
 
+console.log("Loading content script...");
+
 // see comments in background/listeners.ts to understand this shitshow
 window.addEventListener("blur", () => {
   if (isActivated) chrome.runtime.sendMessage({ type: "TAB_BLUR" });
@@ -25,6 +27,7 @@ setupNavigation((url) => {
 chrome.runtime.onMessage.addListener(async (message: any, _, sendResponse) => {
   if (
     !isActivated &&
+    message.type !== "ACTIVATE_OVERLAY" &&
     message.type !== "RE-INITIALIZE_OVERLAY" &&
     message.type !== "SEND_METADATA"
   )
@@ -35,11 +38,6 @@ chrome.runtime.onMessage.addListener(async (message: any, _, sendResponse) => {
   });
   switch (message.type) {
     case "SEND_METADATA": {
-      console.log("SEND_METADATA RECEIVED");
-      chrome.runtime.sendMessage({
-        type: "DEBUG",
-        message: "SEND_METADATA RECEIVED",
-      });
       const metadata = await getMetadata();
       chrome.runtime.sendMessage({
         type: "DEBUG",
@@ -79,8 +77,12 @@ chrome.runtime.onMessage.addListener(async (message: any, _, sendResponse) => {
       break;
 
     case "ACTIVATE_OVERLAY":
+      if (isActivated) return;
+      isActivated = true;
+      await sendEvalMsg();
+      break;
+
     case "RE-INITIALIZE_OVERLAY":
-      chrome.runtime.sendMessage({ type: "DEBUG", message: "RE-INITIALIZING" });
       isActivated = true;
       await sendEvalMsg();
       break;

@@ -77,7 +77,7 @@ export async function addSite(site: string) {
           type: "RE-INITIALIZE_OVERLAY",
         });
         console.log(
-          `Sent ACTIVATE_OVERLAY to already-injected script in tab ${tab.id}`,
+          `Sent RE-INITIALIZE_OVERLAY to already-injected script in tab ${tab.id}`,
         );
       } catch (e) {
         console.log(`Script not found in tab ${tab.id}, injecting fresh.`);
@@ -122,9 +122,10 @@ export async function handleEvaluatePage(
   if (classification === "distracting") {
     await chrome.tabs
       .query({ active: true, currentWindow: true })
-      .then(([activeTab]) => {
+      .then(async ([activeTab]) => {
         if (activeTab?.id === tabId) {
-          updateActiveSession(tabId);
+          await chrome.tabs.sendMessage(tabId, { type: "ACTIVATE_OVERLAY" });
+          await updateActiveSession(tabId);
         }
       });
   } else {

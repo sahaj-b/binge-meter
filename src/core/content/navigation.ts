@@ -1,24 +1,30 @@
-// handling SPAs navigation is pain in the ass
+// detecting SPA navigation is PAAAAINNNNNN in the ass
 // when navigation(client or server side) happens, URL changes instantly, but
 // it takes time to load contents, Title change is a good indicator for that (unless its a shitty SPA)
 // but it has 2 problems:
-//  - if there is already a user rule for the URL, it will delay for no reason
+//  - if there is already a user rule for the URL, we are delaying for no reason
 //  - if title isn't changed, overlay won't re-evaluate
 // so we doin dual-phase evaluation:
 //  - instantly fire the URL change handler which will evaluate the page only based on URL
 //  - after title change, or after FALLBACK_DELAY ms, fire the fullMetadataHandler which will normally evaluate the page
 
+// BRUH monkey-patching history.pushState and replaceState ain't working for SPA nav
+// youtube got that custom yt-navigate-start/finish event, so using that for yt
+// but what about others? I be polling url every X ms
+
 let titleObserver: MutationObserver | null = null;
 let fallbackTimer: NodeJS.Timeout;
 const FALLBACK_DELAY = 4000;
+const POLL_INTERVAL = 250;
 
 /** @returns `destroy` function to remove the listeners. */
 export function setupNavigation(
   instantUrlHandler: (url: string) => void,
   fullMetadataHandler: () => void,
 ): () => void {
-  const originalPushState = history.pushState;
-  const originalReplaceState = history.replaceState;
+  // const originalPushState = history.pushState;
+  // const originalReplaceState = history.replaceState;
+  let previousUrl = window.location.href;
 
   function onTitleChange() {
     clearTimeout(fallbackTimer);
@@ -35,16 +41,14 @@ export function setupNavigation(
     titleObserver.observe(titleElement, { childList: true });
   }
 
-  function handleStateChange() {
+  function handleNavigation() {
     chrome.runtime.sendMessage({
       type: "DEBUG",
-      message:
-        "NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION NAVIGATION",
+      message: "NAVIGATION DETECTED",
     });
     setTimeout(() => {
       instantUrlHandler(window.location.href);
     }, 10); // smol delay to ensure the URL is updated in the history state
-
     clearTimeout(fallbackTimer);
 
     startTitleObserver();
@@ -59,26 +63,35 @@ export function setupNavigation(
   }
 
   // monkey patching
+  // history.pushState = function (...args) {
+  //   originalPushState.apply(this, args);
+  //   console.log("PUSHING STATE");
+  //   handleStateChange();
+  // };
+  // history.replaceState = function (...args) {
+  //   originalReplaceState.apply(this, args);
+  //   console.log("REPLACING STATE");
+  //   handleStateChange();
+  // };
 
-  history.pushState = function (...args) {
-    console.log("PUSHING STATE");
-    handleStateChange();
-    originalPushState.apply(this, args);
-  };
+  // url polling
+  const urlPollingInterval = setInterval(() => {
+    if (window.location.href !== previousUrl) {
+      previousUrl = window.location.href;
+      handleNavigation();
+    }
+  }, POLL_INTERVAL);
 
-  history.replaceState = function (...args) {
-    console.log("REPLACING STATE");
-    handleStateChange();
-    originalReplaceState.apply(this, args);
-  };
-
-  window.addEventListener("popstate", handleStateChange);
+  // window.addEventListener("yt-navigate-start", handleNavigation);
+  // window.addEventListener("popstate", handleNavigation); // manual back/forward
 
   function destroy() {
-    history.pushState = originalPushState;
-    history.replaceState = originalReplaceState;
-    window.removeEventListener("popstate", handleStateChange);
+    // history.pushState = originalPushState;
+    // history.replaceState = originalReplaceState;
+    // window.removeEventListener("popstate", handleNavigation);
+    // window.removeEventListener("yt-navigate-start", handleNavigation);
     titleObserver?.disconnect();
+    clearInterval(urlPollingInterval);
     clearTimeout(fallbackTimer);
   }
 
