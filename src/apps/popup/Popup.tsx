@@ -1,102 +1,25 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Button } from "@ui/button";
 import { Switch } from "@ui/switch";
 import { Label } from "@ui/label";
 import { Settings, BarChart3 } from "lucide-react";
-import type { Metadata, ProductiveRules } from "@/shared/types";
-import {
-  loadStorageData,
-  sendToggleMessage,
-  openSettingsPage,
-  openAnalyticsPage,
-  getCurrentTab,
-} from "../lib/browserService";
+import usePopupStore from "./store";
 import CurrentSiteTracker from "./CurrentSiteTracker";
 import { ClassificationSection } from "./ClassificationSection";
-import { getStorageData } from "@/shared/store";
+import { openAnalyticsPage, openSettingsPage } from "../lib/browserService";
 
 export default function Popup() {
-  const [dailyTime, setDailyTime] = useState(0);
-  const [overlayHidden, setOverlayHidden] = useState(false);
-  const [activeURL, setActiveURL] = useState<URL | null>(null);
-  const [trackedSites, setTrackedSites] = useState<string[]>([]);
-  const [thresholds, setThresholds] = useState({ warn: 0, danger: 0 } as {
-    warn: number | null;
-    danger: number | null;
-  });
-  const [metadata, setMetadata] = useState<Metadata | null>(null);
-
-  let currentSite = getSiteFromURL(activeURL);
-  let isCurrentSiteTracked = trackedSites.includes(currentSite);
-  useState<ProductiveRules | null>(null);
-
+  const dailyTime = usePopupStore((state) => state.dailyTime);
+  const overlayHidden = usePopupStore((state) => state.overlayHidden);
+  const thresholds = usePopupStore((state) => state.thresholds);
+  const isCurrentSiteTracked = usePopupStore(
+    (state) => state.isCurrentSiteTracked,
+  );
+  const initialize = usePopupStore((state) => state.initialize);
+  const toggleOverlay = usePopupStore((state) => state.toggleOverlay);
   useEffect(() => {
-    let trackedSites: string[] = [];
-    async function initializeData() {
-      try {
-        const data = await loadStorageData();
-        setDailyTime(data.dailyTime);
-        setOverlayHidden(data.overlayHidden);
-        setThresholds(data.thresholds);
-        setTrackedSites(data.trackedSites);
-        trackedSites = data.trackedSites;
-      } catch (error) {
-        console.error("Failed to load data:", error);
-      }
-    }
-
-    async function initializeCurrentTab() {
-      console.log("Initializing current tab...");
-      try {
-        const tab = await getCurrentTab();
-        if (!tab.url) {
-          console.warn("No active tab found or tab URL is empty.");
-          return;
-        }
-        const url = new URL(tab.url || "");
-        const site = url.hostname;
-        setActiveURL(url);
-
-        currentSite = getSiteFromURL(url);
-        isCurrentSiteTracked = trackedSites.includes(currentSite);
-
-        if (isCurrentSiteTracked) {
-          const path = url.pathname;
-          console.log("Tracked site found:", site + path);
-          if (
-            (site.endsWith("youtube.com") &&
-              (path.startsWith("/watch") || path.startsWith("/@"))) ||
-            (site.endsWith("reddit.com") && path.startsWith("/r/"))
-          ) {
-            if (tab.id) {
-              console.log("sending SEND_METADATA to tab", tab.id);
-              const response = await chrome.tabs.sendMessage(tab.id, {
-                type: "SEND_METADATA",
-              });
-              console.log("RESPONSE", response);
-              if (response?.metadata) {
-                setMetadata(response.metadata);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Failed to get current tab:", error);
-      }
-    }
-
-    initializeData().then(() => {
-      initializeCurrentTab();
-    });
-    setTimeout(async () => {
-      setDailyTime((await getStorageData(["dailyTime"])).dailyTime.total);
-    }, 500);
-  }, []);
-
-  function handleToggleOverlay() {
-    sendToggleMessage();
-    setOverlayHidden(!overlayHidden);
-  }
+    initialize();
+  }, [initialize]);
 
   return (
     <div className="p-6">
@@ -117,21 +40,13 @@ export default function Popup() {
           <Switch
             id="overlay-toggle"
             checked={!overlayHidden}
-            onCheckedChange={handleToggleOverlay}
+            onCheckedChange={toggleOverlay}
           />
         </div>
 
-        <CurrentSiteTracker
-          currentSite={activeURL?.hostname || ""}
-          isCurrentSiteTracked={isCurrentSiteTracked}
-          setTrackedSites={setTrackedSites}
-        />
+        <CurrentSiteTracker />
 
-        {isCurrentSiteTracked && (
-          <ClassificationSection
-            metadata={metadata ?? { url: activeURL?.href ?? "" }}
-          />
-        )}
+        {isCurrentSiteTracked && <ClassificationSection />}
 
         <div className="flex space-x-4 items-center justify-center">
           <Button
@@ -174,8 +89,3 @@ const getTimeColor = (
   }
   return "text-green-400";
 };
-
-function getSiteFromURL(url: URL | null) {
-  const site = url?.hostname || "";
-  return site.startsWith("www.") ? site.slice(4) : site;
-}

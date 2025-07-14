@@ -18,7 +18,7 @@ export function timeInputToMs(time: TimeInput): number {
 
 export function extractAlphaFromHex(hex: string): number {
   if (hex.length === 9) {
-    return parseInt(hex.slice(-2), 16) / 255;
+    return Number.parseInt(hex.slice(-2), 16) / 255;
   }
   return 1;
 }
@@ -41,7 +41,7 @@ export function updateHexOpacity(hex: string, opacity: number): string {
 
 export function extractOpacityFromColor(color: string): number {
   if (color.startsWith("#") && color.length === 9) {
-    return parseInt(color.slice(-2), 16) / 255;
+    return Number.parseInt(color.slice(-2), 16) / 255;
   }
   return 1;
 }

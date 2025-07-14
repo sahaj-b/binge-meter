@@ -1,12 +1,3 @@
-import { useState, useEffect } from "react";
-import type { Dispatch, SetStateAction } from "react";
-import { Button } from "@ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@ui/tooltip";
 import {
   Plus,
   Minus,
@@ -15,83 +6,76 @@ import {
   AlertCircle,
   HelpCircle,
 } from "lucide-react";
+import { Button } from "@ui/button";
 import {
-  sendAddSiteMessage,
-  checkSitePermission,
-  sendRemoveSiteMessage,
-  requestSitePermission,
-} from "../lib/browserService";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@ui/tooltip";
+import usePopupStore from "./store";
 
-interface CurrentSiteTrackerProps {
-  currentSite: string;
-  isCurrentSiteTracked: boolean;
-  setTrackedSites: Dispatch<SetStateAction<string[]>>;
-}
-
-export default function CurrentSiteTracker({
-  currentSite,
-  isCurrentSiteTracked,
-  setTrackedSites,
-}: CurrentSiteTrackerProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasPermission, setHasPermission] = useState(true);
-
-  useEffect(() => {
-    if (currentSite) {
-      setIsLoading(true);
-      checkSitePermission(currentSite)
-        .then((permissionStatus) => {
-          setHasPermission(permissionStatus);
-        })
-        .catch((err) => {
-          console.error("Failed to check site permission:", err);
-          setHasPermission(false);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      setHasPermission(false);
-    }
-  }, [currentSite]);
-
-  const handleClick = async () => {
-    setError(null);
-
-    if (!hasPermission) {
-      await requestSitePermission(currentSite).catch((err) => {
-        console.error("Failed to request permission:", err);
-      });
-    } else {
-      setIsLoading(true);
-      try {
-        if (isCurrentSiteTracked) {
-          sendRemoveSiteMessage(currentSite);
-        } else {
-          sendAddSiteMessage(currentSite);
-        }
-        setTrackedSites((prevTrackedSites: string[]) =>
-          isCurrentSiteTracked
-            ? prevTrackedSites.filter((site: string) => site !== currentSite)
-            : [...prevTrackedSites, currentSite],
-        );
-      } catch (err) {
-        console.error("Failed to toggle site tracking:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to update tracking status",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
+export default function CurrentSiteTracker() {
+  const currentSite = usePopupStore((state) => state.currentSite);
+  const isCurrentSiteTracked = usePopupStore(
+    (state) => state.isCurrentSiteTracked,
+  );
+  const isLoading = usePopupStore((state) => state.isLoading);
+  const error = usePopupStore((state) => state.error);
+  const hasPermission = usePopupStore((state) => state.hasPermission);
+  const addSite = usePopupStore((state) => state.addSite);
+  const removeSite = usePopupStore((state) => state.removeSite);
+  const requestPermission = usePopupStore((state) => state.requestPermission);
 
   if (!currentSite) {
     return null;
   }
+
+  const handleClick = () => {
+    if (!hasPermission) {
+      requestPermission();
+    } else {
+      isCurrentSiteTracked ? removeSite() : addSite();
+    }
+  };
+
+  const buttonContent = (
+    <>
+      {isLoading ? (
+        <Loader2 size={14} className="mr-1 animate-spin" />
+      ) : !hasPermission ? (
+        <ShieldAlert size={14} className="mr-1" />
+      ) : isCurrentSiteTracked ? (
+        <Minus size={14} className="mr-1" />
+      ) : (
+        <Plus size={14} className="mr-1" />
+      )}
+      {isLoading
+        ? "..."
+        : !hasPermission
+          ? "Grant Permission"
+          : isCurrentSiteTracked
+            ? "Remove"
+            : "Track"}
+    </>
+  );
+
+  const buttonElement = (
+    <Button
+      variant={
+        hasPermission
+          ? isCurrentSiteTracked
+            ? "destructive"
+            : "default"
+          : "secondary"
+      }
+      onClick={handleClick}
+      disabled={isLoading}
+      className="min-w-26"
+    >
+      {buttonContent}
+    </Button>
+  );
 
   return (
     <div className="p-3 bg-card/30 border rounded-lg">
@@ -131,59 +115,18 @@ export default function CurrentSiteTracker({
             </div>
           )}
         </div>
-        {(() => {
-          const buttonContent = (
-            <>
-              {isLoading ? (
-                <Loader2 size={14} className="mr-1 animate-spin" />
-              ) : !hasPermission ? (
-                <ShieldAlert size={14} className="mr-1" />
-              ) : isCurrentSiteTracked ? (
-                <Minus size={14} className="mr-1" />
-              ) : (
-                <Plus size={14} className="mr-1" />
-              )}
-              {isLoading
-                ? "..."
-                : !hasPermission
-                  ? "Grant Permission"
-                  : isCurrentSiteTracked
-                    ? "Remove"
-                    : "Track"}
-            </>
-          );
-
-          const buttonElement = (
-            <Button
-              variant={
-                hasPermission
-                  ? isCurrentSiteTracked
-                    ? "destructive"
-                    : "default"
-                  : "secondary"
-              }
-              onClick={handleClick}
-              disabled={isLoading}
-              className="min-w-26"
-            >
-              {buttonContent}
-            </Button>
-          );
-
-          if (!isLoading && !hasPermission) {
-            return (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
-                  <TooltipContent>
-                    <p>Permission needed to track this site.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            );
-          }
-          return buttonElement;
-        })()}
+        {!isLoading && !hasPermission ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
+              <TooltipContent>
+                <p>Permission needed to track this site.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          buttonElement
+        )}
       </div>
     </div>
   );

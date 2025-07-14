@@ -1,76 +1,44 @@
-import { useState, useEffect } from "react";
-import type { Metadata } from "@/shared/types";
-import { isDistracting } from "@/shared/utils";
-import {
-  markURLAs,
-  markSubredditAs,
-  markChannelAs,
-} from "@/apps/lib/browserService";
 import { Button } from "@ui/button";
+import usePopupStore from "./store";
 
-export function ClassificationSection({
-  metadata,
-}: {
-  metadata: Metadata | null;
-}) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCurrentlyDistracting, setIsCurrentlyDistracting] = useState<
-    boolean | null
-  >(null);
-
-  useEffect(() => {
-    console.log("metadata", metadata);
-    async function checkCurrentStatus() {
-      if (!metadata) return;
-
-      try {
-        const distracting = await isDistracting(metadata);
-        setIsCurrentlyDistracting(distracting);
-      } catch (error) {
-        console.error("Failed to check current status:", error);
-      }
-    }
-
-    checkCurrentStatus();
-  }, [metadata]);
-
-  const handleMarkAs = async (targetUrl: string, markDistracting: boolean) => {
-    if (!metadata) return;
-
-    setIsLoading(true);
-    try {
-      if (isYouTube) await markChannelAs(targetUrl, markDistracting);
-      else if (isReddit) await markSubredditAs(targetUrl, markDistracting);
-      else await markURLAs(targetUrl, markDistracting);
-      const newDistractingStatus = await isDistracting(metadata);
-      setIsCurrentlyDistracting(newDistractingStatus);
-    } catch (error) {
-      console.error("Failed to mark content:", error);
-    } finally {
-      setIsLoading(false);
-    }
+export function ClassificationSection() {
+  const activeURL = usePopupStore((state) => state.activeURL);
+  const metadata = usePopupStore((state) => state.metadata) ?? {
+    url: activeURL?.href ?? "",
   };
+  if (!metadata && !activeURL) return null;
 
-  if (!metadata) return null;
+  const isLoading = usePopupStore((state) => state.isLoading);
+  const isCurrentlyDistracting = usePopupStore(
+    (state) => state.isCurrentlyDistracting,
+  );
+  const markAs = usePopupStore((state) => state.markAs);
+  const isChannelOrSubredditDistracting = usePopupStore(
+    (state) => state.isChannelOrSubredditDistracting,
+  );
 
-  const isYouTube = metadata.youtube?.channelId;
-  const isReddit = metadata.reddit?.subreddit;
+  const isYouTube = !!metadata.youtube?.channelId;
+  const isReddit = !!metadata.reddit?.subreddit;
 
-  let targetUrl = metadata.url;
+  console.log("isYouTube", isYouTube);
+  console.log("isReddit", isReddit);
+  console.log(
+    "isChannelOrSubredditDistracting",
+    isChannelOrSubredditDistracting,
+  );
+
   let displayEle = <span>Mark page as</span>;
 
-  if (isYouTube && metadata.youtube?.channelId) {
-    targetUrl = metadata.youtube.channelId;
-    const channelName = metadata.youtube.channelName || "Unknown Channel";
+  if (isYouTube) {
+    const channelName = metadata.youtube?.channelName || "Unknown Channel";
     const truncatedName = truncateText(channelName);
     displayEle = (
       <span>
         Mark channel <b>{truncatedName}</b> as
       </span>
     );
-  } else if (isReddit && metadata.reddit?.subreddit) {
-    targetUrl = metadata.reddit.subreddit;
-    const subredditName = metadata.reddit.subreddit;
+  } else if (isReddit) {
+    const subredditName = metadata.reddit?.subreddit || "Unknown Subreddit";
     const truncatedName = truncateText(subredditName);
     displayEle = (
       <span>
@@ -79,47 +47,62 @@ export function ClassificationSection({
     );
   }
 
+  let markAsDistracting = !isCurrentlyDistracting;
+  if (isYouTube || isReddit) {
+    markAsDistracting = !isChannelOrSubredditDistracting;
+    if (!isCurrentlyDistracting && isChannelOrSubredditDistracting === false) {
+      // i.e, url is P, but channel/subreddit is D, then label should be 'mark url as P'
+      markAsDistracting = true;
+    }
+  }
+
   displayEle = (
     <>
       {displayEle}
       <span
         className={
-          "-ml-1 " +
-          (isCurrentlyDistracting ? "text-green-400" : "text-primary")
+          "-ml-1 " + (markAsDistracting ? "text-primary" : "text-green-400")
         }
       >
-        {isCurrentlyDistracting ? "Productive" : "Distracting"}
+        {markAsDistracting ? "Distracting" : "Productive"}
       </span>
     </>
+  );
+  const headerEle = (
+    <h3 className="text-lg font-medium mb-3">
+      {isChannelOrSubredditDistracting === false
+        ? isYouTube
+          ? "Current channel is "
+          : "Current subreddit is "
+        : "Current page is "}
+      {isCurrentlyDistracting ? (
+        <b className="text-primary">Distracting</b>
+      ) : (
+        <b className="text-green-400">Productive</b>
+      )}
+    </h3>
   );
 
   if (isYouTube || isReddit) {
     return (
       <div className="p-3 bg-card/30 border rounded-lg">
-        <h3 className="text-lg font-medium mb-3">
-          Current page is{" "}
-          {isCurrentlyDistracting ? (
-            <b className="text-primary">Distracting</b>
-          ) : (
-            <b className="text-green-400">Productive</b>
-          )}
-        </h3>
+        {headerEle}
         <Button
           variant="secondary"
           disabled={isLoading}
           className="w-full justify-between"
-          onClick={() => handleMarkAs(targetUrl, !isCurrentlyDistracting)}
+          onClick={() => markAs(markAsDistracting, true)}
         >
           {displayEle}
         </Button>
-        {isYouTube || isReddit ? (
+        {isChannelOrSubredditDistracting && (
           <div className="flex flex-col gap-2 mt-2 justify-center items-center">
             <div className="text-muted-foreground">OR</div>
             <Button
               variant="secondary"
               disabled={isLoading}
               className="w-full"
-              onClick={() => handleMarkAs(targetUrl, !isCurrentlyDistracting)}
+              onClick={() => markAs(!isCurrentlyDistracting)}
             >
               Mark this Page as
               {isCurrentlyDistracting ? (
@@ -129,19 +112,20 @@ export function ClassificationSection({
               )}
             </Button>
           </div>
-        ) : null}
+        )}
       </div>
     );
   }
 
   return (
     <div className="p-4 border-t border-gray-200">
+      {headerEle}
       <h3 className="text-lg font-medium text-gray-900 mb-3">Classification</h3>
       <Button
         variant="secondary"
         disabled={isLoading}
         className="w-full"
-        onClick={() => handleMarkAs(targetUrl, !isCurrentlyDistracting)}
+        onClick={() => markAs(!isCurrentlyDistracting)}
       >
         {displayEle}
       </Button>
@@ -149,7 +133,7 @@ export function ClassificationSection({
   );
 }
 
-function truncateText(text: string) {
-  if (text.length <= 16) return text;
-  return text.substring(0, 16) + "…";
+function truncateText(text: string, maxLength = 16) {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + "…";
 }
