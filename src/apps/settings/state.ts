@@ -17,6 +17,7 @@ import {
 type StoreData = {
   loading: boolean;
   error: string | null;
+  inputError: string | null;
   trackedSites: string[] | null;
   overlayConfig: OverlayConfig | null;
   productiveRules: ProductiveRules | null;
@@ -54,6 +55,7 @@ type StoreType = StoreData & StoreActions;
 const initialData: StoreData = {
   loading: true,
   error: null,
+  inputError: null,
   trackedSites: null,
   overlayConfig: null,
   productiveRules: null,
@@ -159,14 +161,14 @@ export const useStore = create<StoreType>()((set, get) => ({
 
   addSite: async (site: string) => {
     const cleanSite = site.trim().replace(/^(https?:\/\/)?(www\.)?/, "");
-
+    set({ inputError: null });
     if (!cleanSite) {
-      set({ error: "Site cannot be empty" });
+      set({ inputError: "Site cannot be empty" });
       return;
     }
 
     if (get().trackedSites?.includes(cleanSite)) {
-      set({ error: `${cleanSite} is already tracked` });
+      set({ inputError: `${cleanSite} is already tracked` });
       return;
     }
 

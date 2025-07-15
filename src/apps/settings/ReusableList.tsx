@@ -16,17 +16,19 @@ export function ReusableList({
   onAddItem,
   onRemoveItem,
   placeholder,
-  error,
 }: ReusableListProps) {
   const [newItem, setNewItem] = useState("");
   const [isAddingLoading, setIsAddingLoading] = useState(false);
+  const [error, setError] = useState("");
   const [removingLoadingSet, setRemovingLoadingSet] = useState<Set<string>>(
     new Set(),
   );
 
   async function handleAddItem() {
     setIsAddingLoading(true);
-    await onAddItem(newItem);
+    await onAddItem(newItem).catch((e) => {
+      setError(e.message);
+    });
     setNewItem("");
     setIsAddingLoading(false);
   }
@@ -63,7 +65,7 @@ export function ReusableList({
 
       {error && (
         <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-          <p className="text-sm text-destructive">ERROR: {error}</p>
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 

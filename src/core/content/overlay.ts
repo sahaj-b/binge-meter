@@ -58,7 +58,7 @@ export class OverlayUI {
     background: ${config.colors.bg} !important;
     border: 1px solid ${config.colors.borderColor} !important;
     border-radius: ${config.borderRadius}px
-    font-family: monospace;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     z-index: 10000;
     backdrop-filter: blur(${config.blur}px);
     cursor: move;

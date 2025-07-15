@@ -45,14 +45,14 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen text-xl">
         Loading...
       </div>
     );
   }
   if (error) {
     return (
-      <div className="items-center justify-center flex min-h-screen">
+      <div className="items-center justify-center flex min-h-screen text-xl">
         <div className="text-red-500">{error}</div>
       </div>
     );

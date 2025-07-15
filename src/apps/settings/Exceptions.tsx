@@ -6,7 +6,6 @@ export function Exceptions() {
   const addProductiveRule = useStore((state) => state.addProductiveRule);
   const removeProductiveRule = useStore((state) => state.removeProductiveRule);
   const trackedSites = useStore((state) => state.trackedSites);
-  const error = useStore((state) => state.error);
   const isYoutubeTracked = trackedSites?.includes("youtube.com");
   const isRedditTracked = trackedSites?.includes("reddit.com");
 
@@ -20,41 +19,46 @@ export function Exceptions() {
           Using extension icon is more intuitive though
         </p>
       </div>
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-3">
         <ListContainer title="URLs">
           <ReusableList
-            items={productiveRules?.urls || []}
+            items={[...(productiveRules?.urls ?? [])].reverse()}
             onAddItem={(item) => addProductiveRule("urls", item)}
             onRemoveItem={(item) => removeProductiveRule("urls", item)}
             placeholder="https://example.com/productive"
           />
         </ListContainer>
         {isYoutubeTracked && (
-          <ListContainer title="Youtube Channels">
-            <ReusableList
-              items={productiveRules?.ytChannels || []}
-              onAddItem={(item) => addProductiveRule("ytChannels", item)}
-              onRemoveItem={(item) => removeProductiveRule("ytChannels", item)}
-              placeholder="@channelID or ChannelName"
-            />
-          </ListContainer>
+          <>
+            <Seperator />
+            <ListContainer title="Youtube Channels">
+              <ReusableList
+                items={[...(productiveRules?.ytChannels ?? [])].reverse()}
+                onAddItem={(item) => addProductiveRule("ytChannels", item)}
+                onRemoveItem={(item) =>
+                  removeProductiveRule("ytChannels", item)
+                }
+                placeholder="@channelID or ChannelName"
+              />
+            </ListContainer>
+          </>
         )}
         {isRedditTracked && (
-          <ListContainer title="Subreddits">
-            <ReusableList
-              items={productiveRules?.subreddits || []}
-              onAddItem={(item) => addProductiveRule("subreddits", item)}
-              onRemoveItem={(item) => removeProductiveRule("subreddits", item)}
-              placeholder="SubredditName"
-            />
-          </ListContainer>
+          <>
+            <Seperator />
+            <ListContainer title="Subreddits">
+              <ReusableList
+                items={[...(productiveRules?.subreddits ?? [])].reverse()}
+                onAddItem={(item) => addProductiveRule("subreddits", item)}
+                onRemoveItem={(item) =>
+                  removeProductiveRule("subreddits", item)
+                }
+                placeholder="SubredditName"
+              />
+            </ListContainer>
+          </>
         )}
       </div>
-      {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-          <p className="text-sm text-destructive">ERROR: {error}</p>
-        </div>
-      )}
     </div>
   );
 }
@@ -69,4 +73,8 @@ function ListContainer({
       {children}
     </div>
   );
+}
+
+function Seperator() {
+  return <div className="min-h-full w-px bg-muted" />;
 }

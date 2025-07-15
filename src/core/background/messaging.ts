@@ -145,6 +145,10 @@ export async function addProductiveRule(rule: ProductiveRulesInput) {
       productiveRules[pluralKey] &&
       Array.isArray(productiveRules[pluralKey])
     ) {
+      if (productiveRules[pluralKey].includes(value)) {
+        throw new Error(`'${value}' already exists`);
+      }
+
       productiveRules[pluralKey].push(value);
       changed = true;
     }
@@ -153,10 +157,15 @@ export async function addProductiveRule(rule: ProductiveRulesInput) {
   if (!changed) throw new Error("No valid rule provided to add");
   console.log("SETTING", productiveRules);
   await setStorageData({ productiveRules });
-
+  console.log("HELL YEAHHh");
   if (rule.url)
-    await sendMsgToAllTabs(rule.url, { type: "RE-INITIALIZE_OVERLAY" });
-  else await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
+    await sendMsgToAllTabs(rule.url, { type: "RE-INITIALIZE_OVERLAY" }).catch(
+      () => {},
+    );
+  else
+    await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" }).catch(
+      () => {},
+    );
 }
 
 export async function removeProductiveRule(rule: ProductiveRulesInput) {
@@ -183,8 +192,13 @@ export async function removeProductiveRule(rule: ProductiveRulesInput) {
   await setStorageData({ productiveRules });
 
   if (rule.url)
-    await sendMsgToAllTabs(rule.url, { type: "RE-INITIALIZE_OVERLAY" });
-  else await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
+    await sendMsgToAllTabs(rule.url, { type: "RE-INITIALIZE_OVERLAY" }).catch(
+      () => {},
+    );
+  else
+    await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" }).catch(
+      () => {},
+    );
 }
 
 export async function sendMsgToAllTabs(url: string | string[], message: any) {
