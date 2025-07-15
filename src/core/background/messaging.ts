@@ -52,7 +52,7 @@ export async function removeSite(site: string) {
   await setStorageData({
     trackedSites: trackedSites.filter((s) => s !== site),
   });
-  await sendMsgToTrackedSites({ type: "DEACTIVATE_OVERLAY" }, trackedSites);
+  await sendMsgToAllTabs(sitePatterns(site), { type: "DEACTIVATE_OVERLAY" });
 }
 
 export async function addSite(site: string) {
@@ -187,7 +187,7 @@ export async function removeProductiveRule(rule: ProductiveRulesInput) {
   else await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
 }
 
-export async function sendMsgToAllTabs(url: string, message: any) {
+export async function sendMsgToAllTabs(url: string | string[], message: any) {
   const tabs = await chrome.tabs.query({ url });
   for (const tab of tabs) {
     if (tab.id) {

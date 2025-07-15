@@ -3,12 +3,15 @@ import {
   getStorageData,
   setStorageData,
 } from "@/shared/store";
-import type { OverlayConfig } from "@/shared/types";
+import type { OverlayConfig, ProductiveRules } from "@/shared/types";
 import { create } from "zustand";
 import {
   requestSitePermission,
   sendAddSiteMessage,
   sendRemoveSiteMessage,
+  markURLAs,
+  markChannelAs,
+  markSubredditAs,
 } from "@lib/browserService";
 
 type StoreData = {
@@ -16,6 +19,7 @@ type StoreData = {
   error: string | null;
   trackedSites: string[] | null;
   overlayConfig: OverlayConfig | null;
+  productiveRules: ProductiveRules | null;
   dummyTime: number;
 };
 type StoreActions = {
@@ -35,6 +39,14 @@ type StoreActions = {
   ) => Promise<void>;
   addSite: (site: string) => Promise<void>;
   removeSite: (site: string) => Promise<void>;
+  addProductiveRule: (
+    ruleType: keyof ProductiveRules,
+    value: string,
+  ) => Promise<void>;
+  removeProductiveRule: (
+    ruleType: keyof ProductiveRules,
+    value: string,
+  ) => Promise<void>;
 };
 
 type StoreType = StoreData & StoreActions;
@@ -44,6 +56,7 @@ const initialData: StoreData = {
   error: null,
   trackedSites: null,
   overlayConfig: null,
+  productiveRules: null,
   dummyTime: 369000,
 };
 
@@ -51,12 +64,19 @@ export const useStore = create<StoreType>()((set, get) => ({
   ...initialData,
   fetchSettings: async () => {
     try {
-      const data = await getStorageData(["overlayConfig", "trackedSites"]);
+      const data = await getStorageData([
+        "overlayConfig",
+        "trackedSites",
+        "productiveRules",
+      ]);
       if (!data.overlayConfig) throw new Error("Overlay config not found");
-      set((state) => ({
+      set({
         overlayConfig: data.overlayConfig,
         trackedSites: data.trackedSites,
+        productiveRules: data.productiveRules,
         error: null,
+      });
+      set((state) => ({
         dummyTime: state.getDefaultDummyTime(),
       }));
     } catch (error) {
@@ -162,5 +182,33 @@ export const useStore = create<StoreType>()((set, get) => ({
     set((state) => ({
       trackedSites: state.trackedSites?.filter((s) => s !== site) || [],
     }));
+  },
+  removeProductiveRule: async (ruleType, value) => {
+    const { productiveRules } = get();
+    if (!productiveRules) return;
+    if (ruleType === "urls") {
+      await markURLAs(value, true);
+    } else if (ruleType === "ytChannels") {
+      await markChannelAs(value, true);
+    } else if (ruleType === "subreddits") {
+      await markSubredditAs(value, true);
+    }
+    get().fetchSettings();
+  },
+  addProductiveRule: async (ruleType, value) => {
+    const { productiveRules } = get();
+    if (!productiveRules) return;
+    const newRules = {
+      ...productiveRules,
+      [ruleType]: [...productiveRules[ruleType], value],
+    };
+    if (ruleType === "urls") {
+      await markURLAs(value, false);
+    } else if (ruleType === "ytChannels") {
+      await markChannelAs(value, false);
+    } else if (ruleType === "subreddits") {
+      await markSubredditAs(value, false);
+    }
+    set({ productiveRules: newRules });
   },
 }));

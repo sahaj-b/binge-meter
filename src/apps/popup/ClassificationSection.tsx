@@ -69,7 +69,7 @@ export function ClassificationSection() {
     </>
   );
   const headerEle = (
-    <h3 className="text-lg font-medium mb-3">
+    <h3 className="text-lg font-medium mb-3 text-nowrap">
       {isChannelOrSubredditDistracting === false
         ? isYouTube
           ? "Current channel is "
@@ -118,9 +118,8 @@ export function ClassificationSection() {
   }
 
   return (
-    <div className="p-4 border-t border-gray-200">
+    <div className="p-3 bg-card/30 border rounded-lg">
       {headerEle}
-      <h3 className="text-lg font-medium text-gray-900 mb-3">Classification</h3>
       <Button
         variant="secondary"
         disabled={isLoading}
@@ -133,7 +132,7 @@ export function ClassificationSection() {
   );
 }
 
-function truncateText(text: string, maxLength = 16) {
+function truncateText(text: string, maxLength = 11) {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + "…";
 }

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { TrackedSites } from "./TrackedSites";
 import { OverlaySettings } from "./OverlaySettings";
 import { OverlayStyles } from "./OverlayStyles";
+import { Exceptions } from "./Exceptions";
 import { OverlayUI } from "@/core/content/overlay";
 import { useStore } from "./state";
 
@@ -10,6 +11,7 @@ export default function Settings() {
   const loading = useStore((state) => state.loading);
   const error = useStore((state) => state.error);
   const updateConfig = useStore((state) => state.updateConfig);
+  console.log("loading", loading);
 
   useEffect(() => {
     const hostname = window.location.hostname;
@@ -21,15 +23,18 @@ export default function Settings() {
       (pos) => updateConfig({ positions: { [hostname]: pos } }),
       (size) => updateConfig({ sizes: { [hostname]: size } }),
     );
-    fetchSettings();
     window.addEventListener("focus", fetchSettings);
+    fetchSettings();
 
-    const unsubscribe = useStore.subscribe((state) => {
+    const handleStateChange = (state: ReturnType<typeof useStore.getState>) => {
       if (!state.overlayConfig) return;
-      overlay.create().then(() => {
+      overlay.create(state.overlayConfig).then(() => {
         overlay.update(state.dummyTime, true, state.overlayConfig!);
       });
-    });
+    };
+
+    handleStateChange(useStore.getState());
+    const unsubscribe = useStore.subscribe(handleStateChange);
 
     return () => {
       unsubscribe();
@@ -63,6 +68,7 @@ export default function Settings() {
 
       <div className="space-y-8">
         <TrackedSites />
+        <Exceptions />
         <OverlaySettings />
         <OverlayStyles />
       </div>

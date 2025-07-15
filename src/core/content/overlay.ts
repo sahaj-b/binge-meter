@@ -33,16 +33,13 @@ export class OverlayUI {
     this.onSizeSave = onSizeSave || (() => {});
   }
 
-  async create() {
+  async create(config?: OverlayConfig) {
     // this method can be also called to just revalidate the config cache
 
-    const config = await getConfig(true);
+    config = config ?? (await getConfig(true));
 
     if (config.isHidden) {
-      if (this.element) {
-        this.element.remove();
-        this.element = null;
-      }
+      if (this.element) this.destroy();
       return;
     }
 
