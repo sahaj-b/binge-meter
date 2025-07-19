@@ -15,14 +15,16 @@ export async function getClassification(
 async function classifyByAI(
   metadata: Metadata,
 ): Promise<"distracting" | "productive"> {
+  const MAX_CACHE_SIZE = 500;
   console.log("Classifying by AI");
   const { aiCache, geminiApiKey } = await getStorageData([
     "aiCache",
     "geminiApiKey",
   ]);
-  if (aiCache[metadata.url]) {
+  const aiCacheEntry = aiCache.find(([url]) => url === metadata.url);
+  if (aiCacheEntry) {
     console.log("AI cache hit");
-    return aiCache[metadata.url];
+    return aiCacheEntry[1];
   }
 
   const aiResponse = await callGeminiAPI(
@@ -35,8 +37,9 @@ async function classifyByAI(
     ? "productive"
     : "distracting";
 
-  aiCache[metadata.url] = classification;
   console.log("Updating AI cache");
+  aiCache.push([metadata.url, classification]);
+  if (aiCache.length > MAX_CACHE_SIZE) aiCache.shift();
 
   setStorageData({ aiCache });
   return classification;

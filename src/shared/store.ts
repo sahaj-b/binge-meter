@@ -41,7 +41,7 @@ export const defaultStorageData: StorageData = {
   overlayConfig: defaultOverlayConfig,
   trackedSites: defaultTrackedSites,
   productiveRules: defaultProductiveRules,
-  aiCache: {},
+  aiCache: [],
   aiEnabled: false,
   activeSession: null,
   geminiApiKey: "",

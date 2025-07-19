@@ -43,10 +43,17 @@ export async function isURLDistracting(
   url: string,
   productiveRules?: ProductiveRules,
 ): Promise<boolean> {
-  const data = await getStorageData(["productiveRules", "aiCache"]);
+  const data = await getStorageData([
+    "productiveRules",
+    "aiCache",
+    "aiEnabled",
+  ]);
   if (!productiveRules) productiveRules = data.productiveRules;
-  const aiCache = data.aiCache;
-  return !productiveRules.urls.includes(url) && !aiCache[url];
+  const urlInRules = productiveRules.urls.includes(url);
+  if (urlInRules) return false;
+  if (data.aiEnabled && data.aiCache[url])
+    return data.aiCache[url] === "distracting";
+  return true;
 }
 
 export async function isChannelDistracting(
