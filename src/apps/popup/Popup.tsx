@@ -15,8 +15,10 @@ export default function Popup() {
   const isCurrentSiteTracked = usePopupStore(
     (state) => state.isCurrentSiteTracked,
   );
+  const aiEnabled = usePopupStore((state) => state.aiEnabled);
   const initialize = usePopupStore((state) => state.initialize);
   const toggleOverlay = usePopupStore((state) => state.toggleOverlay);
+  const toggleAI = usePopupStore((state) => state.toggleAI);
   useEffect(() => {
     initialize();
   }, [initialize]);
@@ -41,6 +43,16 @@ export default function Popup() {
             id="overlay-toggle"
             checked={!overlayHidden}
             onCheckedChange={toggleOverlay}
+          />
+        </div>
+        <div className="flex items-center justify-between p-3 bg-card/30 border rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="ai-toggle">Enable AI Classification</Label>
+          </div>
+          <Switch
+            id="ai-toggle"
+            checked={aiEnabled}
+            onCheckedChange={toggleAI}
           />
         </div>
 

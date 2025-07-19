@@ -41,7 +41,10 @@ export const defaultStorageData: StorageData = {
   overlayConfig: defaultOverlayConfig,
   trackedSites: defaultTrackedSites,
   productiveRules: defaultProductiveRules,
+  aiCache: {},
+  aiEnabled: false,
   activeSession: null,
+  geminiApiKey: "",
 };
 
 export async function getStorageData<K extends keyof StorageData>(

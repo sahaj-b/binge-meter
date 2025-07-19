@@ -21,6 +21,8 @@ type StoreData = {
   trackedSites: string[] | null;
   overlayConfig: OverlayConfig | null;
   productiveRules: ProductiveRules | null;
+  aiEnabled: boolean | null;
+  geminiApiKey: string | null;
   dummyTime: number;
 };
 type StoreActions = {
@@ -48,6 +50,8 @@ type StoreActions = {
     ruleType: keyof ProductiveRules,
     value: string,
   ) => Promise<void>;
+  setAiEnabled: (enabled: boolean) => Promise<void>;
+  setApiKey: (key: string) => Promise<void>;
 };
 
 type StoreType = StoreData & StoreActions;
@@ -59,6 +63,8 @@ const initialData: StoreData = {
   trackedSites: null,
   overlayConfig: null,
   productiveRules: null,
+  aiEnabled: null,
+  geminiApiKey: null,
   dummyTime: 369000,
 };
 
@@ -70,12 +76,16 @@ export const useStore = create<StoreType>()((set, get) => ({
         "overlayConfig",
         "trackedSites",
         "productiveRules",
+        "aiEnabled",
+        "geminiApiKey",
       ]);
       if (!data.overlayConfig) throw new Error("Overlay config not found");
       set({
         overlayConfig: data.overlayConfig,
         trackedSites: data.trackedSites,
         productiveRules: data.productiveRules,
+        aiEnabled: data.aiEnabled,
+        geminiApiKey: data.geminiApiKey,
         error: null,
       });
       set((state) => ({
@@ -126,9 +136,12 @@ export const useStore = create<StoreType>()((set, get) => ({
   },
 
   saveConfig: async () => {
-    const { overlayConfig } = get();
-    if (!overlayConfig) return;
-    await setStorageData({ overlayConfig });
+    const { overlayConfig, aiEnabled, geminiApiKey } = get();
+    await setStorageData({
+      overlayConfig: overlayConfig ?? undefined,
+      aiEnabled: aiEnabled ?? undefined,
+      geminiApiKey: geminiApiKey ?? undefined,
+    });
   },
 
   updateStyles: async (updates: Partial<OverlayConfig>) => {
@@ -212,5 +225,13 @@ export const useStore = create<StoreType>()((set, get) => ({
       await markSubredditAs(value, false);
     }
     set({ productiveRules: newRules });
+  },
+  setAiEnabled: async (enabled) => {
+    set({ aiEnabled: enabled });
+    await setStorageData({ aiEnabled: enabled });
+  },
+  setApiKey: async (key) => {
+    set({ geminiApiKey: key });
+    await setStorageData({ geminiApiKey: key });
   },
 }));

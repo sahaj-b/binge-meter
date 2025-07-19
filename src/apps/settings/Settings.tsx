@@ -5,6 +5,7 @@ import { OverlayStyles } from "./OverlayStyles";
 import { Exceptions } from "./Exceptions";
 import { OverlayUI } from "@/core/content/overlay";
 import { useStore } from "./state";
+import { AIClassification } from "./AIClassification";
 
 export default function Settings() {
   const fetchSettings = useStore((state) => state.fetchSettings);
@@ -67,6 +68,7 @@ export default function Settings() {
       </div>
 
       <div className="space-y-8">
+        <AIClassification />
         <TrackedSites />
         <Exceptions />
         <OverlaySettings />

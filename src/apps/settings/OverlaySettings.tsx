@@ -2,6 +2,7 @@ import { Label } from "@ui/label";
 import { Switch } from "@ui/switch";
 import { DurationPicker } from "../components/ui/duration-picker";
 import { useStore } from "./state";
+import { Section } from "./Section";
 
 export function OverlaySettings() {
   const updateConfig = useStore((state) => state.updateConfig);
@@ -11,11 +12,7 @@ export function OverlaySettings() {
   const thresholdDanger =
     useStore((state) => state.overlayConfig?.thresholdDanger) ?? 0;
   return (
-    <div className="space-y-6 p-6 border rounded-lg bg-card/30">
-      <div>
-        <h2 className="text-lg font-semibold">Overlay Settings</h2>
-      </div>
-
+    <Section title="Overlay Settings">
       <div className="space-y-6">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -62,6 +59,6 @@ export function OverlaySettings() {
           </div>
         </div>
       </div>
-    </div>
+    </Section>
   );
 }

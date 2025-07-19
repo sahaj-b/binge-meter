@@ -36,10 +36,12 @@ interface PopupState {
   isCurrentlyDistracting: boolean | null;
   isChannelOrSubredditDistracting: boolean | null;
   currentSite: string;
+  aiEnabled: boolean;
 
   initialize: () => Promise<void>;
   updateDistractingStatuses: (metadata: Metadata) => Promise<void>;
   toggleOverlay: () => void;
+  toggleAI: () => void;
   addSite: () => void;
   removeSite: () => void;
   requestPermission: () => void;
@@ -63,16 +65,19 @@ const usePopupStore = create<PopupState>((set, get) => ({
   isCurrentlyDistracting: null,
   currentSite: "",
   isChannelOrSubredditDistracting: true,
+  aiEnabled: false,
 
-  initialize: async () => {
+initialize: async () => {
     set({ isLoading: true });
     try {
       const data = await loadStorageData();
+      const { aiEnabled } = await getStorageData(["aiEnabled"]);
       set({
         dailyTime: data.dailyTime,
         overlayHidden: data.overlayHidden,
         thresholds: data.thresholds,
         trackedSites: data.trackedSites,
+        aiEnabled: aiEnabled,
       });
 
       const tab = await getCurrentTab();
@@ -146,6 +151,12 @@ const usePopupStore = create<PopupState>((set, get) => ({
   toggleOverlay: () => {
     sendToggleMessage();
     set((state) => ({ overlayHidden: !state.overlayHidden }));
+  },
+
+  toggleAI: () => {
+    const { aiEnabled } = get();
+    chrome.storage.local.set({ aiEnabled: !aiEnabled });
+    set({ aiEnabled: !aiEnabled });
   },
 
   addSite: () => {

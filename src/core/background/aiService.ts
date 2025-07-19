@@ -1,4 +1,7 @@
-export async function callGeminiAPI(prompt: string, apiKey: string) {
+export async function callGeminiAPI(
+  prompt: string,
+  apiKey: string,
+): Promise<string> {
   const model = "gemini-2.0-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
@@ -26,7 +29,7 @@ export async function callGeminiAPI(prompt: string, apiKey: string) {
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(
-      errorData.error?.message || `HTTP error! status: ${response.status}`,
+      errorData.error?.message || `HTTP error: ${response.status}`,
     );
   }
 

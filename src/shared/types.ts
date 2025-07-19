@@ -4,6 +4,9 @@ export type StorageData = {
   trackedSites: string[];
   productiveRules: ProductiveRules;
   activeSession: activeSession;
+  aiCache: Record<string, "productive" | "distracting">;
+  aiEnabled: boolean;
+  geminiApiKey: string;
 };
 
 export type ProductiveRules = {

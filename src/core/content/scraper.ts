@@ -1,3 +1,4 @@
+import { getStorageData } from "@/shared/store";
 import type {
   Metadata,
   PageMeta,
@@ -6,10 +7,11 @@ import type {
 } from "@/shared/types";
 
 export async function getMetadata(): Promise<Metadata> {
+  const aiEnabled = (await getStorageData(["aiEnabled"])).aiEnabled;
   const metadata: Metadata = {
     title: document.title,
     url: window.location.href,
-    pageMeta: scrapePageMeta(),
+    pageMeta: aiEnabled ? scrapePageMeta() : null,
   };
   if (
     metadata.url.includes("youtube.com/watch") ||

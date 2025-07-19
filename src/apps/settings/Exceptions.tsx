@@ -1,5 +1,6 @@
 import { useStore } from "./state";
 import { ReusableList } from "./ReusableList";
+import { Section } from "./Section";
 
 export function Exceptions() {
   const productiveRules = useStore((state) => state.productiveRules);
@@ -10,15 +11,16 @@ export function Exceptions() {
   const isRedditTracked = trackedSites?.includes("reddit.com");
 
   return (
-    <div className="space-y-6 p-6 border rounded-lg bg-card/30">
-      <div>
-        <h2 className="text-lg font-semibold">Exceptions (Productive Pages)</h2>
-        <p className="text-sm text-muted-foreground">
+    <Section
+      title="Exceptions (Productive Pages)"
+      description={
+        <>
           Define what content you consider productive inside Tracked Sites.
           <br />
           Using extension icon is more intuitive though
-        </p>
-      </div>
+        </>
+      }
+    >
       <div className="flex flex-col lg:flex-row gap-3">
         <ListContainer title="URLs">
           <ReusableList
@@ -59,7 +61,7 @@ export function Exceptions() {
           </>
         )}
       </div>
-    </div>
+    </Section>
   );
 }
 
