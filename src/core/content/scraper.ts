@@ -71,9 +71,10 @@ async function scrapeWatchPage(metadata: Metadata): Promise<YoutubeMetadata> {
         ytMetadata.channelId = null;
       }),
 
-    waitForElement("h1.title.style-scope.ytd-video-primary-info-renderer")
+    waitForElement("h1.title.style-scope.ytd-video-primary-info-renderer", true)
       .then((h1Element) => {
-        ytMetadata.videoTitle = h1Element?.textContent?.trim() || null;
+        console.log("h1Element", h1Element.textContent);
+        ytMetadata.videoTitle = h1Element.textContent?.trim() || null;
       })
       .catch(() => {
         ytMetadata.videoTitle = metadata.title;
@@ -128,11 +129,13 @@ function getContent(selector: string, attribute = "content"): string | null {
 
 function waitForElement(
   selector: string,
+  waitForText = false,
   timeout = 10 * 1000,
 ): Promise<Element> {
   return new Promise((resolve, reject) => {
     const element = document.querySelector(selector);
     if (element) {
+      console.log("ELEMENT already there", selector);
       resolve(element);
       return;
     }
@@ -147,7 +150,19 @@ function waitForElement(
             return;
           }
           const descendant = (node as Element).querySelector?.(selector);
-          if (descendant) {
+          console.log("MUTATION, textContent: ", descendant?.textContent);
+          if (waitForText && descendant?.textContent) {
+            console.log(
+              "DISCONNECTING, text content: ",
+              descendant.textContent,
+            );
+            observer.disconnect();
+            timeoutId && clearTimeout(timeoutId);
+            resolve(descendant);
+            return;
+          }
+          if (!waitForText && descendant) {
+            console.log("DISCONNECTING, element:", descendant);
             observer.disconnect();
             timeoutId && clearTimeout(timeoutId);
             resolve(descendant);

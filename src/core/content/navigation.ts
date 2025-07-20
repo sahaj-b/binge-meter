@@ -96,7 +96,7 @@ export function setupNavigation(
     // history.pushState = originalPushState;
     // history.replaceState = originalReplaceState;
     // window.removeEventListener("popstate", handleNavigation);
-    window.removeEventListener("yt-navigate-finish", fullMetadataHandler);
+    window.removeEventListener("yt-page-data-fetched", fullMetadataHandler);
     titleObserver?.disconnect();
     clearInterval(urlPollingInterval);
     clearTimeout(fallbackTimer);
