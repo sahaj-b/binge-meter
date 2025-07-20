@@ -114,22 +114,33 @@ export async function toggleOverlays() {
 export async function handleEvaluatePage(
   tabId: number,
   metadata: Metadata | null,
+  ai = true,
 ) {
   console.log(`Evaluating page for tab ${tabId}`, metadata);
   const classification =
-    (metadata && (await getClassification(metadata))) || "distracting";
+    (metadata && (await getClassification(metadata, ai))) || "distracting";
   console.log(`Page is ${classification}`);
   if (classification === "distracting") {
+    await chrome.tabs.sendMessage(tabId, { type: "ACTIVATE_OVERLAY" });
     await chrome.tabs
       .query({ active: true, currentWindow: true })
       .then(async ([activeTab]) => {
         if (activeTab?.id === tabId) {
-          await chrome.tabs.sendMessage(tabId, { type: "ACTIVATE_OVERLAY" });
+          console.log("updating active session");
           await updateActiveSession(tabId);
         }
       });
   } else {
+    console.log("SENDING DEACTIVATE_OVERLAY to tab", tabId);
     await chrome.tabs.sendMessage(tabId, { type: "DEACTIVATE_OVERLAY" });
+    await chrome.tabs
+      .query({ active: true, currentWindow: true })
+      .then(async ([activeTab]) => {
+        if (activeTab?.id === tabId) {
+          console.log("updating active session to NULL");
+          await updateActiveSession(null);
+        }
+      });
   }
 }
 

@@ -56,17 +56,14 @@ export function setupListeners() {
         revalidateCacheForTab(sender.tab.id);
         break;
       case "EVALUATE_PAGE":
+        console.log("EVALUATE_PAGE received");
         if (!sender.tab?.id) return;
         handleEvaluatePage(sender.tab.id, message.metadata);
         break;
       case "URL_ONLY_EVALUATE":
         if (!sender.tab?.id || !message.url) return;
-        chrome.runtime.sendMessage({
-          type: "DEBUG",
-          message: "URL_ONLY_EVALUATE received",
-        });
-        // TODO: pass no-AI parameter to this
-        handleEvaluatePage(sender.tab.id, { url: message.url });
+        console.log("URL_ONLY_EVALUATE received");
+        handleEvaluatePage(sender.tab.id, { url: message.url }, false);
         break;
       case "ADD_TRACKED_SITE":
         addSite(message.site)

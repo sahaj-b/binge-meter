@@ -38,7 +38,6 @@ export function updateActiveSession(activeTabId: number | null) {
               dailyTime: { ...dailyTime, total: newTotal },
               activeSession: newSession,
             });
-            console.log("STARTING SESSION FOR TAB", activeTabId);
             await chrome.tabs
               .sendMessage(activeTabId, {
                 type: "START_TICKING",
@@ -60,7 +59,6 @@ export function updateActiveSession(activeTabId: number | null) {
           }
         } catch (e) {}
       }
-      console.log("STOPPING SESSION");
       await setStorageData({
         dailyTime: { ...dailyTime, total: newTotal },
         activeSession: null,

@@ -52,23 +52,33 @@ async function getYoutubeMetadata(
 async function scrapeWatchPage(metadata: Metadata): Promise<YoutubeMetadata> {
   const url = new URL(metadata.url);
   const ytMetadata: YoutubeMetadata = {
-    videoTitle: metadata.title,
     videoId: url.searchParams.get("v"),
   };
 
-  try {
-    const channelLinkElement = await waitForElement(
+  await Promise.all([
+    waitForElement(
       "#above-the-fold #channel-name a.yt-simple-endpoint",
       // OR "#owner #channel-name a.yt-simple-endpoint",
-    );
+    )
+      .then((channelLinkElement) => {
+        ytMetadata.channelName =
+          channelLinkElement?.textContent?.trim() || null;
+        ytMetadata.channelId =
+          channelLinkElement?.getAttribute("href")?.replace("/", "") || null;
+      })
+      .catch(() => {
+        ytMetadata.channelName = null;
+        ytMetadata.channelId = null;
+      }),
 
-    ytMetadata.channelName = channelLinkElement?.textContent?.trim() || null;
-    ytMetadata.channelId =
-      channelLinkElement?.getAttribute("href")?.replace("/", "") || null;
-  } catch (error) {
-    ytMetadata.channelName = null;
-    ytMetadata.channelId = null;
-  }
+    waitForElement("h1.title.style-scope.ytd-video-primary-info-renderer")
+      .then((h1Element) => {
+        ytMetadata.videoTitle = h1Element?.textContent?.trim() || null;
+      })
+      .catch(() => {
+        ytMetadata.videoTitle = metadata.title;
+      }),
+  ]);
 
   return ytMetadata;
 }

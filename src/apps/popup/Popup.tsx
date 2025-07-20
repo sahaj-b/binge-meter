@@ -35,25 +35,27 @@ export default function Popup() {
           </p>
         </div>
 
-        <div className="flex items-center justify-between p-3 bg-card/30 border rounded-lg">
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="overlay-toggle">Show Overlay</Label>
+        <div className="p-3 bg-card/30 border rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="overlay-toggle">Show Overlay</Label>
+            </div>
+            <Switch
+              id="overlay-toggle"
+              checked={!overlayHidden}
+              onCheckedChange={toggleOverlay}
+            />
           </div>
-          <Switch
-            id="overlay-toggle"
-            checked={!overlayHidden}
-            onCheckedChange={toggleOverlay}
-          />
-        </div>
-        <div className="flex items-center justify-between p-3 bg-card/30 border rounded-lg">
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="ai-toggle">Enable AI Classification</Label>
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="ai-toggle">Enable AI Classification</Label>
+            </div>
+            <Switch
+              id="ai-toggle"
+              checked={aiEnabled}
+              onCheckedChange={toggleAI}
+            />
           </div>
-          <Switch
-            id="ai-toggle"
-            checked={aiEnabled}
-            onCheckedChange={toggleAI}
-          />
         </div>
 
         <CurrentSiteTracker />

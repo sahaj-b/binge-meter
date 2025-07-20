@@ -21,9 +21,22 @@ export function AIClassification() {
         />
       </div>
       <div className="flex justify-between text-nowrap">
-        <Label htmlFor="gemini-api-key">Gemini API Key</Label>
+        <div>
+          <Label htmlFor="gemini-api-key">Gemini API Key</Label>
+          <p className="text-xs text-muted-foreground mt-1">
+            Don't have one? get from{" "}
+            <a
+              target="_blank"
+              rel="noreferrer"
+              href="https://aistudio.google.com/u/0/apikey"
+              className="underline"
+            >
+              AI Studio
+            </a>
+          </p>
+        </div>
         <Input
-          className="w-1/2"
+          className="w-1/3"
           id="gemini-api-key"
           type="password"
           value={geminiApiKey ?? ""}

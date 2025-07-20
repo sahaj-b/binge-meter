@@ -51,8 +51,10 @@ export async function isURLDistracting(
   if (!productiveRules) productiveRules = data.productiveRules;
   const urlInRules = productiveRules.urls.includes(url);
   if (urlInRules) return false;
-  if (data.aiEnabled && data.aiCache[url])
-    return data.aiCache[url] === "distracting";
+  if (data.aiEnabled) {
+    const aiEntry = data.aiCache.find(([uurl]) => uurl === url);
+    if (aiEntry) return aiEntry[1] === "distracting";
+  }
   return true;
 }
 

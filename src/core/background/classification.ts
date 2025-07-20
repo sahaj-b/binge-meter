@@ -5,10 +5,15 @@ import { callGeminiAPI } from "./aiService";
 
 export async function getClassification(
   metadata: Metadata,
+  ai = true,
 ): Promise<"productive" | "distracting"> {
-  const { aiEnabled } = await getStorageData(["aiEnabled"]);
   const distracting = await isDistracting(metadata);
-  if (distracting && aiEnabled) return await classifyByAI(metadata);
+  console.log("Distracting:", distracting);
+  if (!distracting || !ai) {
+    return distracting ? "distracting" : "productive";
+  }
+  const { aiEnabled } = await getStorageData(["aiEnabled"]);
+  if (aiEnabled) return await classifyByAI(metadata);
   return distracting ? "distracting" : "productive";
 }
 
@@ -94,6 +99,8 @@ function getPrompt(metadata: Metadata): string {
     -  DO NOT use punctuation.
     -  Analyze ALL provided metadata to make your decision.
     -  If you are unsure, respond with "DISTRACTING".
+    -  Sometimes, the metadata will be mismatched (i.e, 2 different websites metadata can be mixed, because of incostistent navigation)
+    -  If some metadata is missmatching(eg, title and url is different than description/tags/OG metadata), always give priority to YOUTUBE/REDDIT section, then Core TITLE and URL, and forget the rest
 
     Analyze the following webpage metadata:
     ${metadataPrompt}

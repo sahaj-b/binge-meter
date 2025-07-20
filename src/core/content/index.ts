@@ -20,11 +20,20 @@ window.addEventListener("focus", () => {
   if (isActivated) chrome.runtime.sendMessage({ type: "TAB_FOCUS" });
 });
 
-setupNavigation((url) => {
-  chrome.runtime.sendMessage({ type: "URL_ONLY_EVALUATE", url });
-}, sendEvalMsg);
+setupNavigation(
+  (url) => {
+    chrome.runtime.sendMessage({ type: "URL_ONLY_EVALUATE", url });
+  },
+  () => {
+    chrome.runtime.sendMessage({
+      type: "DEBUG",
+      message: "FULLLLLLLL METADATA SENDDDDDDDDDDDDDDdd",
+    });
+    sendEvalMsg();
+  },
+);
 
-chrome.runtime.onMessage.addListener(async (message: any, _, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
   if (
     !isActivated &&
     message.type !== "ACTIVATE_OVERLAY" &&
@@ -38,19 +47,26 @@ chrome.runtime.onMessage.addListener(async (message: any, _, sendResponse) => {
   });
   switch (message.type) {
     case "SEND_METADATA": {
-      const metadata = await getMetadata();
-      chrome.runtime.sendMessage({
-        type: "DEBUG",
-        message: "SENDING METADATA" + JSON.stringify(metadata),
+      getMetadata().then((metadata) => {
+        chrome.runtime.sendMessage({
+          type: "DEBUG",
+          message: "SENDING METADATA: " + JSON.stringify(metadata),
+        });
+        sendResponse({ metadata: metadata });
       });
-      sendResponse({ metadata: metadata });
       return true;
     }
 
     case "START_TICKING":
-      await overlay.create();
-      await overlay.update(message.startingDuration, true);
-      ticker.start(message.startingDuration, message.startTime);
+      overlay
+        .create()
+        .then(() =>
+          overlay
+            .update(message.startingDuration, true)
+            .then(() =>
+              ticker.start(message.startingDuration, message.startTime),
+            ),
+        );
       break;
     case "STOP_TICKING":
       ticker.stop();
@@ -67,8 +83,7 @@ chrome.runtime.onMessage.addListener(async (message: any, _, sendResponse) => {
         type: "DEBUG",
         message: `UPDATE_FRAME received, time: ${message.time}`,
       });
-      await overlay.create();
-      await overlay.update(message.time);
+      overlay.create().then(() => overlay.update(message.time));
       break;
     case "DEACTIVATE_OVERLAY":
       overlay.destroy();
@@ -79,12 +94,12 @@ chrome.runtime.onMessage.addListener(async (message: any, _, sendResponse) => {
     case "ACTIVATE_OVERLAY":
       if (isActivated) return;
       isActivated = true;
-      await sendEvalMsg();
+      // sendEvalMsg();
       break;
 
     case "RE-INITIALIZE_OVERLAY":
       isActivated = true;
-      await sendEvalMsg();
+      sendEvalMsg();
       break;
     default:
       break;

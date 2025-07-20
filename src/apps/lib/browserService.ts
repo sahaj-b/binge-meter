@@ -3,12 +3,13 @@ import { sitePatterns } from "@/shared/utils";
 import type { Message, StorageData } from "@/shared/types";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
-  if (!site) {
-    return false;
-  }
+  if (!site) return false;
+
   const permissionsToRequest = {
     origins: sitePatterns(site),
   };
+
+  console.log(chrome.permissions);
   return chrome.permissions.contains(permissionsToRequest);
 }
 

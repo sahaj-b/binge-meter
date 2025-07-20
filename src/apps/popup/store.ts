@@ -60,14 +60,14 @@ const usePopupStore = create<PopupState>((set, get) => ({
   metadata: null,
   isLoading: false,
   error: null,
-  hasPermission: true,
+  hasPermission: false,
   isCurrentSiteTracked: false,
   isCurrentlyDistracting: null,
   currentSite: "",
   isChannelOrSubredditDistracting: true,
   aiEnabled: false,
 
-initialize: async () => {
+  initialize: async () => {
     set({ isLoading: true });
     try {
       const data = await loadStorageData();
@@ -85,17 +85,16 @@ initialize: async () => {
         const url = new URL(tab.url);
         const site = getSiteFromURL(url);
         const isTracked = data.trackedSites.includes(site);
+        const permission = await checkSitePermission(site);
 
         set({
           activeURL: url,
           currentSite: site,
           isCurrentSiteTracked: isTracked,
+          hasPermission: permission,
         });
 
         if (isTracked) {
-          const permission = await checkSitePermission(site);
-          set({ hasPermission: permission });
-
           if (
             (site.endsWith("youtube.com") &&
               (url.pathname.startsWith("/watch") ||
@@ -106,7 +105,9 @@ initialize: async () => {
               const response = await chrome.tabs.sendMessage(tab.id, {
                 type: "SEND_METADATA",
               });
+              console.log("Metadata response:", response);
               if (response?.metadata) {
+                console.log("Metadata received:", response.metadata);
                 set({ metadata: response.metadata });
                 get().updateDistractingStatuses(response.metadata);
               }

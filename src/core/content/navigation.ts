@@ -6,11 +6,10 @@
 //  - if title isn't changed, overlay won't re-evaluate
 // so we doin dual-phase evaluation:
 //  - instantly fire the URL change handler which will evaluate the page only based on URL
-//  - after title change, or after FALLBACK_DELAY ms, fire the fullMetadataHandler which will normally evaluate the page
+//  - after title change(or yt-navigate-finish event), or after FALLBACK_DELAY ms, fire the fullMetadataHandler which will normally evaluate the page
 
 // BRUH monkey-patching history.pushState and replaceState ain't working for SPA nav
-// youtube got that custom yt-navigate-start/finish event, so using that for yt
-// but what about others? I be polling url every X ms
+// so I be polling url every X ms
 
 let titleObserver: MutationObserver | null = null;
 let fallbackTimer: NodeJS.Timeout;
@@ -41,7 +40,7 @@ export function setupNavigation(
     titleObserver.observe(titleElement, { childList: true });
   }
 
-  function handleNavigation() {
+  function handleNavigation(observeTitle = true) {
     chrome.runtime.sendMessage({
       type: "DEBUG",
       message: "NAVIGATION DETECTED",
@@ -50,6 +49,8 @@ export function setupNavigation(
       instantUrlHandler(window.location.href);
     }, 10); // smol delay to ensure the URL is updated in the history state
     clearTimeout(fallbackTimer);
+
+    if (!observeTitle) return;
 
     startTitleObserver();
 
@@ -78,18 +79,24 @@ export function setupNavigation(
   const urlPollingInterval = setInterval(() => {
     if (window.location.href !== previousUrl) {
       previousUrl = window.location.href;
-      handleNavigation();
+      if (previousUrl.startsWith("https://www.youtube.com")) {
+        chrome.runtime.sendMessage({
+          type: "DEBUG",
+          message: "YOUTUBE NAV DETECTED, SENDING URL_ONLY_EVALUATE",
+        });
+        handleNavigation(false); // dont observe title change for youtube coz we using yt-navigate-finish
+      } else handleNavigation();
     }
   }, POLL_INTERVAL);
 
-  // window.addEventListener("yt-navigate-start", handleNavigation);
+  window.addEventListener("yt-page-data-fetched", fullMetadataHandler);
   // window.addEventListener("popstate", handleNavigation); // manual back/forward
 
   function destroy() {
     // history.pushState = originalPushState;
     // history.replaceState = originalReplaceState;
     // window.removeEventListener("popstate", handleNavigation);
-    // window.removeEventListener("yt-navigate-start", handleNavigation);
+    window.removeEventListener("yt-navigate-finish", fullMetadataHandler);
     titleObserver?.disconnect();
     clearInterval(urlPollingInterval);
     clearTimeout(fallbackTimer);
