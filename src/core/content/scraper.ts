@@ -6,6 +6,8 @@ import type {
   YoutubeMetadata,
 } from "@/shared/types";
 
+let lastScrapedYtTitle: string | null = null;
+
 export async function getMetadata(): Promise<Metadata> {
   const aiEnabled = (await getStorageData(["aiEnabled"])).aiEnabled;
   const metadata: Metadata = {
@@ -55,31 +57,26 @@ async function scrapeWatchPage(metadata: Metadata): Promise<YoutubeMetadata> {
     videoId: url.searchParams.get("v"),
   };
 
-  await Promise.all([
-    waitForElement(
-      "#above-the-fold #channel-name a.yt-simple-endpoint",
-      // OR "#owner #channel-name a.yt-simple-endpoint",
-    )
-      .then((channelLinkElement) => {
-        ytMetadata.channelName =
-          channelLinkElement?.textContent?.trim() || null;
-        ytMetadata.channelId =
-          channelLinkElement?.getAttribute("href")?.replace("/", "") || null;
-      })
-      .catch(() => {
-        ytMetadata.channelName = null;
-        ytMetadata.channelId = null;
-      }),
+  try {
+    const h1Element = await waitForElementChange(
+      "h1.title.style-scope.ytd-video-primary-info-renderer",
+      lastScrapedYtTitle,
+    );
+    ytMetadata.videoTitle = h1Element?.textContent?.trim() || null;
+    lastScrapedYtTitle = ytMetadata.videoTitle;
 
-    waitForElement("h1.title.style-scope.ytd-video-primary-info-renderer", true)
-      .then((h1Element) => {
-        console.log("h1Element", h1Element.textContent);
-        ytMetadata.videoTitle = h1Element.textContent?.trim() || null;
-      })
-      .catch(() => {
-        ytMetadata.videoTitle = metadata.title;
-      }),
-  ]);
+    const channelLinkElement = await waitForElement(
+      "#above-the-fold #channel-name a.yt-simple-endpoint",
+    );
+    ytMetadata.channelName = channelLinkElement?.textContent?.trim() || null;
+    ytMetadata.channelId =
+      channelLinkElement?.getAttribute("href")?.replace("/", "") || null;
+  } catch (error) {
+    console.error("Error scraping YouTube watch page:", error);
+    ytMetadata.videoTitle = metadata.title;
+    ytMetadata.channelName = null;
+    ytMetadata.channelId = null;
+  }
 
   return ytMetadata;
 }
@@ -125,6 +122,44 @@ function getContent(selector: string, attribute = "content"): string | null {
   return element
     ? element.getAttribute(attribute) || element.textContent
     : null;
+}
+
+function waitForElementChange(
+  selector: string,
+  previousTextContent: string | null,
+  timeout = 10000,
+): Promise<Element> {
+  return new Promise((resolve, reject) => {
+    const observer = new MutationObserver(() => {
+      const element = document.querySelector(selector);
+      if (element && element.textContent?.trim() !== previousTextContent) {
+        observer.disconnect();
+        clearTimeout(timeoutId);
+        resolve(element);
+      }
+    });
+
+    const timeoutId = setTimeout(() => {
+      observer.disconnect();
+      // Try one last time before giving up
+      const element = document.querySelector(selector);
+      if (element && element.textContent?.trim() !== previousTextContent) {
+        resolve(element);
+      } else {
+        reject(
+          new Error(
+            `Element "${selector}" did not change within ${timeout}ms.`,
+          ),
+        );
+      }
+    }, timeout);
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true, // Important for text changes
+    });
+  });
 }
 
 function waitForElement(
