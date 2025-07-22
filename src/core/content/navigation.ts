@@ -6,7 +6,7 @@
 //  - if title isn't changed, overlay won't re-evaluate
 // so we doin dual-phase evaluation:
 //  - instantly fire the URL change handler which will evaluate the page only based on URL
-//  - after title change(or yt-navigate-finish event), or after FALLBACK_DELAY ms, fire the fullMetadataHandler which will normally evaluate the page
+//  - after title change OR yt-navigate-finish, or after FALLBACK_DELAY ms, fire the fullMetadataHandler which will normally evaluate the page
 
 // BRUH monkey-patching history.pushState and replaceState ain't working for SPA nav
 // so I be polling url every X ms
@@ -23,7 +23,11 @@ export function setupNavigation(
 ): () => void {
   // const originalPushState = history.pushState;
   // const originalReplaceState = history.replaceState;
-  let previousUrl = window.location.href;
+  let previousUrl: string | null = null; // null for initial load
+  if (window.location.href.startsWith("https://www.youtube.com")) {
+    // coz yt-navigate-finish is fired on initial load
+    previousUrl = window.location.href;
+  }
 
   function onTitleChange() {
     clearTimeout(fallbackTimer);
@@ -43,12 +47,17 @@ export function setupNavigation(
   function handleNavigation(observeTitle = true) {
     chrome.runtime.sendMessage({
       type: "DEBUG",
-      message: "NAVIGATION DETECTED",
+      message: "NAVIGATION DETECTED. previousUrl: " + previousUrl,
     });
-    setTimeout(() => {
-      instantUrlHandler(window.location.href);
-    }, 10); // smol delay to ensure the URL is updated in the history state
-    clearTimeout(fallbackTimer);
+    if (previousUrl) {
+      setTimeout(() => {
+        instantUrlHandler(window.location.href);
+      }, 10); // smol delay to ensure the URL is updated in the history state
+      clearTimeout(fallbackTimer);
+    } else {
+      // inital load
+      fullMetadataHandler();
+    }
 
     if (!observeTitle) return;
 
@@ -63,40 +72,21 @@ export function setupNavigation(
     }, FALLBACK_DELAY);
   }
 
-  // monkey patching
-  // history.pushState = function (...args) {
-  //   originalPushState.apply(this, args);
-  //   console.log("PUSHING STATE");
-  //   handleStateChange();
-  // };
-  // history.replaceState = function (...args) {
-  //   originalReplaceState.apply(this, args);
-  //   console.log("REPLACING STATE");
-  //   handleStateChange();
-  // };
-
   // url polling
   const urlPollingInterval = setInterval(() => {
     if (window.location.href !== previousUrl) {
-      previousUrl = window.location.href;
-      if (previousUrl.startsWith("https://www.youtube.com")) {
-        chrome.runtime.sendMessage({
-          type: "DEBUG",
-          message: "YOUTUBE NAV DETECTED, SENDING URL_ONLY_EVALUATE",
-        });
-        handleNavigation(false); // dont observe title change for youtube coz we using yt-navigate-finish
+      if (!previousUrl || previousUrl.startsWith("https://www.youtube.com")) {
+        // no title observation for initial load and youtube coz we using yt-navigate-finish
+        handleNavigation(false);
       } else handleNavigation();
+      previousUrl = window.location.href;
     }
   }, POLL_INTERVAL);
 
-  window.addEventListener("yt-page-data-fetched", fullMetadataHandler);
-  // window.addEventListener("popstate", handleNavigation); // manual back/forward
+  window.addEventListener("yt-navigate-finish", fullMetadataHandler);
 
   function destroy() {
-    // history.pushState = originalPushState;
-    // history.replaceState = originalReplaceState;
-    // window.removeEventListener("popstate", handleNavigation);
-    window.removeEventListener("yt-page-data-fetched", fullMetadataHandler);
+    window.removeEventListener("yt-navigate-finish", fullMetadataHandler);
     titleObserver?.disconnect();
     clearInterval(urlPollingInterval);
     clearTimeout(fallbackTimer);
