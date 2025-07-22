@@ -23,6 +23,7 @@ type StoreData = {
   productiveRules: ProductiveRules | null;
   aiEnabled: boolean | null;
   geminiApiKey: string | null;
+  customPrompt: string | null;
   dummyTime: number;
 };
 type StoreActions = {
@@ -52,6 +53,7 @@ type StoreActions = {
   ) => Promise<void>;
   setAiEnabled: (enabled: boolean) => Promise<void>;
   setApiKey: (key: string) => Promise<void>;
+  setCustomPrompt: (prompt: string) => Promise<void>;
 };
 
 type StoreType = StoreData & StoreActions;
@@ -65,6 +67,7 @@ const initialData: StoreData = {
   productiveRules: null,
   aiEnabled: null,
   geminiApiKey: null,
+  customPrompt: null,
   dummyTime: 369000,
 };
 
@@ -78,6 +81,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         "productiveRules",
         "aiEnabled",
         "geminiApiKey",
+        "customPrompt",
       ]);
       if (!data.overlayConfig) throw new Error("Overlay config not found");
       set({
@@ -86,6 +90,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         productiveRules: data.productiveRules,
         aiEnabled: data.aiEnabled,
         geminiApiKey: data.geminiApiKey,
+        customPrompt: data.customPrompt,
         error: null,
       });
       set((state) => ({
@@ -233,5 +238,9 @@ export const useStore = create<StoreType>()((set, get) => ({
   setApiKey: async (key) => {
     set({ geminiApiKey: key });
     await setStorageData({ geminiApiKey: key });
+  },
+  setCustomPrompt: async (prompt) => {
+    set({ customPrompt: prompt });
+    await setStorageData({ customPrompt: prompt });
   },
 }));

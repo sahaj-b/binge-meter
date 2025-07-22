@@ -45,6 +45,7 @@ export const defaultStorageData: StorageData = {
   aiEnabled: false,
   activeSession: null,
   geminiApiKey: "",
+  customPrompt: "",
 };
 
 export async function getStorageData<K extends keyof StorageData>(

@@ -33,7 +33,7 @@ async function classifyByAI(
   }
 
   const aiResponse = await callGeminiAPI(
-    getPrompt(metadata),
+    await getPrompt(metadata),
     geminiApiKey,
   ).catch(() => "");
   console.log("AI response:", aiResponse);
@@ -50,9 +50,19 @@ async function classifyByAI(
   return classification;
 }
 
-function getPrompt(metadata: Metadata): string {
+async function getPrompt(metadata: Metadata) {
   let ytPrompt: string | null = null;
   let redditPrompt: string | null = null;
+  let customPromptSection: string | null = null;
+  const customPrompt = (await getStorageData(["customPrompt"])).customPrompt;
+  if (customPrompt) {
+    customPromptSection = `
+      The following is user's personal rules. GIVE THIS HIGHEST PRIORITY WHILE CLASSIFYING
+      ---- CUSTOM INSTRUCTIONS START ----
+      ${customPrompt}
+      ---- CUSTOM INSTRUCTIONS END ----
+      `;
+  }
   if (metadata.youtube?.videoId) {
     ytPrompt = `
       YOUTUBE:
@@ -86,13 +96,17 @@ function getPrompt(metadata: Metadata): string {
     ${ytPrompt}
     ${redditPrompt}
     `;
-  console.log("Metadata prompt:", metadataPrompt);
+  // console.log("Metadata prompt:", metadataPrompt);
   return `
     You are a classification engine for a productivity application called BingeMeter. Your sole purpose is to analyze webpage metadata and determine if the content is "PRODUCTIVE" or "DISTRACTING" for a user trying to focus on work or learning.
 
     DEFINITIONS:
-    - PRODUCTIVE: Content that is educational(in any field), instructional, work-related, technical tutorial, documentary, or a tool for creation. Examples: programming tutorials, software documentation, university lectures, articles on professional skills.
-    - DISTRACTING: Content that is primarily for entertainment/dopamine, mindless scrolling, social media, celebrity gossip, gaming, or general time-wasting. Examples: memes, reaction videos, vlogs, most social media feeds, "Top 10" listicles, gaming streams, etc.
+    - PRODUCTIVE: Content that is educational(in any field), instructional, work-related, technical tutorial, etc. Examples: programming tutorials, software documentation, university lectures, articles on professional skills, software design documentary
+    - DISTRACTING: Content that is primarily for entertainment/dopamine, mindless scrolling, social media, celebrity gossip, gaming, or general time-wasting. It could look like its educational like "Worlds Most Expensive AI vs Blender", but its distracting because it doesn't really teach anything. Examples: memes, reaction videos, vlogs, most social media feeds, "Top 10" listicles, gaming streams, etc.
+    Distracting Youtube Title examples: "Biggest lie about programmers", "This website made people do disgusting acts", "The Linux community is cooked", "Top 10 skills I learned this year"
+    Productive Youtube Title examples: "Binary Search Trees tutorial", "Tariffs Explained with Bananas"
+
+    ${customPromptSection}
 
     MANDATORY RULES:
     -  Your response MUST be a single word: "PRODUCTIVE" or "DISTRACTING".

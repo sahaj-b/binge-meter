@@ -7,6 +7,7 @@ export type StorageData = {
   aiCache: [string, "productive" | "distracting"][];
   aiEnabled: boolean;
   geminiApiKey: string;
+  customPrompt: string;
 };
 
 export type ProductiveRules = {
