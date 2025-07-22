@@ -8,6 +8,10 @@ import type {
 
 let lastScrapedYtTitle: string | null = null;
 
+export function setLastScrapedYtTitle(val: string | null) {
+  lastScrapedYtTitle = val;
+}
+
 export async function getMetadata(): Promise<Metadata> {
   const aiEnabled = (await getStorageData(["aiEnabled"])).aiEnabled;
   const metadata: Metadata = {
@@ -61,16 +65,20 @@ async function scrapeWatchPage(metadata: Metadata): Promise<YoutubeMetadata> {
     const h1Element = await waitForElementChange(
       "h1.title.style-scope.ytd-video-primary-info-renderer",
       lastScrapedYtTitle,
-    );
+    ).catch(() => {
+      ytMetadata.videoTitle = null;
+    });
     ytMetadata.videoTitle = h1Element?.textContent?.trim() || null;
     lastScrapedYtTitle = ytMetadata.videoTitle;
 
     const channelLinkElement = await waitForElement(
       "#above-the-fold #channel-name a.yt-simple-endpoint",
+      true,
     );
-    ytMetadata.channelName = channelLinkElement?.textContent?.trim() || null;
+    ytMetadata.channelName = channelLinkElement?.textContent?.trim() ?? null;
+
     ytMetadata.channelId =
-      channelLinkElement?.getAttribute("href")?.replace("/", "") || null;
+      channelLinkElement?.getAttribute("href")?.replace("/", "") ?? null;
   } catch (error) {
     console.error("Error scraping YouTube watch page:", error);
     ytMetadata.videoTitle = metadata.title;
@@ -127,7 +135,7 @@ function getContent(selector: string, attribute = "content"): string | null {
 function waitForElementChange(
   selector: string,
   previousTextContent: string | null,
-  timeout = 10000,
+  timeout = 5000,
 ): Promise<Element> {
   return new Promise((resolve, reject) => {
     const observer = new MutationObserver(() => {
@@ -169,8 +177,10 @@ function waitForElement(
 ): Promise<Element> {
   return new Promise((resolve, reject) => {
     const element = document.querySelector(selector);
-    if (element) {
-      console.log("ELEMENT already there", selector);
+    if (
+      (!waitForText && element) ||
+      (waitForText && element?.textContent?.trim())
+    ) {
       resolve(element);
       return;
     }

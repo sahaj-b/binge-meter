@@ -1,6 +1,7 @@
+import type { Metadata } from "@/shared/types";
 import { setupNavigation } from "./navigation";
 import { OverlayUI } from "./overlay";
-import { getMetadata } from "./scraper";
+import { getMetadata, setLastScrapedYtTitle } from "./scraper";
 import { revalidateCache } from "./storeService";
 import { TickerController } from "./tickerController";
 
@@ -8,6 +9,7 @@ const overlay = new OverlayUI(document.body, window.location.hostname);
 const ticker = new TickerController(overlay);
 
 let isActivated = true;
+let cachedMetadata: Metadata | null = null;
 
 console.log("Loading content script...");
 
@@ -47,13 +49,22 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
   });
   switch (message.type) {
     case "SEND_METADATA": {
-      getMetadata().then((metadata) => {
+      if (cachedMetadata) {
         chrome.runtime.sendMessage({
           type: "DEBUG",
-          message: "SENDING METADATA: " + JSON.stringify(metadata),
+          message: "SENDING METADATA " + JSON.stringify(cachedMetadata),
         });
-        sendResponse({ metadata: metadata });
-      });
+        sendResponse({ metadata: cachedMetadata });
+      } else {
+        getMetadata().then((metadata) => {
+          chrome.runtime.sendMessage({
+            type: "DEBUG",
+            message: "SENDING METADATA " + JSON.stringify(metadata),
+          });
+          cachedMetadata = metadata;
+          sendResponse({ metadata: metadata });
+        });
+      }
       return true;
     }
 
@@ -79,16 +90,13 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
       revalidateCache();
       break;
     case "UPDATE_FRAME":
-      chrome.runtime.sendMessage({
-        type: "DEBUG",
-        message: `UPDATE_FRAME received, time: ${message.time}`,
-      });
       overlay.create().then(() => overlay.update(message.time));
       break;
     case "DEACTIVATE_OVERLAY":
       overlay.destroy();
       ticker.stop();
       isActivated = false;
+      setLastScrapedYtTitle(null);
       break;
 
     case "ACTIVATE_OVERLAY":
@@ -99,19 +107,24 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
 
     case "RE-INITIALIZE_OVERLAY":
       isActivated = true;
-      sendEvalMsg();
+      sendEvalMsg(false);
       break;
     default:
       break;
   }
 });
 
-async function sendEvalMsg() {
-  const metadata = await getMetadata();
+async function sendEvalMsg(freshMetadata = true) {
+  let metadata: Metadata;
+  if (!freshMetadata && cachedMetadata) metadata = cachedMetadata;
+  else {
+    metadata = await getMetadata();
+    cachedMetadata = metadata;
+  }
   await chrome.runtime.sendMessage({
     type: "EVALUATE_PAGE",
     metadata,
   });
 }
 
-sendEvalMsg();
+// sendEvalMsg(); setupNavgation will handle initial load

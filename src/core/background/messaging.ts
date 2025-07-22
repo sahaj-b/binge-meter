@@ -166,9 +166,7 @@ export async function addProductiveRule(rule: ProductiveRulesInput) {
   }
 
   if (!changed) throw new Error("No valid rule provided to add");
-  console.log("SETTING", productiveRules);
   await setStorageData({ productiveRules });
-  console.log("HELL YEAHHh");
   if (rule.url)
     await sendMsgToAllTabs(rule.url, { type: "RE-INITIALIZE_OVERLAY" }).catch(
       () => {},
