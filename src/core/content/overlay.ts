@@ -109,6 +109,42 @@ export class OverlayUI {
       await setSizeForHost(this.hostname, size);
       this.onSizeSave(size);
     });
+
+    // this is for repositioning the overlay when the window resizes and it goes off-screen
+    // I think this is a bad idea, coz it saves the position permanently
+    // const windowResizeHandler = () => {
+    //   if (!this.element) return;
+    //
+    //   const rect = this.element.getBoundingClientRect();
+    //   const viewportWidth = window.innerWidth;
+    //   const viewportHeight = window.innerHeight;
+    //
+    //   let needsRepositioning = false;
+    //   let newLeft = rect.left;
+    //   let newTop = rect.top;
+    //
+    //   if (rect.right > viewportWidth) {
+    //     newLeft = viewportWidth - rect.width;
+    //     needsRepositioning = true;
+    //   }
+    //
+    //   if (rect.bottom > viewportHeight) {
+    //     newTop = viewportHeight - rect.height;
+    //     needsRepositioning = true;
+    //   }
+    //
+    //   if (newLeft < 0) newLeft = 0;
+    //   if (newTop < 0) newTop = 0;
+    //
+    //   if (needsRepositioning) {
+    //     this.element.style.left = `${newLeft}px`;
+    //     this.element.style.top = `${newTop}px`;
+    //
+    //     const newPosition = { left: `${newLeft}px`, top: `${newTop}px` };
+    //     setPositionForHost(this.hostname, newPosition);
+    //   }
+    // };
+    // window.addEventListener("resize", windowResizeHandler);
     document.body.appendChild(this.element);
   }
 
