@@ -13,16 +13,16 @@ export function setLastScrapedYtTitle(val: string | null) {
 }
 
 export async function getMetadata(): Promise<Metadata> {
-  const { aiEnabled, aiEnabledSites } = await getStorageData([
+  const { aiEnabled, aiDisabledSites } = await getStorageData([
     "aiEnabled",
-    "aiEnabledSites",
+    "aiDisabledSites",
   ]);
   const url = window.location.href;
   const metadata: Metadata = {
     title: document.title,
     url: url,
     pageMeta:
-      aiEnabled && aiEnabledSites.some((site) => url.includes(site))
+      aiEnabled && !aiDisabledSites.some((site) => url.includes(site))
         ? scrapePageMeta()
         : null,
   };

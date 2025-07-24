@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { Button } from "@ui/button";
 import { Input } from "@ui/input";
@@ -9,6 +10,7 @@ interface ReusableListProps {
   onRemoveItem: (item: string) => Promise<void>;
   placeholder: string;
   error?: string | null;
+  actions?: (item: string) => ReactNode;
 }
 
 export function ReusableList({
@@ -16,6 +18,7 @@ export function ReusableList({
   onAddItem,
   onRemoveItem,
   placeholder,
+  actions,
 }: ReusableListProps) {
   const [newItem, setNewItem] = useState("");
   const [isAddingLoading, setIsAddingLoading] = useState(false);
@@ -76,19 +79,22 @@ export function ReusableList({
             className="flex items-center justify-between py-2 px-3 bg-muted/60 rounded-md"
           >
             <span className="text-sm break-all">{item}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleRemoveItem(item)}
-              className="hover:bg-destructive/10 hover:text-destructive"
-              disabled={removingLoadingSet.has(item)}
-            >
-              {removingLoadingSet.has(item) ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Trash2 className="h-3 w-3" />
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              {actions?.(item)}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRemoveItem(item)}
+                className="hover:bg-destructive/10 hover:text-destructive"
+                disabled={removingLoadingSet.has(item)}
+              >
+                {removingLoadingSet.has(item) ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
           </div>
         ))}
       </div>

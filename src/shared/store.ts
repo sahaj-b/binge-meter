@@ -43,7 +43,7 @@ export const defaultStorageData: StorageData = {
   productiveRules: defaultProductiveRules,
   aiCache: [],
   aiEnabled: false,
-  aiEnabledSites: ["youtube.com", "reddit.com"],
+  aiDisabledSites: [],
   activeSession: null,
   geminiApiKey: "",
   customPrompt: "",

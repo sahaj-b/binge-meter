@@ -59,7 +59,7 @@ export function AIClassification() {
             <TooltipTrigger asChild>
               <HelpCircle className="size-3" />
             </TooltipTrigger>
-            <TooltipContent className="font-bold">
+            <TooltipContent>
               Your personal rules defining what's productive and what's not.
               (Optional)
             </TooltipContent>

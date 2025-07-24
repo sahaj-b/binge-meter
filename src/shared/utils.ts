@@ -47,14 +47,14 @@ export async function isURLDistracting(
     "productiveRules",
     "aiCache",
     "aiEnabled",
-    "aiEnabledSites",
+    "aiDisabledSites",
   ]);
   if (!productiveRules) productiveRules = data.productiveRules;
   const urlInRules = productiveRules.urls.includes(url);
   if (urlInRules) return false;
   if (
     data.aiEnabled &&
-    data.aiEnabledSites.some((site) => url.includes(site))
+    !data.aiDisabledSites.some((site) => url.includes(site))
   ) {
     const aiEntry = data.aiCache.find(([uurl]) => uurl === url);
     if (aiEntry) return aiEntry[1] === "distracting";

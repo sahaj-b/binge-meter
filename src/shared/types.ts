@@ -6,7 +6,7 @@ export type StorageData = {
   activeSession: activeSession;
   aiCache: [string, "productive" | "distracting"][];
   aiEnabled: boolean;
-  aiEnabledSites: string[];
+  aiDisabledSites: string[];
   geminiApiKey: string;
   customPrompt: string;
 };

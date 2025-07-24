@@ -22,6 +22,7 @@ type StoreData = {
   overlayConfig: OverlayConfig | null;
   productiveRules: ProductiveRules | null;
   aiEnabled: boolean | null;
+  aiDisabledSites: string[] | null;
   geminiApiKey: string | null;
   customPrompt: string | null;
   dummyTime: number;
@@ -52,6 +53,7 @@ type StoreActions = {
     value: string,
   ) => Promise<void>;
   setAiEnabled: (enabled: boolean) => Promise<void>;
+  toggleAiDisabledSite: (site: string) => Promise<void>;
   setApiKey: (key: string) => Promise<void>;
   setCustomPrompt: (prompt: string) => Promise<void>;
 };
@@ -66,6 +68,7 @@ const initialData: StoreData = {
   overlayConfig: null,
   productiveRules: null,
   aiEnabled: null,
+  aiDisabledSites: null,
   geminiApiKey: null,
   customPrompt: null,
   dummyTime: 369000,
@@ -80,6 +83,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         "trackedSites",
         "productiveRules",
         "aiEnabled",
+        "aiDisabledSites",
         "geminiApiKey",
         "customPrompt",
       ]);
@@ -89,6 +93,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         trackedSites: data.trackedSites,
         productiveRules: data.productiveRules,
         aiEnabled: data.aiEnabled,
+        aiDisabledSites: data.aiDisabledSites,
         geminiApiKey: data.geminiApiKey,
         customPrompt: data.customPrompt,
         error: null,
@@ -234,6 +239,15 @@ export const useStore = create<StoreType>()((set, get) => ({
   setAiEnabled: async (enabled) => {
     set({ aiEnabled: enabled });
     await setStorageData({ aiEnabled: enabled });
+  },
+  toggleAiDisabledSite: async (site: string) => {
+    const { aiDisabledSites } = get();
+    if (!aiDisabledSites) return;
+    const newSites = aiDisabledSites.includes(site)
+      ? aiDisabledSites.filter((s) => s !== site)
+      : [...aiDisabledSites, site];
+    set({ aiDisabledSites: newSites });
+    await setStorageData({ aiDisabledSites: newSites });
   },
   setApiKey: async (key) => {
     set({ geminiApiKey: key });
