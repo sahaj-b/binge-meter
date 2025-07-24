@@ -13,11 +13,18 @@ export function setLastScrapedYtTitle(val: string | null) {
 }
 
 export async function getMetadata(): Promise<Metadata> {
-  const aiEnabled = (await getStorageData(["aiEnabled"])).aiEnabled;
+  const { aiEnabled, aiEnabledSites } = await getStorageData([
+    "aiEnabled",
+    "aiEnabledSites",
+  ]);
+  const url = window.location.href;
   const metadata: Metadata = {
     title: document.title,
-    url: window.location.href,
-    pageMeta: aiEnabled ? scrapePageMeta() : null,
+    url: url,
+    pageMeta:
+      aiEnabled && aiEnabledSites.some((site) => url.includes(site))
+        ? scrapePageMeta()
+        : null,
   };
   if (
     metadata.url.includes("youtube.com/watch") ||

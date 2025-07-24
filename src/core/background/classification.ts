@@ -12,8 +12,12 @@ export async function getClassification(
   if (!distracting || !ai) {
     return distracting ? "distracting" : "productive";
   }
-  const { aiEnabled } = await getStorageData(["aiEnabled"]);
-  if (aiEnabled) return await classifyByAI(metadata);
+  const { aiEnabled, aiEnabledSites } = await getStorageData([
+    "aiEnabled",
+    "aiEnabledSites",
+  ]);
+  if (aiEnabled && aiEnabledSites.some((site) => metadata.url.includes(site)))
+    return await classifyByAI(metadata);
   return distracting ? "distracting" : "productive";
 }
 
