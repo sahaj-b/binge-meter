@@ -2,7 +2,7 @@ export type StorageData = {
   dailyTime: dailyTime;
   overlayConfig: OverlayConfig;
   trackedSites: string[];
-  productiveRules: ProductiveRules;
+  userRules: UserRules;
   activeSession: activeSession;
   aiCache: [string, "productive" | "distracting"][];
   aiEnabled: boolean;
@@ -11,17 +11,22 @@ export type StorageData = {
   customPrompt: string;
 };
 
-export type ProductiveRules = {
-  urls: string[];
-  ytChannels: string[];
-  subreddits: string[];
+// why not just string[] for URLRules?
+// coz if user marks URL as distracting, it should not trigger AI classification
+// so marking distracting is explicit
+type URLRules = Record<string, "productive" | "distracting">;
+
+export type UserRules = {
+  urls: URLRules;
+  productiveYtChannels: string[];
+  productiveSubreddits: string[];
 };
 
-type SingularizeKey<T extends string> = T extends `${infer U}s` ? U : T;
-
-export type ProductiveRulesInput = Partial<{
-  [K in keyof ProductiveRules as SingularizeKey<K>]: ProductiveRules[K][number];
-}>; // {url?: string, ytChannel?: string, subreddit?: string, etc..}
+export type UserRulesInput = {
+  url?: [string, "productive" | "distracting"];
+  productiveYtChannel?: [string, "productive" | "distracting"];
+  productiveSubreddit?: [string, "productive" | "distracting"];
+};
 
 export type dailyTime = {
   total: number; //ms
@@ -51,9 +56,10 @@ export type OverlayConfig = {
 export type Message = {
   type: string;
   site?: string;
+  url?: string;
   metadata?: any;
   time?: number;
-  rule?: ProductiveRulesInput;
+  rule?: UserRulesInput;
 };
 export type PageMeta = {
   description?: string | null;

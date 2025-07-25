@@ -6,8 +6,7 @@ import {
   revalidateCacheForTab,
   toggleOverlays,
   handleEvaluatePage,
-  addProductiveRule,
-  removeProductiveRule,
+  updateUserRule,
 } from "./messaging";
 
 export function setupListeners() {
@@ -85,8 +84,9 @@ export function setupListeners() {
           });
         return true;
 
-      case "REMOVE_PRODUCTIVE_RULE":
-        removeProductiveRule(message.rule)
+      case "UPDATE_USER_RULE":
+        console.log("UPDATE_USER_RULE", message.rule);
+        updateUserRule(message.rule)
           .then(() => {
             sendResponse({ success: true });
           })
@@ -95,8 +95,9 @@ export function setupListeners() {
           });
         return true;
 
-      case "ADD_PRODUCTIVE_RULE":
-        addProductiveRule(message.rule)
+      case "MARK_URL_DISTRACTING":
+        console.log("MARK_URL_DISTRACTING", message.rule);
+        updateUserRule(message.rule, true)
           .then(() => {
             sendResponse({ success: true });
           })

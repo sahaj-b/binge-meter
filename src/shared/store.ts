@@ -1,9 +1,4 @@
-import type {
-  dailyTime,
-  ProductiveRules,
-  OverlayConfig,
-  StorageData,
-} from "./types";
+import type { dailyTime, UserRules, OverlayConfig, StorageData } from "./types";
 
 export const defaultOverlayConfig: OverlayConfig = {
   thresholdWarn: 10 * 1000,
@@ -30,17 +25,17 @@ export const defaultDailyTime: dailyTime = {
   date: new Date().toISOString().split("T")[0],
 };
 
-export const defaultProductiveRules: ProductiveRules = {
-  urls: [],
-  ytChannels: [],
-  subreddits: [],
+export const defaultUserRules: UserRules = {
+  urls: {},
+  productiveYtChannels: [],
+  productiveSubreddits: [],
 };
 
 export const defaultStorageData: StorageData = {
   dailyTime: defaultDailyTime,
   overlayConfig: defaultOverlayConfig,
   trackedSites: defaultTrackedSites,
-  productiveRules: defaultProductiveRules,
+  userRules: defaultUserRules,
   aiCache: [],
   aiEnabled: false,
   aiDisabledSites: [],
@@ -67,5 +62,5 @@ export async function setStorageData(
   data: Partial<StorageData>,
 ): Promise<void> {
   await chrome.storage.local.set(data);
-  // console.log("SAVED", data);
+  console.log("SAVED", data);
 }

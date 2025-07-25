@@ -1,5 +1,5 @@
 import { getStorageData } from "@/shared/store";
-import type { ProductiveRules, Metadata } from "@/shared/types";
+import type { UserRules, Metadata } from "@/shared/types";
 
 export function sitePatterns(site: string): string[] {
   return [`*://${site}/*`, `*://www.${site}/*`];
@@ -7,32 +7,24 @@ export function sitePatterns(site: string): string[] {
 
 export async function isDistracting(
   metadata: Metadata,
-  productiveRules?: ProductiveRules,
+  userRules?: UserRules,
 ): Promise<boolean> {
-  if (!productiveRules)
-    productiveRules = (await getStorageData(["productiveRules"]))
-      .productiveRules;
+  if (!userRules) userRules = (await getStorageData(["userRules"])).userRules;
 
-  if (!(await isURLDistracting(metadata.url, productiveRules))) return false;
+  if (!(await isURLDistracting(metadata.url, userRules))) return false;
 
   if (
     metadata.youtube?.channelId &&
     metadata.youtube?.channelName &&
-    (!(await isChannelDistracting(
-      metadata.youtube.channelId,
-      productiveRules,
-    )) ||
-      !(await isChannelDistracting(
-        metadata.youtube.channelName,
-        productiveRules,
-      )))
+    (!(await isChannelDistracting(metadata.youtube.channelId, userRules)) ||
+      !(await isChannelDistracting(metadata.youtube.channelName, userRules)))
   ) {
     return false;
   }
 
   if (
     metadata.reddit?.subreddit &&
-    !(await isSubredditDistracting(metadata.reddit.subreddit, productiveRules))
+    !(await isSubredditDistracting(metadata.reddit.subreddit, userRules))
   ) {
     return false;
   }
@@ -41,17 +33,17 @@ export async function isDistracting(
 
 export async function isURLDistracting(
   url: string,
-  productiveRules?: ProductiveRules,
+  userRules?: UserRules,
 ): Promise<boolean> {
   const data = await getStorageData([
-    "productiveRules",
+    "userRules",
     "aiCache",
     "aiEnabled",
     "aiDisabledSites",
   ]);
-  if (!productiveRules) productiveRules = data.productiveRules;
-  const urlInRules = productiveRules.urls.includes(url);
-  if (urlInRules) return false;
+  if (!userRules) userRules = data.userRules;
+  if (url in userRules.urls) return userRules.urls[url] === "distracting";
+  if (url.includes("youtube.com/shorts")) return true;
   if (
     data.aiEnabled &&
     !data.aiDisabledSites.some((site) => url.includes(site))
@@ -64,28 +56,24 @@ export async function isURLDistracting(
 
 export async function isChannelDistracting(
   channel: string,
-  productiveRules?: ProductiveRules,
+  userRules?: UserRules,
 ): Promise<boolean> {
-  if (!productiveRules)
-    productiveRules = (await getStorageData(["productiveRules"]))
-      .productiveRules;
+  if (!userRules) userRules = (await getStorageData(["userRules"])).userRules;
 
   console.log(
     "is",
     channel,
     "distracting?",
-    !productiveRules.ytChannels.includes(channel),
+    !userRules.productiveYtChannels.includes(channel),
   );
-  return !productiveRules.ytChannels.includes(channel);
+  return !userRules.productiveYtChannels.includes(channel);
 }
 
 export async function isSubredditDistracting(
   subreddit: string,
-  productiveRules?: ProductiveRules,
+  userRules?: UserRules,
 ): Promise<boolean> {
-  if (!productiveRules)
-    productiveRules = (await getStorageData(["productiveRules"]))
-      .productiveRules;
+  if (!userRules) userRules = (await getStorageData(["userRules"])).userRules;
 
-  return !productiveRules.subreddits.includes(subreddit);
+  return !userRules.productiveSubreddits.includes(subreddit);
 }

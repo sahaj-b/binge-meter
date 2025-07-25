@@ -3,9 +3,8 @@ import { ReusableList } from "./ReusableList";
 import { Section } from "./Section";
 
 export function Exceptions() {
-  const productiveRules = useStore((state) => state.productiveRules);
-  const addProductiveRule = useStore((state) => state.addProductiveRule);
-  const removeProductiveRule = useStore((state) => state.removeProductiveRule);
+  const userRules = useStore((state) => state.userRules);
+  const updateUserRule = useStore((state) => state.updateUserRule);
   const trackedSites = useStore((state) => state.trackedSites);
   const isYoutubeTracked = trackedSites?.includes("youtube.com");
   const isRedditTracked = trackedSites?.includes("reddit.com");
@@ -24,9 +23,14 @@ export function Exceptions() {
       <div className="flex flex-col lg:flex-row gap-3">
         <ListContainer title="URLs">
           <ReusableList
-            items={[...(productiveRules?.urls ?? [])].reverse()}
-            onAddItem={(item) => addProductiveRule("urls", item)}
-            onRemoveItem={(item) => removeProductiveRule("urls", item)}
+            items={Object.entries(userRules?.urls ?? {})
+              .reduce((acc, [key, value]) => {
+                if (value === "productive") acc.push(key);
+                return acc;
+              }, [] as string[])
+              .reverse()}
+            onAddItem={(item) => updateUserRule("urls", item, false)}
+            onRemoveItem={(item) => updateUserRule("urls", item, true)}
             placeholder="https://example.com/productive"
           />
         </ListContainer>
@@ -35,10 +39,12 @@ export function Exceptions() {
             <Seperator />
             <ListContainer title="Youtube Channels">
               <ReusableList
-                items={[...(productiveRules?.ytChannels ?? [])].reverse()}
-                onAddItem={(item) => addProductiveRule("ytChannels", item)}
+                items={[...(userRules?.productiveYtChannels ?? [])].reverse()}
+                onAddItem={(item) =>
+                  updateUserRule("productiveYtChannels", item, false)
+                }
                 onRemoveItem={(item) =>
-                  removeProductiveRule("ytChannels", item)
+                  updateUserRule("productiveYtChannels", item, true)
                 }
                 placeholder="@channelID or ChannelName"
               />
@@ -48,12 +54,14 @@ export function Exceptions() {
         {isRedditTracked && (
           <>
             <Seperator />
-            <ListContainer title="Subreddits">
+            <ListContainer title="productiveSubreddits">
               <ReusableList
-                items={[...(productiveRules?.subreddits ?? [])].reverse()}
-                onAddItem={(item) => addProductiveRule("subreddits", item)}
+                items={[...(userRules?.productiveSubreddits ?? [])].reverse()}
+                onAddItem={(item) =>
+                  updateUserRule("productiveSubreddits", item, false)
+                }
                 onRemoveItem={(item) =>
-                  removeProductiveRule("subreddits", item)
+                  updateUserRule("productiveSubreddits", item, true)
                 }
                 placeholder="SubredditName"
               />

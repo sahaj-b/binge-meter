@@ -29,12 +29,12 @@ export async function requestSitePermission(site: string) {
 
 export async function loadStorageData() {
   try {
-    const { trackedSites, dailyTime, overlayConfig, productiveRules } =
+    const { trackedSites, dailyTime, overlayConfig, userRules } =
       (await getStorageData([
         "dailyTime",
         "overlayConfig",
         "trackedSites",
-        "productiveRules",
+        "userRules",
       ])) as StorageData;
 
     return {
@@ -45,7 +45,7 @@ export async function loadStorageData() {
         danger: overlayConfig?.thresholdDanger ?? null,
       },
       trackedSites: trackedSites ?? [],
-      productiveRules: productiveRules ?? [],
+      userRules: userRules ?? [],
     };
   } catch (error) {
     console.error("Failed to load data:", error);
@@ -106,8 +106,18 @@ export async function sendRemoveSiteMessage(site: string) {
 
 export async function markURLAs(url: string, markDistracting: boolean) {
   const response = await chrome.runtime.sendMessage({
-    type: markDistracting ? "REMOVE_PRODUCTIVE_RULE" : "ADD_PRODUCTIVE_RULE",
-    rule: { url },
+    type: "UPDATE_USER_RULE",
+    rule: { url: [url, markDistracting ? "distracting" : "productive"] },
+  } satisfies Message);
+  if (!response?.success)
+    throw new Error(response?.error ?? "Unknown error occurred");
+}
+
+export async function markURLAsDistracting(url: string) {
+  // this is for popup button mark page as distracting (marks instead of deleting)
+  const response = await chrome.runtime.sendMessage({
+    type: "MARK_URL_DISTRACTING",
+    rule: { url: [url, "distracting"] },
   } satisfies Message);
   if (!response?.success)
     throw new Error(response?.error ?? "Unknown error occurred");
@@ -115,8 +125,13 @@ export async function markURLAs(url: string, markDistracting: boolean) {
 
 export async function markChannelAs(channel: string, markDistracting: boolean) {
   const response = await chrome.runtime.sendMessage({
-    type: markDistracting ? "REMOVE_PRODUCTIVE_RULE" : "ADD_PRODUCTIVE_RULE",
-    rule: { ytChannel: channel },
+    type: "UPDATE_USER_RULE",
+    rule: {
+      productiveYtChannel: [
+        channel,
+        markDistracting ? "distracting" : "productive",
+      ],
+    },
   } satisfies Message);
   if (!response?.success)
     throw new Error(response?.error ?? "Unknown error occurred");
@@ -127,8 +142,13 @@ export async function markSubredditAs(
   markDistracting: boolean,
 ) {
   const response = await chrome.runtime.sendMessage({
-    type: markDistracting ? "REMOVE_PRODUCTIVE_RULE" : "ADD_PRODUCTIVE_RULE",
-    rule: { subreddit },
+    type: "UPDATE_USER_RULE",
+    rule: {
+      productiveSubreddit: [
+        subreddit,
+        markDistracting ? "distracting" : "productive",
+      ],
+    },
   } satisfies Message);
   if (!response?.success)
     throw new Error(response?.error ?? "Unknown error occurred");

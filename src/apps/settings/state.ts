@@ -3,7 +3,7 @@ import {
   getStorageData,
   setStorageData,
 } from "@/shared/store";
-import type { OverlayConfig, ProductiveRules } from "@/shared/types";
+import type { OverlayConfig, UserRules } from "@/shared/types";
 import { create } from "zustand";
 import {
   requestSitePermission,
@@ -20,7 +20,7 @@ type StoreData = {
   inputError: string | null;
   trackedSites: string[] | null;
   overlayConfig: OverlayConfig | null;
-  productiveRules: ProductiveRules | null;
+  userRules: UserRules | null;
   aiEnabled: boolean | null;
   aiDisabledSites: string[] | null;
   geminiApiKey: string | null;
@@ -44,13 +44,10 @@ type StoreActions = {
   ) => Promise<void>;
   addSite: (site: string) => Promise<void>;
   removeSite: (site: string) => Promise<void>;
-  addProductiveRule: (
-    ruleType: keyof ProductiveRules,
+  updateUserRule: (
+    ruleType: keyof UserRules,
     value: string,
-  ) => Promise<void>;
-  removeProductiveRule: (
-    ruleType: keyof ProductiveRules,
-    value: string,
+    markDistracting: boolean,
   ) => Promise<void>;
   setAiEnabled: (enabled: boolean) => Promise<void>;
   toggleAiDisabledSite: (site: string) => Promise<void>;
@@ -66,7 +63,7 @@ const initialData: StoreData = {
   inputError: null,
   trackedSites: null,
   overlayConfig: null,
-  productiveRules: null,
+  userRules: null,
   aiEnabled: null,
   aiDisabledSites: null,
   geminiApiKey: null,
@@ -81,7 +78,7 @@ export const useStore = create<StoreType>()((set, get) => ({
       const data = await getStorageData([
         "overlayConfig",
         "trackedSites",
-        "productiveRules",
+        "userRules",
         "aiEnabled",
         "aiDisabledSites",
         "geminiApiKey",
@@ -91,7 +88,7 @@ export const useStore = create<StoreType>()((set, get) => ({
       set({
         overlayConfig: data.overlayConfig,
         trackedSites: data.trackedSites,
-        productiveRules: data.productiveRules,
+        userRules: data.userRules,
         aiEnabled: data.aiEnabled,
         aiDisabledSites: data.aiDisabledSites,
         geminiApiKey: data.geminiApiKey,
@@ -208,33 +205,15 @@ export const useStore = create<StoreType>()((set, get) => ({
       trackedSites: state.trackedSites?.filter((s) => s !== site) || [],
     }));
   },
-  removeProductiveRule: async (ruleType, value) => {
-    const { productiveRules } = get();
-    if (!productiveRules) return;
+  updateUserRule: async (ruleType, value, markDistracting) => {
     if (ruleType === "urls") {
-      await markURLAs(value, true);
-    } else if (ruleType === "ytChannels") {
-      await markChannelAs(value, true);
-    } else if (ruleType === "subreddits") {
-      await markSubredditAs(value, true);
+      await markURLAs(value, markDistracting);
+    } else if (ruleType === "productiveYtChannels") {
+      await markChannelAs(value, markDistracting);
+    } else if (ruleType === "productiveSubreddits") {
+      await markSubredditAs(value, markDistracting);
     }
     get().fetchSettings();
-  },
-  addProductiveRule: async (ruleType, value) => {
-    const { productiveRules } = get();
-    if (!productiveRules) return;
-    const newRules = {
-      ...productiveRules,
-      [ruleType]: [...productiveRules[ruleType], value],
-    };
-    if (ruleType === "urls") {
-      await markURLAs(value, false);
-    } else if (ruleType === "ytChannels") {
-      await markChannelAs(value, false);
-    } else if (ruleType === "subreddits") {
-      await markSubredditAs(value, false);
-    }
-    set({ productiveRules: newRules });
   },
   setAiEnabled: async (enabled) => {
     set({ aiEnabled: enabled });

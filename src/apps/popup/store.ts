@@ -11,6 +11,7 @@ import {
   markURLAs,
   markSubredditAs,
   markChannelAs,
+  markURLAsDistracting,
 } from "../lib/browserService";
 import { getStorageData } from "@/shared/store";
 import {
@@ -201,7 +202,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
 
     set({ isLoading: true });
     try {
-      const url = metadata?.url || activeURL?.href;
+      const url = metadata?.url ?? activeURL?.href;
       if (url) {
         if (markChannelOrSubreddit) {
           if (metadata?.youtube?.channelId) {
@@ -213,7 +214,8 @@ const usePopupStore = create<PopupState>((set, get) => ({
             return;
           }
         } else {
-          await markURLAs(url, markDistracting);
+          if (markDistracting) await markURLAsDistracting(url);
+          else await markURLAs(url, markDistracting);
         }
         get().updateDistractingStatuses(metadata || { url });
       }

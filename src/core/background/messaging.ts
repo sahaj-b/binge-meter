@@ -3,8 +3,8 @@ import { sitePatterns } from "@/shared/utils";
 import type {
   Message,
   Metadata,
-  ProductiveRules,
-  ProductiveRulesInput,
+  UserRules,
+  UserRulesInput,
 } from "@/shared/types";
 
 import { injectContentScript, registerContentScript } from "./scripting";
@@ -144,66 +144,51 @@ export async function handleEvaluatePage(
   }
 }
 
-export async function addProductiveRule(rule: ProductiveRulesInput) {
-  const { productiveRules } = await getStorageData(["productiveRules"]);
+export async function updateUserRule(
+  rule: UserRulesInput,
+  deleteDistractingURL = false,
+) {
+  const { userRules } = await getStorageData(["userRules"]);
   let changed = false;
 
   for (const [key, value] of Object.entries(rule)) {
-    const singularKey = key as keyof ProductiveRulesInput;
-    const pluralKey = (singularKey + "s") as keyof ProductiveRules;
+    const singularKey = key as keyof UserRulesInput;
+    const pluralKey = (singularKey + "s") as keyof UserRules;
 
-    if (
-      productiveRules[pluralKey] &&
-      Array.isArray(productiveRules[pluralKey])
-    ) {
-      if (productiveRules[pluralKey].includes(value)) {
-        throw new Error(`'${value}' already exists`);
+    if (userRules[pluralKey] && Array.isArray(userRules[pluralKey])) {
+      // isArray is true for ytChannels and subreddits
+      console.log("UPDATING YTCHANNEL or SUBREDDIT", value);
+      if (value[1] === "productive") {
+        if (userRules[pluralKey].includes(value[0]))
+          throw new Error(`'${value[0]}' already exists`);
+
+        userRules[pluralKey].push(value[0]);
+        changed = true;
+      } else {
+        const index = userRules[pluralKey].indexOf(value[0]);
+        if (index !== -1) {
+          userRules[pluralKey].splice(index, 1);
+          changed = true;
+        }
       }
-
-      productiveRules[pluralKey].push(value);
+    } else {
+      // url is a special case
+      console.log("UPDATING URL", value);
+      if (value[1] === "productive") userRules.urls[value[0]] = "productive";
+      else {
+        if (deleteDistractingURL) delete userRules.urls[value[0]];
+        else userRules.urls[value[0]] = "distracting";
+      }
       changed = true;
     }
   }
 
   if (!changed) throw new Error("No valid rule provided to add");
-  await setStorageData({ productiveRules });
+  await setStorageData({ userRules });
   if (rule.url)
-    await sendMsgToAllTabs(rule.url, { type: "RE-INITIALIZE_OVERLAY" }).catch(
-      () => {},
-    );
-  else
-    await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" }).catch(
-      () => {},
-    );
-}
-
-export async function removeProductiveRule(rule: ProductiveRulesInput) {
-  const { productiveRules } = await getStorageData(["productiveRules"]);
-  let changed = false;
-
-  for (const [key, value] of Object.entries(rule)) {
-    const singularKey = key as keyof ProductiveRulesInput;
-    const pluralKey = (singularKey + "s") as keyof ProductiveRules;
-    if (
-      productiveRules[pluralKey] &&
-      Array.isArray(productiveRules[pluralKey])
-    ) {
-      const index = productiveRules[pluralKey].indexOf(value);
-      if (index !== -1) {
-        productiveRules[pluralKey].splice(index, 1);
-        changed = true;
-      }
-    }
-  }
-  if (!changed) throw new Error("No matching rule found to remove");
-
-  console.log("SETTING", productiveRules);
-  await setStorageData({ productiveRules });
-
-  if (rule.url)
-    await sendMsgToAllTabs(rule.url, { type: "RE-INITIALIZE_OVERLAY" }).catch(
-      () => {},
-    );
+    await sendMsgToAllTabs(rule.url[0], {
+      type: "RE-INITIALIZE_OVERLAY",
+    }).catch(() => {});
   else
     await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" }).catch(
       () => {},
