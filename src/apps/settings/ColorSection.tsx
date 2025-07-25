@@ -3,7 +3,7 @@ import { Slider } from "@ui/slider";
 import { ColorInput } from "./ColorInput";
 import { extractAlphaFromHex, updateHexOpacity } from "./utils";
 import { useEffect, useState } from "react";
-import { useStore } from "./state";
+import { useStore } from "./store";
 
 interface ColorSectionProps {
   type: "normal" | "warning" | "danger";

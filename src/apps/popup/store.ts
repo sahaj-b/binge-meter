@@ -214,8 +214,11 @@ const usePopupStore = create<PopupState>((set, get) => ({
             return;
           }
         } else {
-          if (markDistracting) await markURLAsDistracting(url);
-          else await markURLAs(url, markDistracting);
+          let extraMetadata: string | undefined = undefined;
+          if (metadata?.youtube?.videoTitle || metadata?.youtube?.channelName)
+            extraMetadata = `Video Title: ${metadata?.youtube?.videoTitle}, Channel: ${metadata?.youtube?.channelName}`;
+          if (markDistracting) await markURLAsDistracting(url, extraMetadata);
+          else await markURLAs(url, markDistracting, extraMetadata);
         }
         get().updateDistractingStatuses(metadata || { url });
       }

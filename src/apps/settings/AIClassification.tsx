@@ -2,7 +2,7 @@ import { Label } from "@/apps/components/ui/label";
 import { Switch } from "@/apps/components/ui/switch";
 import { Input } from "@/apps/components/ui/input";
 import { Textarea } from "@/apps/components/ui/textarea";
-import { useStore } from "./state";
+import { useStore } from "./store";
 import { Section } from "./Section";
 import {
   Tooltip,

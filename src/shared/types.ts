@@ -14,7 +14,7 @@ export type StorageData = {
 // why not just string[] for URLRules?
 // coz if user marks URL as distracting, it should not trigger AI classification
 // so marking distracting is explicit
-type URLRules = Record<string, "productive" | "distracting">;
+type URLRules = Record<string, ["productive" | "distracting", string?]>; // optional string as metadata for AI
 
 export type UserRules = {
   urls: URLRules;
@@ -23,7 +23,7 @@ export type UserRules = {
 };
 
 export type UserRulesInput = {
-  url?: [string, "productive" | "distracting"];
+  url?: [string, "productive" | "distracting", string?];
   productiveYtChannel?: [string, "productive" | "distracting"];
   productiveSubreddit?: [string, "productive" | "distracting"];
 };
@@ -60,6 +60,7 @@ export type Message = {
   metadata?: any;
   time?: number;
   rule?: UserRulesInput;
+  extraMetadata?: string;
 };
 export type PageMeta = {
   description?: string | null;

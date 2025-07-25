@@ -1,4 +1,4 @@
-import { useStore } from "./state";
+import { useStore } from "./store";
 import { ReusableList } from "./ReusableList";
 import { Section } from "./Section";
 
@@ -25,7 +25,7 @@ export function Exceptions() {
           <ReusableList
             items={Object.entries(userRules?.urls ?? {})
               .reduce((acc, [key, value]) => {
-                if (value === "productive") acc.push(key);
+                if (value[0] === "productive") acc.push(key);
                 return acc;
               }, [] as string[])
               .reverse()}

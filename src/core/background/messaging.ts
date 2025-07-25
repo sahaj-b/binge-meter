@@ -147,6 +147,7 @@ export async function handleEvaluatePage(
 export async function updateUserRule(
   rule: UserRulesInput,
   deleteDistractingURL = false,
+  extraMetadata?: string, // eg: title for yt vid, for auto-improving AI
 ) {
   const { userRules } = await getStorageData(["userRules"]);
   let changed = false;
@@ -157,7 +158,6 @@ export async function updateUserRule(
 
     if (userRules[pluralKey] && Array.isArray(userRules[pluralKey])) {
       // isArray is true for ytChannels and subreddits
-      console.log("UPDATING YTCHANNEL or SUBREDDIT", value);
       if (value[1] === "productive") {
         if (userRules[pluralKey].includes(value[0]))
           throw new Error(`'${value[0]}' already exists`);
@@ -173,11 +173,11 @@ export async function updateUserRule(
       }
     } else {
       // url is a special case
-      console.log("UPDATING URL", value);
-      if (value[1] === "productive") userRules.urls[value[0]] = "productive";
-      else {
+      if (value[1] === "productive") {
+        userRules.urls[value[0]] = ["productive", extraMetadata];
+      } else {
         if (deleteDistractingURL) delete userRules.urls[value[0]];
-        else userRules.urls[value[0]] = "distracting";
+        else userRules.urls[value[0]] = ["distracting", extraMetadata];
       }
       changed = true;
     }

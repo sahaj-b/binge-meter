@@ -42,7 +42,7 @@ export async function isURLDistracting(
     "aiDisabledSites",
   ]);
   if (!userRules) userRules = data.userRules;
-  if (url in userRules.urls) return userRules.urls[url] === "distracting";
+  if (url in userRules.urls) return userRules.urls[url][0] === "distracting";
   if (url.includes("youtube.com/shorts")) return true;
   if (
     data.aiEnabled &&

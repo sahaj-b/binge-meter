@@ -4,7 +4,7 @@ import { OverlaySettings } from "./OverlaySettings";
 import { OverlayStyles } from "./OverlayStyles";
 import { Exceptions } from "./Exceptions";
 import { OverlayUI } from "@/core/content/overlay";
-import { useStore } from "./state";
+import { useStore } from "./store";
 import { AIClassification } from "./AIClassification";
 
 const NAV_ITEMS = [

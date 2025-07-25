@@ -85,8 +85,8 @@ export function setupListeners() {
         return true;
 
       case "UPDATE_USER_RULE":
-        console.log("UPDATE_USER_RULE", message.rule);
-        updateUserRule(message.rule)
+        // if the rule is URL marked as distracting, it will be DELTED instead of marked
+        updateUserRule(message.rule, true, message.extraMetadata)
           .then(() => {
             sendResponse({ success: true });
           })
@@ -96,8 +96,8 @@ export function setupListeners() {
         return true;
 
       case "MARK_URL_DISTRACTING":
-        console.log("MARK_URL_DISTRACTING", message.rule);
-        updateUserRule(message.rule, true)
+        // this is solely for MARKING URL as distracting, not deleting (used in Popup)
+        updateUserRule(message.rule, false, message.extraMetadata)
           .then(() => {
             sendResponse({ success: true });
           })

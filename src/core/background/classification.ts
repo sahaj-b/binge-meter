@@ -55,10 +55,14 @@ async function classifyByAI(
 }
 
 async function getPrompt(metadata: Metadata) {
-  let ytPrompt: string | null = null;
-  let redditPrompt: string | null = null;
-  let customPromptSection: string | null = null;
-  const customPrompt = (await getStorageData(["customPrompt"])).customPrompt;
+  let ytPrompt = "";
+  let redditPrompt = "";
+  let customPromptSection = "";
+  let userRulesSection = "";
+  const { customPrompt, userRules } = await getStorageData([
+    "customPrompt",
+    "userRules",
+  ]);
   if (customPrompt) {
     customPromptSection = `
       The following is user's personal rules. GIVE THIS HIGHEST PRIORITY WHILE CLASSIFYING
@@ -67,6 +71,22 @@ async function getPrompt(metadata: Metadata) {
       ---- CUSTOM INSTRUCTIONS END ----
       `;
   }
+  const userRuleEntries = Object.entries(userRules.urls);
+  if (userRuleEntries.length > 0)
+    userRulesSection = `
+      The following are URLs which are manually classified by User. Consider these too while classifying
+      ---- URL USER RULES START ----
+      ${userRuleEntries
+        .map(
+          ([url, [classification, metadata]]) =>
+            `${url} IS ${classification}; ${
+              metadata ? `Metadata: ${metadata}` : ""
+            }`,
+        )
+        .join("\n")}
+      ---- URL USER RULES END ----
+      `;
+
   if (metadata.youtube?.videoId) {
     ytPrompt = `
       YOUTUBE:
@@ -101,6 +121,7 @@ async function getPrompt(metadata: Metadata) {
     ${redditPrompt}
     `;
   // console.log("Metadata prompt:", metadataPrompt);
+  console.log(userRulesSection);
   return `
     You are a classification engine for a productivity application called BingeMeter. Your sole purpose is to analyze webpage metadata and determine if the content is "PRODUCTIVE" or "DISTRACTING" for a user trying to focus on work or learning.
 
@@ -112,13 +133,15 @@ async function getPrompt(metadata: Metadata) {
 
     ${customPromptSection}
 
+    ${userRulesSection}
+
     MANDATORY RULES:
     -  Your response MUST be a single word: "PRODUCTIVE" or "DISTRACTING".
     -  DO NOT use punctuation.
     -  Analyze ALL provided metadata to make your decision.
     -  If you are unsure, respond with "DISTRACTING".
     -  Sometimes, the metadata will be mismatched (i.e, 2 different websites metadata can be mixed, because of incostistent navigation)
-    -  If some metadata is missmatching(eg, title and url is different than description/tags/OG metadata), always give priority to YOUTUBE/REDDIT section, then Core TITLE and URL, and forget the rest
+    -  If some metadata is missmatching(eg, title and url is different than description/tags/OG metadata), always give priority to YOUTUBE/REDDIT section first, then Core TITLE and URL, and forget the rest
 
     Analyze the following webpage metadata:
     ${metadataPrompt}

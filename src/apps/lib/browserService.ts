@@ -104,20 +104,30 @@ export async function sendRemoveSiteMessage(site: string) {
   }
 }
 
-export async function markURLAs(url: string, markDistracting: boolean) {
+export async function markURLAs(
+  url: string,
+  markDistracting: boolean,
+  extraMetadata?: string,
+) {
+  // this DELETES the URL from user rules if markDistracting is true
   const response = await chrome.runtime.sendMessage({
     type: "UPDATE_USER_RULE",
     rule: { url: [url, markDistracting ? "distracting" : "productive"] },
+    extraMetadata: extraMetadata,
   } satisfies Message);
   if (!response?.success)
     throw new Error(response?.error ?? "Unknown error occurred");
 }
 
-export async function markURLAsDistracting(url: string) {
+export async function markURLAsDistracting(
+  url: string,
+  extraMetadata?: string,
+) {
   // this is for popup button mark page as distracting (marks instead of deleting)
   const response = await chrome.runtime.sendMessage({
     type: "MARK_URL_DISTRACTING",
     rule: { url: [url, "distracting"] },
+    extraMetadata: extraMetadata,
   } satisfies Message);
   if (!response?.success)
     throw new Error(response?.error ?? "Unknown error occurred");

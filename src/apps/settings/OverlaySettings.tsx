@@ -1,7 +1,7 @@
 import { Label } from "@ui/label";
 import { Switch } from "@ui/switch";
 import { DurationPicker } from "../components/ui/duration-picker";
-import { useStore } from "./state";
+import { useStore } from "./store";
 import { Section } from "./Section";
 
 export function OverlaySettings() {

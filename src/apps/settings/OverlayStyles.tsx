@@ -2,7 +2,7 @@ import { Label } from "@ui/label";
 import { Slider } from "@ui/slider";
 import { Button } from "@ui/button";
 import { ColorSection } from "./ColorSection";
-import { useStore } from "./state";
+import { useStore } from "./store";
 
 export function OverlayStyles() {
   const resetToDefaults = useStore((state) => state.resetStylesToDefault);
