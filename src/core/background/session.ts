@@ -5,15 +5,41 @@ let sessionLock = Promise.resolve();
 export function updateActiveSession(activeTabId: number | null) {
   const taskPromise = sessionLock
     .then(async () => {
-      const { dailyTime, trackedSites, activeSession } = await getStorageData([
-        "dailyTime",
-        "trackedSites",
-        "activeSession",
-      ]);
+      const { dailyTime, trackedSites, activeSession, analyticsData } =
+        await getStorageData([
+          "dailyTime",
+          "trackedSites",
+          "activeSession",
+          "analyticsData",
+        ]);
       let newTotal = dailyTime.total;
       if (activeSession?.startTime) {
         const elapsed = Date.now() - activeSession.startTime;
         newTotal += elapsed;
+
+        try {
+          const tab = await chrome.tabs.get(activeSession.tabId);
+          if (tab.url) {
+            const url = new URL(tab.url);
+            const hostname = url.hostname.startsWith("www.")
+              ? url.hostname.slice(4)
+              : url.hostname;
+            const date = dailyTime.date;
+
+            if (!analyticsData[date]) {
+              analyticsData[date] = {};
+            }
+
+            analyticsData[date][hostname] =
+              (analyticsData[date][hostname] ?? 0) + elapsed;
+          }
+        } catch (error) {
+          // tab got closed bruh. time is still added to daily total, but can't attribute it to a specific site, acceptable loss tbh
+          console.error(
+            `Failed to get tab info for tabId ${activeSession.tabId}:`,
+            error,
+          );
+        }
         await chrome.tabs
           .sendMessage(activeSession.tabId, {
             type: "STOP_TICKING",
@@ -26,6 +52,7 @@ export function updateActiveSession(activeTabId: number | null) {
             );
           });
       }
+
       if (activeTabId !== null) {
         try {
           const tab = await chrome.tabs.get(activeTabId);
@@ -37,6 +64,7 @@ export function updateActiveSession(activeTabId: number | null) {
             await setStorageData({
               dailyTime: { ...dailyTime, total: newTotal },
               activeSession: newSession,
+              analyticsData,
             });
             await chrome.tabs
               .sendMessage(activeTabId, {
@@ -62,6 +90,7 @@ export function updateActiveSession(activeTabId: number | null) {
       await setStorageData({
         dailyTime: { ...dailyTime, total: newTotal },
         activeSession: null,
+        analyticsData,
       });
     })
     .catch((err) => {

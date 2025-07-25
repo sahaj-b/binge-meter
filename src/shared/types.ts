@@ -9,6 +9,11 @@ export type StorageData = {
   aiDisabledSites: string[];
   geminiApiKey: string;
   customPrompt: string;
+  analyticsData: {
+    [date: string]: {
+      [site: string]: number; // time spent in ms
+    };
+  };
 };
 
 // why not just string[] for URLRules?
