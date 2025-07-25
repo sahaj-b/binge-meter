@@ -20,17 +20,23 @@ export class OverlayUI {
   resizableController: Resizable | null = null;
   onPositionSave: (position: Position) => void;
   onSizeSave: (size: Size) => void;
+  absolute = false;
+  fallbackPosition: Position;
 
   constructor(
     parentElement: HTMLElement,
     hostname: string,
     onPositionSave?: (position: Position) => void,
     onSizeSave?: (size: Size) => void,
+    absolute = false,
+    fallbackPosition: Position = { left: "50%", top: "20px" },
   ) {
     this.parentElement = parentElement;
     this.hostname = hostname;
     this.onPositionSave = onPositionSave || (() => {});
     this.onSizeSave = onSizeSave || (() => {});
+    this.absolute = absolute;
+    this.fallbackPosition = fallbackPosition;
   }
 
   async create(config?: OverlayConfig) {
@@ -53,7 +59,7 @@ export class OverlayUI {
     this.element = document.createElement("div");
     this.element.id = "binge-meter-overlay";
     this.element.style.cssText = `
-    position: fixed;
+    ${this.absolute ? "position: absolute;" : "position: fixed;"}
     color: ${config.colors.fg} !important;
     background: ${config.colors.bg} !important;
     border: 1px solid ${config.colors.borderColor} !important;
@@ -101,10 +107,15 @@ export class OverlayUI {
 
     await this.loadSizeAndPosition();
     await this.update(0);
-    this.draggableController = new Draggable(this.element, async (pos) => {
-      await setPositionForHost(this.hostname, pos);
-      this.onPositionSave(pos);
-    });
+    this.draggableController = new Draggable(
+      this.element,
+      async (pos) => {
+        await setPositionForHost(this.hostname, pos);
+        this.onPositionSave(pos);
+      },
+      this.absolute,
+    );
+
     this.resizableController = new Resizable(this.element, async (size) => {
       await setSizeForHost(this.hostname, size);
       this.onSizeSave(size);
@@ -155,8 +166,13 @@ export class OverlayUI {
     this.element.style.height = `${size.height}px`;
 
     const position = await getPositionForHost(this.hostname);
-    this.element.style.left = position.left;
-    this.element.style.top = position.top;
+    if (position) {
+      this.element.style.left = position.left;
+      this.element.style.top = position.top;
+    } else {
+      this.element.style.left = this.fallbackPosition.left;
+      this.element.style.top = this.fallbackPosition.top;
+    }
   }
 
   async update(

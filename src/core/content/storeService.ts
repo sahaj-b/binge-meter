@@ -10,9 +10,11 @@ export async function getSizeForHost(hostname: string): Promise<Size> {
   return overlayConfig.sizes[hostname] || overlayConfig.defaultSize;
 }
 
-export async function getPositionForHost(hostname: string): Promise<Position> {
+export async function getPositionForHost(
+  hostname: string,
+): Promise<Position | null> {
   const { overlayConfig } = await getStorageData(["overlayConfig"]);
-  return overlayConfig.positions[hostname] || { left: "50%", top: "20px" };
+  return overlayConfig.positions[hostname];
 }
 
 export async function setPositionForHost(hostname: string, position: Position) {

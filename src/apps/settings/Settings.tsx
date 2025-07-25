@@ -52,34 +52,52 @@ export default function Settings() {
   const updateConfig = useStore((state) => state.updateConfig);
   const [activeId, setActiveId] = useState(NAV_ITEMS[0].id);
   const observer = useRef<IntersectionObserver | null>(null);
-  console.log("loading", loading);
 
   useEffect(() => {
+    let overlay: OverlayUI | null = null;
     const hostname = window.location.hostname;
-    const overlay = new OverlayUI(
-      document.body,
-      hostname,
-      // callback functions to keep the state in sync after drag/resize actions
-      // took me hours to debug. AAAAAAAAAAA
-      (pos) => updateConfig({ positions: { [hostname]: pos } }),
-      (size) => updateConfig({ sizes: { [hostname]: size } }),
-    );
-    window.addEventListener("focus", fetchSettings);
-    fetchSettings();
 
-    const handleStateChange = (state: ReturnType<typeof useStore.getState>) => {
+    const getOverlayPosition = () => {
+      const headerElement = document.getElementById("overlay-styles-header");
+      if (headerElement) {
+        const rect = headerElement.getBoundingClientRect();
+        return { left: "50%", top: `${rect.top + window.scrollY}px` };
+      }
+      return { left: "50%", top: "20px" };
+    };
+
+    setTimeout(() => {
+      overlay = new OverlayUI(
+        document.body,
+        hostname,
+        // callback functions to keep the state in sync after drag/resize actions
+        // took me hours to debug. AAAAAAAAAAA
+        (pos) => updateConfig({ positions: { [hostname]: pos } }),
+        (size) => updateConfig({ sizes: { [hostname]: size } }),
+        true,
+        getOverlayPosition(),
+      );
+      handleOverlayStateChange(useStore.getState());
+    }, 500);
+
+    const handleOverlayStateChange = (
+      state: ReturnType<typeof useStore.getState>,
+    ) => {
       if (!state.overlayConfig) return;
-      overlay.create(state.overlayConfig).then(() => {
-        overlay.update(state.dummyTime, true, state.overlayConfig!);
+      overlay?.create(state.overlayConfig).then(() => {
+        overlay?.update(state.dummyTime, true, state.overlayConfig!);
       });
     };
 
-    handleStateChange(useStore.getState());
-    const unsubscribe = useStore.subscribe(handleStateChange);
+    handleOverlayStateChange(useStore.getState());
+    const unsubscribe = useStore.subscribe(handleOverlayStateChange);
+
+    window.addEventListener("focus", fetchSettings);
+    fetchSettings();
 
     return () => {
       unsubscribe();
-      overlay.destroy();
+      overlay?.destroy();
       window.removeEventListener("focus", fetchSettings);
     };
   }, [fetchSettings, updateConfig]);

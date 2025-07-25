@@ -13,7 +13,10 @@ export function OverlayStyles() {
   }
   return (
     <div className="space-y-6 p-6 border rounded-lg bg-card/30">
-      <div className="flex items-center justify-between">
+      <div
+        className="flex items-center justify-between"
+        id="overlay-styles-header"
+      >
         <h2 className="text-lg font-semibold">Overlay Styles</h2>
         <Button
           variant="outline"

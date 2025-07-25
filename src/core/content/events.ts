@@ -3,11 +3,17 @@ import type { Position } from "./storeService";
 
 export class Draggable {
   isDragging = false;
+  ignoreVerticalBounds = false;
   offsetX = 0;
   offsetY = 0;
   dragMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
   dragMouseUpHandler: (() => void) | null = null;
-  constructor(element: HTMLElement, onDragEnd: (pos: Position) => void) {
+  constructor(
+    element: HTMLElement,
+    onDragEnd: (pos: Position) => void,
+    ignoreVerticalBounds = false,
+  ) {
+    this.ignoreVerticalBounds = ignoreVerticalBounds;
     this.dragMouseMoveHandler = (e) => {
       if (!this.isDragging) return;
 
@@ -19,7 +25,9 @@ export class Draggable {
       let newY = e.clientY - this.offsetY;
 
       newX = Math.max(0, Math.min(newX, windowWidth - rect.width));
-      newY = Math.max(0, Math.min(newY, windowHeight - rect.height));
+      newY = this.ignoreVerticalBounds
+        ? newY
+        : Math.max(0, Math.min(newY, windowHeight - rect.height));
 
       element.style.left = `${newX}px`;
       element.style.top = `${newY}px`;
