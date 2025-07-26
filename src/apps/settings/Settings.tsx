@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { TrackedSites } from "./TrackedSites";
 import { OverlaySettings } from "./OverlaySettings";
 import { OverlayStyles } from "./OverlayStyles";
@@ -51,7 +51,7 @@ export default function Settings() {
   const error = useStore((state) => state.error);
   const updateConfig = useStore((state) => state.updateConfig);
   const [activeId, setActiveId] = useState(NAV_ITEMS[0].id);
-  const observer = useRef<IntersectionObserver | null>(null);
+  // const observer = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     let overlay: OverlayUI | null = null;
@@ -103,27 +103,87 @@ export default function Settings() {
   }, [fetchSettings, updateConfig]);
 
   useEffect(() => {
-    const handleObserver = (entries: IntersectionObserverEntry[]) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          setActiveId(entry.target.id);
-        }
+    if (loading) return;
+
+    const sections = NAV_ITEMS.map(({ id }) =>
+      document.getElementById(id),
+    ).filter((el): el is HTMLElement => el !== null);
+
+    if (sections.length === 0) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
+
+      timeoutId = setTimeout(() => {
+        const screenTop = window.innerHeight * 0.3;
+        const screenBottom = window.innerHeight * 0.7;
+        let currentSectionId: string | null = null;
+
+        for (const section of sections) {
+          const rect = section.getBoundingClientRect();
+          if (rect.top < screenBottom && rect.bottom > screenTop) {
+            currentSectionId = section.id;
+            break;
+          }
+        }
+
+        if (currentSectionId) {
+          setActiveId((prevId) => {
+            if (currentSectionId && currentSectionId !== prevId) {
+              return currentSectionId;
+            }
+            return prevId;
+          });
+        }
+      }, 20);
     };
 
-    observer.current = new IntersectionObserver(handleObserver, {
-      rootMargin: "-30% 0% -70% 0%",
-    });
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
 
-    const elements = NAV_ITEMS.map(({ id }) =>
-      document.getElementById(id),
-    ).filter((el) => el);
-    for (const el of elements) {
-      observer.current?.observe(el!);
-    }
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [loading]);
 
-    return () => observer.current?.disconnect();
-  }, []);
+  // not using IntersectionObserver coz FUCK YOU FIREFOX. doesnt work on FF no matter what I try
+  // useEffect(() => {
+  //   const handleObserver = (entries: IntersectionObserverEntry[]) => {
+  //     console.log("--- Observer Fired ---");
+  //     for (const entry of entries) {
+  //       console.log({
+  //         id: entry.target.id,
+  //         isIntersecting: entry.isIntersecting,
+  //         ratio: entry.intersectionRatio,
+  //       });
+  //
+  //       if (entry.isIntersecting) {
+  //         setActiveId(entry.target.id);
+  //       }
+  //     }
+  //   };
+  //
+  //   observer.current = new IntersectionObserver(handleObserver, {
+  //     // rootMargin: "-30% 0% -70% 0%",
+  //     root: document.body,
+  //     rootMargin: "0px",
+  //     threshold: 0,
+  //   });
+  //
+  //   const elements = NAV_ITEMS.map(({ id }) =>
+  //     document.getElementById(id),
+  //   ).filter((el) => el);
+  //   for (const el of elements) {
+  //     observer.current?.observe(el!);
+  //   }
+  //
+  //   return () => observer.current?.disconnect();
+  // }, []);
 
   if (loading) {
     return (

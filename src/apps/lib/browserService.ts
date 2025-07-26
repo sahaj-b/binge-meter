@@ -18,13 +18,18 @@ export async function requestSitePermission(site: string) {
   const permissionsToRequest = {
     origins: sitePatterns(site),
   };
-  if (await checkSitePermission(site)) {
-    console.log(`Permission already granted for '${site}'`);
-    return;
-  }
+  // removing this coz firefox doesnt trust waiting this much for asking permission duh
+  // if (await checkSitePermission(site)) {
+  //   console.log(`Permission already granted for '${site}'`);
+  //   return;
+  // }
 
   const granted = await chrome.permissions.request(permissionsToRequest);
-  if (!granted) throw new Error("Permission denied by user");
+  if (!granted) {
+    if (!(await checkSitePermission(site))) {
+      throw new Error("Permission denied by user");
+    }
+  }
 }
 
 export async function loadStorageData() {
