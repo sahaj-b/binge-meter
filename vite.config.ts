@@ -16,7 +16,7 @@ export default defineConfig({
     tailwindcss(),
     crx({
       manifest,
-      // browser: "firefox" // for firefox build
+      // browser: "firefox", // for firefox build
     }),
   ],
   build: {

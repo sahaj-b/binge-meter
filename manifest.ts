@@ -8,7 +8,7 @@ export default defineManifest({
   background: {
     service_worker: "src/core/background/index.ts",
     type: "module",
-    // scripts: ["core/background/index.ts"],
+    scripts: ["src/core/background/index.ts"],
   },
   action: {
     default_popup: "src/apps/popup/index.html",
