@@ -24,7 +24,7 @@ export function ColorSection({ type, colors }: ColorSectionProps) {
   }, [colors.bg]);
 
   return (
-    <div className="p-4 border rounded-lg bg-card/60 flex-1">
+    <div className="p-4 border rounded-lg bg-card flex-1">
       <Label className="text-sm font-medium">{title}</Label>
       <div className="space-y-3 mt-3">
         <ColorInput

@@ -78,7 +78,7 @@ export default function CurrentSiteTracker() {
   );
 
   return (
-    <div className="p-3 bg-card/30 border rounded-lg">
+    <div className="p-3 bg-card/60 border rounded-lg">
       <div className="flex space-x-5 items-center justify-between">
         <div className="max-w-44 w-full overflow-hidden">
           <p className="text-sm font-medium">{formatSite(currentSite)}</p>

@@ -12,7 +12,7 @@ export function OverlayStyles() {
     return null;
   }
   return (
-    <div className="space-y-6 p-6 border rounded-lg bg-card/30">
+    <div className="space-y-6 p-6 border rounded-lg bg-card/60">
       <div
         className="flex items-center justify-between"
         id="overlay-styles-header"

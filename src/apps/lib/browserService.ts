@@ -1,6 +1,5 @@
-import { getStorageData } from "@/shared/store";
 import { sitePatterns } from "@/shared/utils";
-import type { Message, StorageData } from "@/shared/types";
+import type { Message } from "@/shared/types";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
   if (!site) return false;
@@ -29,32 +28,6 @@ export async function requestSitePermission(site: string) {
     if (!(await checkSitePermission(site))) {
       throw new Error("Permission denied by user");
     }
-  }
-}
-
-export async function loadStorageData() {
-  try {
-    const { trackedSites, dailyTime, overlayConfig, userRules } =
-      (await getStorageData([
-        "dailyTime",
-        "overlayConfig",
-        "trackedSites",
-        "userRules",
-      ])) as StorageData;
-
-    return {
-      dailyTime: dailyTime?.total ?? 0,
-      overlayHidden: overlayConfig?.isHidden ?? false,
-      thresholds: {
-        warn: overlayConfig?.thresholdWarn ?? null,
-        danger: overlayConfig?.thresholdDanger ?? null,
-      },
-      trackedSites: trackedSites ?? [],
-      userRules: userRules ?? [],
-    };
-  } catch (error) {
-    console.error("Failed to load data:", error);
-    throw error;
   }
 }
 

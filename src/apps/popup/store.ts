@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type { Metadata } from "@/shared/types";
 import {
-  loadStorageData,
   sendToggleMessage,
   getCurrentTab,
   sendAddSiteMessage,
@@ -71,14 +70,22 @@ const usePopupStore = create<PopupState>((set, get) => ({
   initialize: async () => {
     set({ isLoading: true });
     try {
-      const data = await loadStorageData();
-      const { aiEnabled } = await getStorageData(["aiEnabled"]);
+      const data = await getStorageData([
+        "dailyTime",
+        "overlayConfig",
+        "trackedSites",
+        "userRules",
+        "aiEnabled",
+      ]);
       set({
-        dailyTime: data.dailyTime,
-        overlayHidden: data.overlayHidden,
-        thresholds: data.thresholds,
+        dailyTime: data.dailyTime.total,
+        overlayHidden: data.overlayConfig.isHidden,
+        thresholds: {
+          warn: data.overlayConfig?.thresholdWarn ?? null,
+          danger: data.overlayConfig?.thresholdDanger ?? null,
+        },
         trackedSites: data.trackedSites,
-        aiEnabled: aiEnabled,
+        aiEnabled: data.aiEnabled,
       });
 
       const tab = await getCurrentTab();

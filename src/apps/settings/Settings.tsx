@@ -6,6 +6,8 @@ import { Exceptions } from "./Exceptions";
 import { OverlayUI } from "@/core/content/overlay";
 import { useStore } from "./store";
 import { AIClassification } from "./AIClassification";
+import { SettingsIcon } from "lucide-react";
+import { Underline } from "@lib/utils";
 
 const NAV_ITEMS = [
   { id: "ai", title: "AI Classification" },
@@ -207,9 +209,10 @@ export default function Settings() {
           <SettingsNav activeId={activeId} />
         </div>
         <div className="space-y-8 w-full max-w-[60rem]">
-          <div className="mb-8 flex items-center justify-between ">
-            <h1 className="text-2xl font-bold">Binge Meter Settings</h1>
-          </div>
+          <h1 className="flex items-center justify-center tracking-wide text-3xl text-center font-bold">
+            <SettingsIcon className="mr-2 text-muted-foreground" /> Binge Meter
+            <Underline text="Settings" />
+          </h1>
           <div id="ai" className="scroll-mt-20 space-y-8">
             <AIClassification />
           </div>

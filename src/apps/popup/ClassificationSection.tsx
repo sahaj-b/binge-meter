@@ -85,7 +85,7 @@ export function ClassificationSection() {
 
   if (isYouTube || isReddit) {
     return (
-      <div className="p-3 bg-card/30 border rounded-lg">
+      <div className="p-3 bg-card/60 border rounded-lg">
         {headerEle}
         <Button
           variant="secondary"
@@ -118,7 +118,7 @@ export function ClassificationSection() {
   }
 
   return (
-    <div className="p-3 bg-card/30 border rounded-lg">
+    <div className="p-3 bg-card/60 border rounded-lg">
       {headerEle}
       <Button
         variant="secondary"
