@@ -81,7 +81,7 @@ export function openSettingsPage() {
 
 export function openAnalyticsPage() {
   chrome.tabs.create({
-    url: chrome.runtime.getURL("src/analytics/index.html"),
+    url: chrome.runtime.getURL("src/apps/analytics/index.html"),
   });
 }
 
