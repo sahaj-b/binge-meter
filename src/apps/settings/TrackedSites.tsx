@@ -3,11 +3,7 @@ import { ReusableList } from "./ReusableList";
 import { Section } from "./Section";
 import { Toggle } from "@ui/toggle";
 import { Slash } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "../components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
 
 export function TrackedSites() {
   const trackedSites = useStore((state) => state.trackedSites);

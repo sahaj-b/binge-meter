@@ -1,14 +1,10 @@
-import { Label } from "@/apps/components/ui/label";
-import { Switch } from "@/apps/components/ui/switch";
-import { Input } from "@/apps/components/ui/input";
-import { Textarea } from "@/apps/components/ui/textarea";
+import { Label } from "@ui/label";
+import { Switch } from "@ui/switch";
+import { Input } from "@ui/input";
+import { Textarea } from "@ui/textarea";
 import { useStore } from "./store";
 import { Section } from "./Section";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "../components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
 import { HelpCircle } from "lucide-react";
 
 export function AIClassification() {
