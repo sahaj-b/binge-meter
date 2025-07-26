@@ -102,6 +102,7 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
     case "ACTIVATE_OVERLAY":
       if (isActivated) return;
       isActivated = true;
+      overlay.create();
       // sendEvalMsg();
       break;
 

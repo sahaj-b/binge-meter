@@ -13,5 +13,6 @@ export default defineManifest({
   action: {
     default_popup: "src/apps/popup/index.html",
   },
+  optional_host_permissions: ["*://*/*"],
   permissions: ["alarms", "storage", "tabs", "scripting"],
 });

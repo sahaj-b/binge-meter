@@ -17,6 +17,12 @@ export function updateActiveSession(activeTabId: number | null) {
         const elapsed = Date.now() - activeSession.startTime;
         newTotal += elapsed;
 
+        const date = dailyTime.date;
+        if (!analyticsData[date]) {
+          analyticsData[date] = { total: 0 };
+        }
+        analyticsData[date].total = (analyticsData[date].total ?? 0) + elapsed;
+
         try {
           const tab = await chrome.tabs.get(activeSession.tabId);
           if (tab.url) {
@@ -24,11 +30,6 @@ export function updateActiveSession(activeTabId: number | null) {
             const hostname = url.hostname.startsWith("www.")
               ? url.hostname.slice(4)
               : url.hostname;
-            const date = dailyTime.date;
-
-            if (!analyticsData[date]) {
-              analyticsData[date] = {};
-            }
 
             analyticsData[date][hostname] =
               (analyticsData[date][hostname] ?? 0) + elapsed;
