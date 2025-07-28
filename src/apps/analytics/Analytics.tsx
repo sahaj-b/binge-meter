@@ -1,8 +1,10 @@
 import type { AnalyticsData } from "@/shared/types";
 import { useEffect, useState } from "react";
-import { TotalBingeTimes } from "./TotalBingeTimes";
+import { TotalBingeTime } from "./TotalBingeTimes";
 import { BarChart3Icon } from "lucide-react";
 import { Underline } from "@lib/utils";
+import SitesSection from "./SitesSection";
+import { TopDistractingSites } from "./TopDistractingSites";
 
 const dummyData = {
   "2025-07-16": {
@@ -61,10 +63,10 @@ const dummyData = {
     total: 29160000,
   },
   "2025-07-22": {
-    "google.com": 1800000,
-    "bing.com": 1080000,
-    "duckduckgo.com": 900000,
-    total: 3780000,
+    "google.com": 1825200,
+    "bing.com": 1105200,
+    "duckduckgo.com": 925200,
+    total: 9855600,
   },
   "2025-07-23": {
     "reddit.com": 2700000,
@@ -106,11 +108,37 @@ const dummyData = {
     "onedrive.com": 2520000,
     total: 50220000,
   },
+  "2025-07-27": {
+    "reddit.com": 7200000,
+    "youtube.com": 10800000,
+    "x.com": 3600000,
+    "github.com": 1800000,
+    "stackoverflow.com": 2700000,
+    "quora.com": 2160000,
+    total: 28800000,
+  },
+  "2025-07-28": {
+    "reddit.com": 4320000,
+    "youtube.com": 7200000,
+    "x.com": 1800000,
+    "linkedin.com": 3600000,
+    "github.com": 2700000,
+    "stackoverflow.com": 3240000,
+    "quora.com": 2160000,
+    total: 21600000,
+  },
 };
+
+const daysMap = { "30d": 30, "7d": 7, "90d": 90, inf: -1 };
+export type TimeRange = keyof typeof daysMap;
 
 export default function Analytics() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({});
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0],
+  );
+  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   useEffect(() => {
     async function fetchAnalyticsData() {
       setLoading(true);
@@ -123,6 +151,20 @@ export default function Analytics() {
     fetchAnalyticsData();
   }, []);
 
+  const filteredData = Object.fromEntries(
+    Object.entries(analyticsData).filter(([date]) => {
+      if (timeRange === "inf") return true;
+
+      const itemDate = new Date(date);
+      const cutoffDate = new Date();
+
+      const daysToSubtract = daysMap[timeRange];
+
+      cutoffDate.setDate(cutoffDate.getDate() - daysToSubtract);
+      return itemDate >= cutoffDate;
+    }),
+  );
+
   if (loading || !analyticsData || Object.keys(analyticsData).length === 0)
     return (
       <div className="flex min-h-screen items-center justify-center text-xl">
@@ -130,13 +172,26 @@ export default function Analytics() {
       </div>
     );
 
+  const timeChartData = Object.entries(filteredData).map(([date, time]) => ({
+    date,
+    time: time.total,
+  }));
+
   return (
-    <div className="h-full w-full p-8">
+    <div className="h-full max-w-[65rem] mx-auto p-8 flex flex-col space-y-5">
       <h1 className="mb-8 text-3xl text-foreground text-center font-bold tracking-wide flex items-center justify-center">
         <BarChart3Icon className="mr-2 text-muted-foreground" />
         Binge Meter <Underline text="Analytics" />
       </h1>
-      <TotalBingeTimes analyticsData={analyticsData} />
+      <TotalBingeTime
+        timeChartData={timeChartData}
+        timeRange={timeRange}
+        setTimeRange={setTimeRange}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+      />
+      <SitesSection analyticsData={analyticsData} date={selectedDate} />
+      <TopDistractingSites analyticsData={filteredData} timeRange={timeRange} />
     </div>
   );
 }
