@@ -1,4 +1,4 @@
-import { getStorageData, setStorageData } from "@/shared/store";
+import { getStorageData, setStorageData } from "@/shared/storage";
 
 let sessionLock = Promise.resolve();
 

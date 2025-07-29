@@ -12,7 +12,7 @@ import {
   markChannelAs,
   markURLAsDistracting,
 } from "../lib/browserService";
-import { getStorageData } from "@/shared/store";
+import { getStorageData } from "@/shared/storage";
 import {
   isChannelDistracting,
   isDistracting,

@@ -1,4 +1,4 @@
-import { getStorageData, setStorageData } from "@/shared/store";
+import { getStorageData, setStorageData } from "@/shared/storage";
 import { sitePatterns } from "@/shared/utils";
 import type {
   Message,

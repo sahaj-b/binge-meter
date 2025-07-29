@@ -1,4 +1,4 @@
-import { getStorageData } from "@/shared/store";
+import { getStorageData } from "@/shared/storage";
 import type {
   Metadata,
   PageMeta,

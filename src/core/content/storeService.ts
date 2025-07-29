@@ -1,4 +1,4 @@
-import { getStorageData, setStorageData } from "@/shared/store";
+import { getStorageData, setStorageData } from "@/shared/storage";
 import type { OverlayConfig } from "@/shared/types";
 export type Size = { width: number; height: number };
 export type Position = { left: string; top: string };

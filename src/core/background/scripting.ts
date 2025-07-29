@@ -1,6 +1,6 @@
 // @ts-ignore
 import contentScriptPath from "../content/index?script";
-import { getStorageData, setStorageData } from "@/shared/store";
+import { getStorageData, setStorageData } from "@/shared/storage";
 import { sitePatterns } from "@/shared/utils";
 
 export async function syncRegisteredScriptsForAllowedSites() {

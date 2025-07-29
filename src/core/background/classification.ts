@@ -1,4 +1,4 @@
-import { getStorageData, setStorageData } from "@/shared/store";
+import { getStorageData, setStorageData } from "@/shared/storage";
 import type { Metadata } from "@/shared/types";
 import { isDistracting } from "@/shared/utils";
 import { callGeminiAPI } from "./aiService";

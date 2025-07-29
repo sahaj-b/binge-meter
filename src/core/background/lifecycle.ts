@@ -2,7 +2,7 @@ import {
   defaultStorageData,
   getStorageData,
   setStorageData,
-} from "@/shared/store";
+} from "@/shared/storage";
 import { syncRegisteredScriptsForAllowedSites } from "./scripting";
 import { updateActiveSession } from "./session";
 

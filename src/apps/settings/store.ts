@@ -2,7 +2,7 @@ import {
   defaultOverlayConfig,
   getStorageData,
   setStorageData,
-} from "@/shared/store";
+} from "@/shared/storage";
 import type { OverlayConfig, UserRules } from "@/shared/types";
 import { create } from "zustand";
 import {
