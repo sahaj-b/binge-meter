@@ -6,7 +6,7 @@ export default function SitesSection({
   analyticsData,
   date,
 }: { analyticsData: AnalyticsData; date: string }) {
-  const todaysTime = analyticsData[date].total ?? 0;
+  const todaysTime = analyticsData[date]?.total ?? 0;
   return (
     <Card>
       <CardHeader>

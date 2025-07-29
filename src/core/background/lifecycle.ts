@@ -41,15 +41,20 @@ export function setupLifecycleEvents() {
   //   injectIntoAllTrackedTabs();
   // });
 
-  chrome.alarms.onAlarm.addListener((alarm) => {
+  chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === "dailyReset") {
+      const { analyticsData } = await getStorageData(["analyticsData"]);
+      const date = new Date().toISOString().split("T")[0];
+      analyticsData[date] = { total: 0 };
+
       // stop any running session before resetting time
       updateActiveSession(null).then(() => {
         setStorageData({
           dailyTime: {
             total: 0,
-            date: new Date().toISOString().split("T")[0],
+            date: date,
           },
+          analyticsData: analyticsData,
         });
       });
     }

@@ -34,7 +34,7 @@ export function TimeBarChart({
   )?.time;
   return (
     <div className="min-h-[50px] relative">
-      {hoveredTime && (
+      {hoveredTime != null && (
         <div className="absolute inset-0 flex justify-center pointer-events-none z-0">
           <div className="text-8xl font-bold text-muted-foreground/20 select-none">
             {formatTimeMs(hoveredTime)}

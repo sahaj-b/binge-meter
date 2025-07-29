@@ -127,6 +127,16 @@ const dummyData = {
     "quora.com": 2160000,
     total: 21600000,
   },
+  "2025-07-29": {
+    "reddit.com": 5400000,
+    "youtube.com": 8100000,
+    "x.com": 2700000,
+    "linkedin.com": 1800000,
+    "github.com": 3600000,
+    "stackoverflow.com": 3240000,
+    "quora.com": 2160000,
+    total: 24300000,
+  },
 };
 
 const daysMap = { "30d": 30, "7d": 7, "90d": 90, inf: -1 };
