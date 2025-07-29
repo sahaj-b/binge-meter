@@ -148,7 +148,7 @@ export default function Analytics() {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0],
   );
-  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
+  const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   useEffect(() => {
     async function fetchAnalyticsData() {
       setLoading(true);

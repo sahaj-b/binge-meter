@@ -54,12 +54,12 @@ export default function SitesSection({
                     <span className="text-lg font-semibold">
                       {formatTimeMs(time)}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {todaysTime > 0
-                        ? Math.round((time / todaysTime) * 100)
-                        : 0}
-                      %
-                    </span>
+                    {/* <span className="text-xs text-muted-foreground"> */}
+                    {/*   {todaysTime > 0 */}
+                    {/*     ? Math.round((time / todaysTime) * 100) */}
+                    {/*     : 0} */}
+                    {/*   % */}
+                    {/* </span> */}
                   </div>
                 </div>
                 <span className="text-lg font-medium text-center">{site}</span>
