@@ -32,9 +32,8 @@ export const defaultUserRules: UserRules = {
 };
 
 export const defaultBlockingSettings = {
-  enabled: true,
-  // timeLimit: 3 * 60 * 60 * 1000, // 5 hours
-  timeLimit: 0.95 * 60 * 60 * 1000, // 5 hours
+  enabled: false,
+  timeLimit: 5 * 60 * 60 * 1000, // 5 hours
   urlExceptions: [
     "https://www.youtube.com",
     "https://www.youtube.com/feed/subscriptions",

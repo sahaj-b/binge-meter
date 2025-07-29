@@ -8,11 +8,13 @@ import { useStore } from "./store";
 import { AIClassification } from "./AIClassification";
 import { SettingsIcon } from "lucide-react";
 import { MiscSettings } from "./MiscSettings";
+import { BlockingSettings } from "./BlockingSection";
 import { Underline } from "@lib/utils";
 
 const NAV_ITEMS = [
   { id: "ai", title: "AI Classification" },
   { id: "site-tracking", title: "Site Tracking" },
+  { id: "blocking", title: "Blocking" },
   { id: "overlay", title: "Overlay" },
   { id: "misc", title: "Misc" },
 ];
@@ -183,7 +185,7 @@ export default function Settings() {
   //
   //   observer.current = new IntersectionObserver(handleObserver, {
   //     // rootMargin: "-30% 0% -70% 0%",
-  //     root: document.body,
+  //     root: null,
   //     rootMargin: "0px",
   //     threshold: 0,
   //   });
@@ -230,6 +232,9 @@ export default function Settings() {
           <div id="site-tracking" className="scroll-mt-20 space-y-8">
             <TrackedSites />
             <Exceptions />
+          </div>
+          <div id="blocking" className="scroll-mt-20 space-y-8">
+            <BlockingSettings />
           </div>
           <div id="overlay" className="scroll-mt-20 space-y-8">
             <OverlaySettings />

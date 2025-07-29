@@ -3,7 +3,7 @@ import {
   getStorageData,
   setStorageData,
 } from "@/shared/storage";
-import type { OverlayConfig, UserRules } from "@/shared/types";
+import type { BlockingSettings, OverlayConfig, UserRules } from "@/shared/types";
 import { create } from "zustand";
 import {
   requestSitePermission,
@@ -28,6 +28,7 @@ type StoreData = {
   customPrompt: string | null;
   dummyTime: number;
   resetTime: { hours: number; minutes: number } | null;
+  blockingSettings: BlockingSettings | null;
   miscError: string | null;
 };
 type StoreActions = {
@@ -57,6 +58,9 @@ type StoreActions = {
   setApiKey: (key: string) => Promise<void>;
   setCustomPrompt: (prompt: string) => Promise<void>;
   setResetTime: (time: { hours: number; minutes: number }) => Promise<void>;
+  updateBlockingSettings: (updates: Partial<BlockingSettings>) => Promise<void>;
+  addBlockingException: (url: string) => Promise<void>;
+  removeBlockingException: (url: string) => Promise<void>;
 };
 
 type StoreType = StoreData & StoreActions;
@@ -74,6 +78,7 @@ const initialData: StoreData = {
   customPrompt: null,
   dummyTime: 369000,
   resetTime: null,
+  blockingSettings: null,
   miscError: null,
 };
 
@@ -90,6 +95,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         "geminiApiKey",
         "customPrompt",
         "resetTime",
+        "blockingSettings",
       ]);
       if (!data.overlayConfig) throw new Error("Overlay config not found");
       set({
@@ -101,6 +107,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         geminiApiKey: data.geminiApiKey,
         customPrompt: data.customPrompt,
         resetTime: data.resetTime,
+        blockingSettings: data.blockingSettings,
         error: null,
       });
       set((state) => ({
@@ -249,5 +256,27 @@ export const useStore = create<StoreType>()((set, get) => ({
     await sendResetTimeMessage(time).catch((error) => {
       set({ miscError: "Failed to set time: " + error.message });
     });
+  },
+  updateBlockingSettings: async (updates: Partial<BlockingSettings>) => {
+    set((state) => {
+      if (!state.blockingSettings) return state;
+      const newSettings = { ...state.blockingSettings, ...updates };
+      setStorageData({ blockingSettings: newSettings });
+      return { blockingSettings: newSettings };
+    });
+  },
+  addBlockingException: async (url: string) => {
+    const { blockingSettings } = get();
+    if (!blockingSettings) return;
+    const newExceptions = [...blockingSettings.urlExceptions, url];
+    await get().updateBlockingSettings({ urlExceptions: newExceptions });
+  },
+  removeBlockingException: async (url: string) => {
+    const { blockingSettings } = get();
+    if (!blockingSettings) return;
+    const newExceptions = blockingSettings.urlExceptions.filter(
+      (u) => u !== url,
+    );
+    await get().updateBlockingSettings({ urlExceptions: newExceptions });
   },
 }));
