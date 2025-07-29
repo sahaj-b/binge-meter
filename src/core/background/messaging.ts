@@ -124,8 +124,7 @@ export async function handleEvaluatePage(
 
   // --- PRODUCTIVE PATH ---
   if (classification === "productive") {
-    await chrome.tabs.sendMessage(tabId, { type: "DEACTIVATE_OVERLAY" });
-    chrome.tabs
+    await chrome.tabs
       .query({ active: true, currentWindow: true })
       .then(async ([activeTab]) => {
         if (activeTab?.id === tabId) {
@@ -135,6 +134,7 @@ export async function handleEvaluatePage(
           await updateActiveSession(null);
         }
       });
+    await chrome.tabs.sendMessage(tabId, { type: "DEACTIVATE_OVERLAY" });
     return;
   }
 

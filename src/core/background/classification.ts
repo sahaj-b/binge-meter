@@ -1,17 +1,16 @@
 import { getStorageData, setStorageData } from "@/shared/storage";
 import type { Metadata } from "@/shared/types";
-import { isDistracting } from "@/shared/utils";
+import { classifyByUserRules } from "@/shared/utils";
 import { callGeminiAPI } from "./aiService";
 
 export async function getClassification(
   metadata: Metadata,
   ai = true,
 ): Promise<"productive" | "distracting"> {
-  const distracting = await isDistracting(metadata);
-  console.log("Distracting:", distracting);
-  if (!distracting || !ai) {
-    return distracting ? "distracting" : "productive";
-  }
+  const distracting = await classifyByUserRules(metadata);
+  if (distracting !== null || !ai)
+    return distracting !== "productive" ? "distracting" : "productive";
+
   const { aiEnabled, aiDisabledSites } = await getStorageData([
     "aiEnabled",
     "aiDisabledSites",

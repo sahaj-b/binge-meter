@@ -5,36 +5,38 @@ export function sitePatterns(site: string): string[] {
   return [`*://${site}/*`, `*://www.${site}/*`];
 }
 
-export async function isDistracting(
+export async function classifyByUserRules(
   metadata: Metadata,
   userRules?: UserRules,
-): Promise<boolean> {
+): Promise<"distracting" | "productive" | null> {
+  // null means not in user rules(for url only)
   if (!userRules) userRules = (await getStorageData(["userRules"])).userRules;
-
-  if (!(await isURLDistracting(metadata.url, userRules))) return false;
-
+  const urlDistracting = await isURLDistracting(metadata.url, userRules);
+  if (urlDistracting !== null)
+    return urlDistracting ? "distracting" : "productive";
   if (
     metadata.youtube?.channelId &&
     metadata.youtube?.channelName &&
     (!(await isChannelDistracting(metadata.youtube.channelId, userRules)) ||
       !(await isChannelDistracting(metadata.youtube.channelName, userRules)))
   ) {
-    return false;
+    return "productive";
   }
 
   if (
     metadata.reddit?.subreddit &&
     !(await isSubredditDistracting(metadata.reddit.subreddit, userRules))
   ) {
-    return false;
+    return "productive";
   }
-  return true;
+
+  return null;
 }
 
 export async function isURLDistracting(
   url: string,
   userRules?: UserRules,
-): Promise<boolean> {
+): Promise<boolean | null> {
   const data = await getStorageData([
     "userRules",
     "aiCache",
@@ -51,7 +53,7 @@ export async function isURLDistracting(
     const aiEntry = data.aiCache.find(([uurl]) => uurl === url);
     if (aiEntry) return aiEntry[1] === "distracting";
   }
-  return true;
+  return null;
 }
 
 export async function isChannelDistracting(
