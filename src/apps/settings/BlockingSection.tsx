@@ -6,12 +6,21 @@ import { Section } from "./Section";
 import { ReusableList } from "./ReusableList";
 
 export function BlockingSection() {
-  const {
-    blockingSettings,
-    updateBlockingSettings,
-    addBlockingException,
-    removeBlockingException,
-  } = useStore();
+  // const {
+  //   blockingSettings,
+  //   updateBlockingSettings,
+  //   addBlockingException,
+  //   removeBlockingException,
+  // } = useStore();
+  const blockingSettings = useStore((state) => state.blockingSettings);
+  const updateBlockingSettings = useStore(
+    (state) => state.updateBlockingSettings,
+  );
+  const addBlockingException = useStore((state) => state.addBlockingException);
+  const removeBlockingException = useStore(
+    (state) => state.removeBlockingException,
+  );
+  const blockError = useStore((state) => state.blockError);
 
   if (!blockingSettings) return null;
 
@@ -58,6 +67,7 @@ export function BlockingSection() {
             onAddItem={addBlockingException}
             onRemoveItem={removeBlockingException}
             placeholder="https://google.com"
+            error={blockError}
           />
         </div>
       </div>

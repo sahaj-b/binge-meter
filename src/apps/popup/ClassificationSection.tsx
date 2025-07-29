@@ -20,13 +20,6 @@ export function ClassificationSection() {
   const isYouTube = !!metadata.youtube?.channelId;
   const isReddit = !!metadata.reddit?.subreddit;
 
-  console.log("isYouTube", isYouTube);
-  console.log("isReddit", isReddit);
-  console.log(
-    "isChannelOrSubredditDistracting",
-    isChannelOrSubredditDistracting,
-  );
-
   let displayEle = <span>Mark page as</span>;
 
   if (isYouTube) {

@@ -11,11 +11,12 @@ import {
   markSubredditAs,
   markChannelAs,
   markURLAsDistracting,
-} from "../lib/browserService";
+  isBlocked,
+} from "@lib/browserService";
 import { getStorageData } from "@/shared/storage";
 import {
   isChannelDistracting,
-  isDistracting,
+  classifyByUserRules,
   isSubredditDistracting,
 } from "@/shared/utils";
 
@@ -37,6 +38,7 @@ interface PopupState {
   isChannelOrSubredditDistracting: boolean | null;
   currentSite: string;
   aiEnabled: boolean;
+  isBlocked: boolean;
 
   initialize: () => Promise<void>;
   updateDistractingStatuses: (metadata: Metadata) => Promise<void>;
@@ -45,6 +47,7 @@ interface PopupState {
   addSite: () => void;
   removeSite: () => void;
   requestPermission: () => void;
+  updateIsBlocked: () => Promise<void>;
   markAs: (
     markDistracting: boolean,
     markChannelOrSubreddit?: boolean,
@@ -66,6 +69,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
   currentSite: "",
   isChannelOrSubredditDistracting: true,
   aiEnabled: false,
+  isBlocked: false,
 
   initialize: async () => {
     set({ isLoading: true });
@@ -121,7 +125,8 @@ const usePopupStore = create<PopupState>((set, get) => ({
               }
             }
           } else {
-            const distracting = await isDistracting({ url: url.href });
+            const distracting =
+              (await classifyByUserRules({ url: url.href })) !== "productive";
             set({ isCurrentlyDistracting: distracting });
           }
         }
@@ -133,13 +138,14 @@ const usePopupStore = create<PopupState>((set, get) => ({
       set({ isLoading: false });
       setTimeout(async () => {
         const { dailyTime } = await getStorageData(["dailyTime"]);
-        set({ dailyTime: dailyTime.total });
+        const blocked = await isBlocked(get().activeURL?.href ?? "");
+        set({ dailyTime: dailyTime.total, isBlocked: blocked });
       }, 500);
     }
   },
 
   updateDistractingStatuses: async (metadata: Metadata) => {
-    const distracting = await isDistracting(metadata);
+    const distracting = (await classifyByUserRules(metadata)) !== "productive";
     set({ isCurrentlyDistracting: distracting });
 
     const isYoutube = metadata.youtube?.channelId;
@@ -154,6 +160,14 @@ const usePopupStore = create<PopupState>((set, get) => ({
           ? await isSubredditDistracting(metadata.reddit?.subreddit!)
           : true;
       set({ isChannelOrSubredditDistracting });
+    }
+  },
+
+  updateIsBlocked: async () => {
+    const { activeURL } = get();
+    if (activeURL) {
+      const blocked = await isBlocked(activeURL.href);
+      set({ isBlocked: blocked });
     }
   },
 

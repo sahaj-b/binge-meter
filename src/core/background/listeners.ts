@@ -7,6 +7,8 @@ import {
   toggleOverlays,
   handleEvaluatePage,
   updateUserRule,
+  unblockURL,
+  blockURL,
 } from "./messaging";
 import { setupDailyResetAlarm } from "./lifecycle";
 import { setStorageData } from "@/shared/storage";
@@ -38,34 +40,41 @@ export function setupListeners() {
         if (!sender.tab?.id) return;
         updateActiveSession(sender.tab.id);
         break;
+
       case "TAB_BLUR":
         if (!sender.tab?.id) return;
         updateActiveSession(null);
         break;
+
       case "TOGGLE_ALL_OVERLAYS":
         console.log("TOGGLE_ALL_OVERLAYS received");
         toggleOverlays();
         break;
+
       case "REVALIDATE_ALL_OVERLAYS":
         console.log(
           `REVALIDATE_ALL_OVERLAYS received from tab: ${sender.tab?.id}`,
         );
         revalidateCacheForAllTabs();
         break;
+
       case "REVALIDATE_CACHE_TAB":
         if (!sender.tab?.id) return;
         revalidateCacheForTab(sender.tab.id);
         break;
+
       case "EVALUATE_PAGE":
         console.log("EVALUATE_PAGE received");
         if (!sender.tab?.id) return;
         handleEvaluatePage(sender.tab.id, message.metadata);
         break;
+
       case "URL_ONLY_EVALUATE":
         if (!sender.tab?.id || !message.url) return;
         console.log("URL_ONLY_EVALUATE received");
         handleEvaluatePage(sender.tab.id, { url: message.url }, false);
         break;
+
       case "ADD_TRACKED_SITE":
         addSite(message.site)
           .then(() => {
@@ -107,6 +116,7 @@ export function setupListeners() {
             sendResponse({ success: false, error: error.message });
           });
         return true;
+
       case "SET_RESET_TIME":
         if (
           message.resetTime?.hours == null ||
@@ -125,6 +135,27 @@ export function setupListeners() {
             sendResponse({ success: false, error: error.message });
           });
         return true;
+
+      case "UNBLOCK_URL":
+        unblockURL(message.url ?? "")
+          .then(() => {
+            sendResponse({ success: true });
+          })
+          .catch((error) => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+
+      case "BLOCK_URL":
+        blockURL(message.url ?? "")
+          .then(() => {
+            sendResponse({ success: true });
+          })
+          .catch((error) => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+
       case "DEBUG":
         console.log(sender.tab?.id, message.message);
         break;

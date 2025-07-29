@@ -3,7 +3,11 @@ import {
   getStorageData,
   setStorageData,
 } from "@/shared/storage";
-import type { BlockingSettings, OverlayConfig, UserRules } from "@/shared/types";
+import type {
+  BlockingSettings,
+  OverlayConfig,
+  UserRules,
+} from "@/shared/types";
 import { create } from "zustand";
 import {
   requestSitePermission,
@@ -13,6 +17,7 @@ import {
   markChannelAs,
   markSubredditAs,
   sendResetTimeMessage,
+  updateBlockingException,
 } from "@lib/browserService";
 
 type StoreData = {
@@ -30,6 +35,7 @@ type StoreData = {
   resetTime: { hours: number; minutes: number } | null;
   blockingSettings: BlockingSettings | null;
   miscError: string | null;
+  blockError: string | null;
 };
 type StoreActions = {
   fetchSettings: () => Promise<void>;
@@ -80,6 +86,7 @@ const initialData: StoreData = {
   resetTime: null,
   blockingSettings: null,
   miscError: null,
+  blockError: null,
 };
 
 export const useStore = create<StoreType>()((set, get) => ({
@@ -266,17 +273,17 @@ export const useStore = create<StoreType>()((set, get) => ({
     });
   },
   addBlockingException: async (url: string) => {
-    const { blockingSettings } = get();
-    if (!blockingSettings) return;
-    const newExceptions = [...blockingSettings.urlExceptions, url];
-    await get().updateBlockingSettings({ urlExceptions: newExceptions });
+    set({ blockError: null });
+    await updateBlockingException(url, false).catch((error) => {
+      set({ blockError: `Failed to add ${url}: ` + error.message });
+    });
+    await get().fetchSettings();
   },
   removeBlockingException: async (url: string) => {
-    const { blockingSettings } = get();
-    if (!blockingSettings) return;
-    const newExceptions = blockingSettings.urlExceptions.filter(
-      (u) => u !== url,
-    );
-    await get().updateBlockingSettings({ urlExceptions: newExceptions });
+    set({ blockError: null });
+    await updateBlockingException(url, true).catch((error) => {
+      set({ blockError: `Failed to remove ${url}: ` + error.message });
+    });
+    await get().fetchSettings();
   },
 }));

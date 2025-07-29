@@ -7,14 +7,15 @@ import usePopupStore from "./store";
 import CurrentSiteTracker from "./CurrentSiteTracker";
 import { ClassificationSection } from "./ClassificationSection";
 import { openAnalyticsPage, openSettingsPage } from "../lib/browserService";
+import { BlockedSection } from "./BlockedSection";
 
 export default function Popup() {
-  const dailyTime = usePopupStore((state) => state.dailyTime);
-  const overlayHidden = usePopupStore((state) => state.overlayHidden);
-  const thresholds = usePopupStore((state) => state.thresholds);
   const isCurrentSiteTracked = usePopupStore(
     (state) => state.isCurrentSiteTracked,
   );
+  const dailyTime = usePopupStore((state) => state.dailyTime);
+  const overlayHidden = usePopupStore((state) => state.overlayHidden);
+  const thresholds = usePopupStore((state) => state.thresholds);
   const aiEnabled = usePopupStore((state) => state.aiEnabled);
   const initialize = usePopupStore((state) => state.initialize);
   const toggleOverlay = usePopupStore((state) => state.toggleOverlay);
@@ -60,7 +61,12 @@ export default function Popup() {
 
         <CurrentSiteTracker />
 
-        {isCurrentSiteTracked && <ClassificationSection />}
+        {isCurrentSiteTracked && (
+          <>
+            <BlockedSection />
+            <ClassificationSection />
+          </>
+        )}
 
         <div className="flex space-x-4 items-center justify-center">
           <Button

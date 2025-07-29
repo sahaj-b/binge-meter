@@ -120,7 +120,7 @@ async function getPrompt(metadata: Metadata) {
     ${redditPrompt}
     `;
   // console.log("Metadata prompt:", metadataPrompt);
-  console.log(userRulesSection);
+  // console.log(userRulesSection);
   return `
     You are a classification engine for a productivity application called BingeMeter. Your sole purpose is to analyze webpage metadata and determine if the content is "PRODUCTIVE" or "DISTRACTING" for a user trying to focus on work or learning.
 

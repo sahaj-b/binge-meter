@@ -8,7 +8,7 @@ import { useStore } from "./store";
 import { AIClassification } from "./AIClassification";
 import { SettingsIcon } from "lucide-react";
 import { MiscSettings } from "./MiscSettings";
-import { BlockingSettings } from "./BlockingSection";
+import { BlockingSection } from "./BlockingSection";
 import { Underline } from "@lib/utils";
 
 const NAV_ITEMS = [
@@ -234,7 +234,7 @@ export default function Settings() {
             <Exceptions />
           </div>
           <div id="blocking" className="scroll-mt-20 space-y-8">
-            <BlockingSettings />
+            <BlockingSection />
           </div>
           <div id="overlay" className="scroll-mt-20 space-y-8">
             <OverlaySettings />

@@ -1,5 +1,6 @@
 import { sitePatterns } from "@/shared/utils";
 import type { Message } from "@/shared/types";
+import { getStorageData } from "@/shared/storage";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
   if (!site) return false;
@@ -149,5 +150,23 @@ export async function sendResetTimeMessage(time: {
   await chrome.runtime.sendMessage({
     type: "SET_RESET_TIME",
     resetTime: time,
+  } satisfies Message);
+}
+
+export async function isBlocked(url: string) {
+  const { blockingSettings, dailyTime } = await getStorageData([
+    "blockingSettings",
+    "dailyTime",
+  ]);
+  return (
+    dailyTime.total >= blockingSettings.timeLimit &&
+    !blockingSettings.urlExceptions.includes(url)
+  );
+}
+
+export async function updateBlockingException(url: string, remove: boolean) {
+  await chrome.runtime.sendMessage({
+    type: remove ? "BLOCK_URL" : "UNBLOCK_URL",
+    url: url,
   } satisfies Message);
 }

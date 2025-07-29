@@ -238,6 +238,28 @@ export async function updateUserRule(
     );
 }
 
+export async function unblockURL(url: string) {
+  if (!url) return;
+  const { blockingSettings } = await getStorageData(["blockingSettings"]);
+  if (blockingSettings.urlExceptions.includes(url))
+    throw new Error(`'${url}' is already unblocked`);
+  blockingSettings.urlExceptions.push(url);
+  await setStorageData({ blockingSettings });
+  await sendMsgToAllTabs(url, { type: "RE-INITIALIZE_OVERLAY" });
+}
+
+export async function blockURL(url: string) {
+  if (!url) return;
+  const { blockingSettings } = await getStorageData(["blockingSettings"]);
+  if (!blockingSettings.urlExceptions.includes(url))
+    throw new Error(`'${url}' is already blocked`);
+  blockingSettings.urlExceptions = blockingSettings.urlExceptions.filter(
+    (exception) => exception !== url,
+  );
+  await setStorageData({ blockingSettings });
+  await sendMsgToAllTabs(url, { type: "RE-INITIALIZE_OVERLAY" });
+}
+
 export async function sendMsgToAllTabs(url: string | string[], message: any) {
   const tabs = await chrome.tabs.query({ url });
   for (const tab of tabs) {
