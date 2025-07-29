@@ -7,12 +7,14 @@ import { OverlayUI } from "@/core/content/overlay";
 import { useStore } from "./store";
 import { AIClassification } from "./AIClassification";
 import { SettingsIcon } from "lucide-react";
+import { MiscSettings } from "./MiscSettings";
 import { Underline } from "@lib/utils";
 
 const NAV_ITEMS = [
   { id: "ai", title: "AI Classification" },
   { id: "site-tracking", title: "Site Tracking" },
   { id: "overlay", title: "Overlay" },
+  { id: "misc", title: "Misc" },
 ];
 
 function SettingsNav({ activeId }: { activeId: string }) {
@@ -24,7 +26,7 @@ function SettingsNav({ activeId }: { activeId: string }) {
   };
 
   return (
-    <nav className="text-nowrap sticky top-1/2 -translate-y-1/2">
+    <nav className="sticky top-1/2 -translate-y-1/2 text-nowrap">
       <ul className="space-y-2">
         {NAV_ITEMS.map((item) => (
           <li key={item.id}>
@@ -121,6 +123,15 @@ export default function Settings() {
       }
 
       timeoutId = setTimeout(() => {
+        const isAtBottom =
+          window.innerHeight + window.scrollY >=
+          document.documentElement.scrollHeight - 50;
+        if (isAtBottom) {
+          const lastSectionId = NAV_ITEMS[NAV_ITEMS.length - 1].id;
+          setActiveId(lastSectionId);
+          return;
+        }
+
         const screenTop = window.innerHeight * 0.3;
         const screenBottom = window.innerHeight * 0.7;
         let currentSectionId: string | null = null;
@@ -208,8 +219,8 @@ export default function Settings() {
         <div className="relative hidden lg:block">
           <SettingsNav activeId={activeId} />
         </div>
-        <div className="space-y-8 w-full max-w-[60rem]">
-          <h1 className="flex items-center justify-center tracking-wide text-3xl text-center font-bold">
+        <div className="w-full max-w-[60rem] space-y-8">
+          <h1 className="flex items-center justify-center text-center text-3xl font-bold tracking-wide">
             <SettingsIcon className="mr-2 text-muted-foreground" /> Binge Meter
             <Underline text="Settings" />
           </h1>
@@ -223,6 +234,9 @@ export default function Settings() {
           <div id="overlay" className="scroll-mt-20 space-y-8">
             <OverlaySettings />
             <OverlayStyles />
+          </div>
+          <div id="misc" className="scroll-mt-20 space-y-8">
+            <MiscSettings />
           </div>
         </div>
       </div>

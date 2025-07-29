@@ -10,6 +10,7 @@ export type StorageData = {
   geminiApiKey: string;
   customPrompt: string;
   analyticsData: AnalyticsData;
+  resetTime: { hours: number; minutes: number };
 };
 
 export type AnalyticsData = {
@@ -67,6 +68,7 @@ export type Message = {
   url?: string;
   metadata?: any;
   time?: number;
+  resetTime?: { hours: number; minutes: number };
   rule?: UserRulesInput;
   extraMetadata?: string;
 };

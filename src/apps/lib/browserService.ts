@@ -141,3 +141,13 @@ export async function markSubredditAs(
   if (!response?.success)
     throw new Error(response?.error ?? "Unknown error occurred");
 }
+
+export async function sendResetTimeMessage(time: {
+  hours: number;
+  minutes: number;
+}) {
+  await chrome.runtime.sendMessage({
+    type: "SET_RESET_TIME",
+    resetTime: time,
+  } satisfies Message);
+}

@@ -12,6 +12,7 @@ import {
   markURLAs,
   markChannelAs,
   markSubredditAs,
+  sendResetTimeMessage,
 } from "@lib/browserService";
 
 type StoreData = {
@@ -26,6 +27,8 @@ type StoreData = {
   geminiApiKey: string | null;
   customPrompt: string | null;
   dummyTime: number;
+  resetTime: { hours: number; minutes: number } | null;
+  miscError: string | null;
 };
 type StoreActions = {
   fetchSettings: () => Promise<void>;
@@ -53,6 +56,7 @@ type StoreActions = {
   toggleAiDisabledSite: (site: string) => Promise<void>;
   setApiKey: (key: string) => Promise<void>;
   setCustomPrompt: (prompt: string) => Promise<void>;
+  setResetTime: (time: { hours: number; minutes: number }) => Promise<void>;
 };
 
 type StoreType = StoreData & StoreActions;
@@ -69,6 +73,8 @@ const initialData: StoreData = {
   geminiApiKey: null,
   customPrompt: null,
   dummyTime: 369000,
+  resetTime: null,
+  miscError: null,
 };
 
 export const useStore = create<StoreType>()((set, get) => ({
@@ -83,6 +89,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         "aiDisabledSites",
         "geminiApiKey",
         "customPrompt",
+        "resetTime",
       ]);
       if (!data.overlayConfig) throw new Error("Overlay config not found");
       set({
@@ -93,6 +100,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         aiDisabledSites: data.aiDisabledSites,
         geminiApiKey: data.geminiApiKey,
         customPrompt: data.customPrompt,
+        resetTime: data.resetTime,
         error: null,
       });
       set((state) => ({
@@ -235,5 +243,11 @@ export const useStore = create<StoreType>()((set, get) => ({
   setCustomPrompt: async (prompt) => {
     set({ customPrompt: prompt });
     await setStorageData({ customPrompt: prompt });
+  },
+  setResetTime: async (time) => {
+    set({ resetTime: time, miscError: null });
+    await sendResetTimeMessage(time).catch((error) => {
+      set({ miscError: "Failed to set time: " + error.message });
+    });
   },
 }));

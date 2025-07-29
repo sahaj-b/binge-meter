@@ -27,11 +27,7 @@ export function setupLifecycleEvents() {
       activeSession: null,
     });
 
-    // reset daily time at 3 AM
-    await chrome.alarms.create("dailyReset", {
-      when: getNext3AM(),
-      periodInMinutes: 24 * 60,
-    });
+    await setupDailyResetAlarm();
 
     await syncRegisteredScriptsForAllowedSites();
   });
@@ -61,12 +57,23 @@ export function setupLifecycleEvents() {
   });
 }
 
-function getNext3AM(): number {
+export async function setupDailyResetAlarm() {
+  const { resetTime } = await getStorageData(["resetTime"]);
+
+  await chrome.alarms.clear("dailyReset");
+
+  await chrome.alarms.create("dailyReset", {
+    when: getNextTime(resetTime.hours, resetTime.minutes),
+    periodInMinutes: 24 * 60,
+  });
+}
+
+function getNextTime(hour: number, minute = 0): number {
   const now = new Date();
-  const next3AM = new Date();
-  next3AM.setHours(3, 0, 0, 0);
-  if (next3AM <= now) {
-    next3AM.setDate(next3AM.getDate() + 1);
+  const nextTime = new Date();
+  nextTime.setHours(hour, minute, 0, 0);
+  if (nextTime <= now) {
+    nextTime.setDate(nextTime.getDate() + 1);
   }
-  return next3AM.getTime();
+  return nextTime.getTime();
 }

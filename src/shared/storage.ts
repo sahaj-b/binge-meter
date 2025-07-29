@@ -43,6 +43,7 @@ export const defaultStorageData: StorageData = {
   geminiApiKey: "",
   customPrompt: "",
   analyticsData: {},
+  resetTime: { hours: 3, minutes: 0 }, // 3 AM daily reset
 };
 
 export async function getStorageData<K extends keyof StorageData>(

@@ -8,6 +8,8 @@ import {
   handleEvaluatePage,
   updateUserRule,
 } from "./messaging";
+import { setupDailyResetAlarm } from "./lifecycle";
+import { setStorageData } from "@/shared/storage";
 
 export function setupListeners() {
   // this chrome API fuckin SUCKS. can't handle focus changes outside the browser instance (for my WM atleast)
@@ -105,7 +107,24 @@ export function setupListeners() {
             sendResponse({ success: false, error: error.message });
           });
         return true;
-
+      case "SET_RESET_TIME":
+        if (
+          message.resetTime?.hours == null ||
+          message.resetTime?.minutes == null
+        ) {
+          return sendResponse({ success: false, error: "Invalid reset time" });
+        }
+        setStorageData({
+          resetTime: message.resetTime,
+        })
+          .then(setupDailyResetAlarm)
+          .then(() => {
+            sendResponse({ success: true });
+          })
+          .catch((error) => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
       case "DEBUG":
         console.log(sender.tab?.id, message.message);
         break;
