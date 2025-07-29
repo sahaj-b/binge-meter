@@ -54,6 +54,11 @@ export function setupLifecycleEvents() {
         });
       });
     }
+    if (alarm.name === "blockingLimitAlarm") {
+      const { activeSession } = await getStorageData(["activeSession"]);
+      if (activeSession)
+        chrome.tabs.sendMessage(activeSession.tabId, { type: "BLOCK_PAGE" });
+    }
   });
 }
 

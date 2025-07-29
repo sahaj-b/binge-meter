@@ -1,4 +1,4 @@
-import type { dailyTime, UserRules, OverlayConfig, StorageData } from "./types";
+import type { DailyTime, UserRules, OverlayConfig, StorageData } from "./types";
 
 export const defaultOverlayConfig: OverlayConfig = {
   thresholdWarn: 10 * 1000,
@@ -20,7 +20,7 @@ export const defaultTrackedSites: string[] = [
   "reddit.com",
 ];
 
-export const defaultDailyTime: dailyTime = {
+export const defaultDailyTime: DailyTime = {
   total: 0,
   date: new Date().toISOString().split("T")[0],
 };
@@ -29,6 +29,16 @@ export const defaultUserRules: UserRules = {
   urls: {},
   productiveYtChannels: [],
   productiveSubreddits: [],
+};
+
+export const defaultBlockingSettings = {
+  enabled: true,
+  // timeLimit: 3 * 60 * 60 * 1000, // 5 hours
+  timeLimit: 0.95 * 60 * 60 * 1000, // 5 hours
+  urlExceptions: [
+    "https://www.youtube.com",
+    "https://www.youtube.com/feed/subscriptions",
+  ],
 };
 
 export const defaultStorageData: StorageData = {
@@ -44,6 +54,7 @@ export const defaultStorageData: StorageData = {
   customPrompt: "",
   analyticsData: {},
   resetTime: { hours: 3, minutes: 0 }, // 3 AM daily reset
+  blockingSettings: defaultBlockingSettings,
 };
 
 export async function getStorageData<K extends keyof StorageData>(

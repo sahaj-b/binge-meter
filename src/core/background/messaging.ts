@@ -114,34 +114,77 @@ export async function toggleOverlays() {
 export async function handleEvaluatePage(
   tabId: number,
   metadata: Metadata | null,
-  ai = true,
+  isFullEval = true,
 ) {
+  if (!metadata?.url) return;
+
   console.log(`Evaluating page for tab ${tabId}`, metadata);
-  const classification =
-    (metadata && (await getClassification(metadata, ai))) || "distracting";
+  const classification = await getClassification(metadata, isFullEval);
   console.log(`Page is ${classification}`);
-  if (classification === "distracting") {
-    await chrome.tabs.sendMessage(tabId, { type: "ACTIVATE_OVERLAY" });
-    await chrome.tabs
-      .query({ active: true, currentWindow: true })
-      .then(async ([activeTab]) => {
-        if (activeTab?.id === tabId) {
-          console.log("updating active session");
-          await updateActiveSession(tabId);
-        }
-      });
-  } else {
-    console.log("SENDING DEACTIVATE_OVERLAY to tab", tabId);
+
+  // --- PRODUCTIVE PATH ---
+  if (classification === "productive") {
     await chrome.tabs.sendMessage(tabId, { type: "DEACTIVATE_OVERLAY" });
-    await chrome.tabs
+    chrome.tabs
       .query({ active: true, currentWindow: true })
       .then(async ([activeTab]) => {
         if (activeTab?.id === tabId) {
-          console.log("updating active session to NULL");
+          console.log(
+            "Productive page is active, ensuring session is stopped.",
+          );
           await updateActiveSession(null);
         }
       });
+    return;
   }
+
+  // --- DISTRACTING PATH ---
+  const { blockingSettings, dailyTime } = await getStorageData([
+    "blockingSettings",
+    "dailyTime",
+  ]);
+
+  const toBlock =
+    isFullEval && // only block if this is a full evaluation, not premature URL-ONLY eval
+    blockingSettings.enabled &&
+    !blockingSettings.urlExceptions.some(
+      (exception) => metadata.url === exception,
+    );
+
+  if (!toBlock) {
+    console.log("AINT BLOCKING THIS SHI");
+    chrome.tabs
+      .query({ active: true, currentWindow: true })
+      .then(async ([activeTab]) => {
+        if (activeTab?.id === tabId) {
+          await chrome.tabs.sendMessage(tabId, { type: "ACTIVATE_OVERLAY" });
+          await updateActiveSession(tabId);
+        }
+      });
+    return;
+  }
+
+  const timeLimitExceeded =
+    blockingSettings.enabled && dailyTime.total >= blockingSettings.timeLimit;
+
+  if (timeLimitExceeded) {
+    console.log("BLOCKING TIMEEEEEEEEEEEEee");
+    await chrome.tabs.sendMessage(tabId, { type: "BLOCK_PAGE" });
+    return;
+  }
+
+  chrome.tabs
+    .query({ active: true, currentWindow: true })
+    .then(async ([activeTab]) => {
+      if (activeTab?.id === tabId) {
+        // If we're not already blocking, send the activate message.
+        // (If BLOCK_PAGE was sent, this is redundant but harmless).
+        if (!(timeLimitExceeded && isFullEval)) {
+          await chrome.tabs.sendMessage(tabId, { type: "ACTIVATE_OVERLAY" });
+        }
+        await updateActiveSession(tabId);
+      }
+    });
 }
 
 export async function updateUserRule(

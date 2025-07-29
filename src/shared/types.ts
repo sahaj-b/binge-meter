@@ -1,5 +1,5 @@
 export type StorageData = {
-  dailyTime: dailyTime;
+  dailyTime: DailyTime;
   overlayConfig: OverlayConfig;
   trackedSites: string[];
   userRules: UserRules;
@@ -11,6 +11,13 @@ export type StorageData = {
   customPrompt: string;
   analyticsData: AnalyticsData;
   resetTime: { hours: number; minutes: number };
+  blockingSettings: BlockingSettings;
+};
+
+export type BlockingSettings = {
+  enabled: boolean;
+  timeLimit: number;
+  urlExceptions: string[];
 };
 
 export type AnalyticsData = {
@@ -37,7 +44,7 @@ export type UserRulesInput = {
   productiveSubreddit?: [string, "productive" | "distracting"];
 };
 
-export type dailyTime = {
+export type DailyTime = {
   total: number; //ms
   date: string;
 };

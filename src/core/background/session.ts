@@ -5,14 +5,23 @@ let sessionLock = Promise.resolve();
 export function updateActiveSession(activeTabId: number | null) {
   const taskPromise = sessionLock
     .then(async () => {
-      const { dailyTime, trackedSites, activeSession, analyticsData } =
-        await getStorageData([
-          "dailyTime",
-          "trackedSites",
-          "activeSession",
-          "analyticsData",
-        ]);
+      const {
+        dailyTime,
+        trackedSites,
+        activeSession,
+        analyticsData,
+        blockingSettings,
+      } = await getStorageData([
+        "dailyTime",
+        "trackedSites",
+        "activeSession",
+        "analyticsData",
+        "blockingSettings",
+      ]);
       let newTotal = dailyTime.total;
+      await chrome.alarms.clear("blockingLimitAlarm");
+
+      // --- ENDING the current session ---
       if (activeSession?.startTime) {
         const elapsed = Date.now() - activeSession.startTime;
         newTotal += elapsed;
@@ -26,11 +35,7 @@ export function updateActiveSession(activeTabId: number | null) {
         try {
           const tab = await chrome.tabs.get(activeSession.tabId);
           if (tab.url) {
-            const url = new URL(tab.url);
-            const hostname = url.hostname.startsWith("www.")
-              ? url.hostname.slice(4)
-              : url.hostname;
-
+            const hostname = new URL(tab.url).hostname.replace(/^www\./, "");
             analyticsData[date][hostname] =
               (analyticsData[date][hostname] ?? 0) + elapsed;
           }
@@ -41,32 +46,46 @@ export function updateActiveSession(activeTabId: number | null) {
             error,
           );
         }
+
+        // stop old tab's ticker
         await chrome.tabs
-          .sendMessage(activeSession.tabId, {
-            type: "STOP_TICKING",
-          })
+          .sendMessage(activeSession.tabId, { type: "STOP_TICKING" })
           .catch((err) => {
             console.error(
-              "Error while sending STOP_TICKING to",
-              activeTabId,
+              `Error sending STOP_TICKING to tab ${activeSession.tabId}:`,
               err,
             );
           });
       }
 
+      // --- STARTING a new session ---
       if (activeTabId !== null) {
         try {
           const tab = await chrome.tabs.get(activeTabId);
-          if (
-            tab.url &&
-            trackedSites.some((site: string) => tab.url!.includes(site))
-          ) {
+          if (tab.url && trackedSites.some((site) => tab.url!.includes(site))) {
+            // setting a time bomb for the blocking
+            if (blockingSettings.enabled) {
+              const timeLimit = blockingSettings.timeLimit;
+              const timeSoFar = newTotal;
+
+              if (timeLimit > 0 && timeSoFar < timeLimit) {
+                const timeRemaining = timeLimit - timeSoFar;
+                chrome.alarms.create("blockingLimitAlarm", {
+                  when: Date.now() + timeRemaining,
+                });
+                console.log(
+                  `Blocking alarm set for ${Math.round(timeRemaining / 1000)}s from now.`,
+                );
+              }
+            }
+
             const newSession = { tabId: activeTabId, startTime: Date.now() };
             await setStorageData({
               dailyTime: { ...dailyTime, total: newTotal },
               activeSession: newSession,
               analyticsData,
             });
+
             await chrome.tabs
               .sendMessage(activeTabId, {
                 type: "START_TICKING",
@@ -75,19 +94,25 @@ export function updateActiveSession(activeTabId: number | null) {
               })
               .catch((err) => {
                 console.error(
-                  "Error while sending START_TICKING to",
-                  activeTabId,
+                  `Error sending START_TICKING to tab ${activeTabId}:`,
                   err,
                 );
+
                 setStorageData({
                   dailyTime: { ...dailyTime, total: newTotal },
                   activeSession: null,
                 });
               });
+
             return;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error(`Failed to start session for tab ${activeTabId}:`, e);
+        }
       }
+
+      // --- NO NEW SESSION ---
+      // (stopping a session without starting a new one)
       await setStorageData({
         dailyTime: { ...dailyTime, total: newTotal },
         activeSession: null,
@@ -95,8 +120,9 @@ export function updateActiveSession(activeTabId: number | null) {
       });
     })
     .catch((err) => {
-      console.error("Error in the PROMISE CHAIN:", err);
+      console.error("Error in updateActiveSession promise chain:", err);
     });
+
   sessionLock = taskPromise;
   return taskPromise;
 }
