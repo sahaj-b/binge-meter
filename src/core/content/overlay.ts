@@ -189,13 +189,15 @@ export class OverlayUI {
       <h1 class="blocking-title">Time Limit Reached</h1>
       <div class="unlock-actions">
         <span id="unlock-message" class="unlock-message">Unlock for:</span>
-        <button id="unlock-5" class="unlock-button">5 min</button>
-        <button id="unlock-15" class="unlock-button">15 min</button>
-      </div>
-      <button id="custom-unlock-toggle" class="custom-unlock-toggle">Custom duration</button>
-      <div id="custom-unlock-container" class="custom-unlock-container hidden">
-        <input type="number" id="custom-unlock-input" class="custom-unlock-input" placeholder="mins" min="1" />
-        <button id="custom-unlock-confirm" class="unlock-button">Unlock</button>
+        <div class="unlock-buttons">
+          <button id="unlock-5" class="unlock-button">5 min</button>
+          <button id="unlock-15" class="unlock-button">15 min</button>
+        </div>
+        <button id="custom-unlock-button" class="unlock-button custom-unlock-button">Custom duration</button>
+        <div id="custom-unlock-container" class="custom-unlock-container hidden">
+          <input type="number" id="custom-unlock-input" class="custom-unlock-input" placeholder="mins" min="1" />
+          <button id="custom-unlock-confirm" class="unlock-button">Unlock</button>
+        </div>
       </div>
     `;
 
@@ -225,11 +227,13 @@ export class OverlayUI {
     const customContainer = this.element.querySelector<HTMLDivElement>(
       "#custom-unlock-container",
     );
-    this.element
-      .querySelector("#custom-unlock-toggle")
-      ?.addEventListener("click", () => {
-        customContainer?.classList.toggle("hidden");
-      });
+    const customUnlockButton = this.element.querySelector<HTMLButtonElement>(
+      "#custom-unlock-button",
+    );
+    customUnlockButton?.addEventListener("click", () => {
+      customContainer?.classList.remove("hidden");
+      customUnlockButton.classList.add("hidden");
+    });
 
     this.element
       .querySelector("#custom-unlock-confirm")
@@ -244,11 +248,19 @@ export class OverlayUI {
 
   private setBlockingStyles() {
     if (!this.element) return;
+    // clearing coz this overrides the <styles>(overlayCss)
+    this.element.style.position = "";
+    this.element.style.top = "";
+    this.element.style.left = "";
+    this.element.style.width = "";
+    this.element.style.height = "";
     this.element.style.background = "";
+    this.element.style.color = "";
     this.element.style.borderRadius = "";
     this.element.style.backdropFilter = "";
     this.element.style.border = "";
     this.element.style.transition = "all 0.3s ease-in-out";
+
     this.element.classList.add("blocking");
   }
 

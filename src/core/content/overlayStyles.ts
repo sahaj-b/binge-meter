@@ -1,123 +1,161 @@
 export const overlayCss = `
 
-  #binge-meter-overlay {
-    position: fixed;
-    font-family: 'SF Pro Display', 'Segoe UI', 'Roboto', 'Inter', 'Helvetica Neue', 'Arial', sans-serif !important;
-    z-index: 2147483647;
-    backdrop-filter: blur(10px);
-    cursor: move;
-    user-select: none;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    /* transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); */
+#binge-meter-overlay.blocking {
+  --background: oklch(0.2046 0 0 /0.9);
+  --foreground: oklch(0.9219 0 0 /0.9);
+  --card: #1f1f1f42;
+  --primary: hsl(38 92% 50% / 90%);
+  --primary-foreground: oklch(0 0 0 /0.9);
+  --secondary: oklch(0.2686 0 0 /0.9);
+  --secondary-foreground: oklch(0.9219 0 0 /0.9);
+  --border: oklch(0.3715 0 0 /0.9);
+  --input: #333333e6;
+  --ring: var(--primary);
+}
+
+#binge-meter-overlay {
+  position: fixed;
+  font-family: 'SF Pro Display', 'Segoe UI', 'Roboto', 'Inter', 'Helvetica Neue', 'Arial', sans-serif !important;
+  z-index: 2147483647;
+  backdrop-filter: blur(10px);
+  cursor: move;
+  user-select: none;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
+  /* transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); */
+}
+
+#binge-meter-overlay .time-display {
+  pointer-events: none;
+  transition: all;
+}
+
+#binge-meter-overlay.blocking .time-display {
+  position: absolute;
+  top: 20%;
+  color: var(--foreground) !important;
+  opacity: 0.9 !important;
+  font-size: 2em !important;
+}
+
+#binge-meter-overlay.blocking {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  width: 95vw;
+  height: 95vh;
+  top: 2.5vh;
+  left: 2.5vw;
+  border-radius: 1.5rem;
+  cursor: default;
+  backdrop-filter: blur(10px);
+}
+
+#binge-meter-overlay .binge-meter-resize-handle {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  cursor: se-resize;
+  opacity: 0;
+  transition: opacity 0.2s;
+  background: linear-gradient(-45deg, transparent 50%, #ffffff59 50%, 60%, transparent 60%) !important;
+}
+
+.blocking-ui-container {
+  translate: 0 20%;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 2rem 4rem;
+  background: var(--card);
+  text-align: center;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.blocking-title {
+  color: var(--foreground);
+  font-size: 0.7em;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.unlock-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.unlock-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.unlock-message {
+  font-size: 0.6em;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+}
+
+.unlock-button {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 12px 24px;
+  white-space: nowrap;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.1s ease;
+  width: 100%;
+}
+
+#custom-unlock-button {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 1px solid var(--border);
+}
+
+#custom-unlock-button:hover {
+  background: var(--input);
+}
+
+.unlock-button:hover { opacity: 0.9; }
+.unlock-button:active { opacity: 0.8; }
+
+.custom-unlock-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.hidden { display: none; }
+
+.custom-unlock-input {
+  background: var(--input);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  width: 67px;
+  height: 24px;
+  text-align: center;
   }
 
-  #binge-meter-overlay .time-display {
-    pointer-events: none;
-  }
-  
-  #binge-meter-overlay.blocking .time-display {
-    font-size: 1.5em !important;
-  }
-
-  #binge-meter-overlay.blocking {
-    background: #494c15cc !important;
-    width: 95vw;
-    height: 95vh;
-    top: 2.5vh;
-    left: 2.5vw;
-    border-radius: 1.5rem;
-    cursor: default;
-  }
-
-  #binge-meter-overlay .binge-meter-resize-handle {
-    position: absolute;
-    bottom: 1px;
-    right: 1px;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    cursor: se-resize;
-    opacity: 0;
-    transition: opacity 0.2s;
-    background: linear-gradient(-45deg, transparent 50%, #ffffff59 50%, 60%, transparent 60%) !important;
-  }
-  
-  .blocking-ui-container {
-    text-align: center;
-    color: white;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5rem;
-    justify-content: center;
-  }
-
-  .blocking-title {
-    font-size: 1em;
-    font-weight: bold;
-    margin-bottom: 1rem;
-  }
-
-  .unlock-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .unlock-message {
-    font-size: 1em;
-    color: #aaa;
-    margin-bottom: 1rem;
-  }
-
-  .unlock-button {
-    background: #fff;
-    color: #111;
-    font-weight: bold;
-    font-size: 1em;
-    padding: 12px 24px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.1s ease;
-  }
-  .unlock-button:hover { transform: scale(1.05); }
-  .unlock-button:active { transform: scale(0.98); }
-
-  .custom-unlock-toggle {
-    background: none;
-    border: none;
-    color: #aaa;
-    cursor: pointer;
-    text-decoration: underline;
-    font-size: 0.9em;
-    padding: 0;
-  }
-  .custom-unlock-toggle:hover { color: #fff; }
-
-  .custom-unlock-container {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    margin-top: 1rem;
-  }
-  .custom-unlock-container.hidden { display: none; }
-
-  .custom-unlock-input {
-    background: rgba(40, 40, 40, 0.8);
-    color: #fff;
-    border: 1px solid rgba(100, 100, 100, 0.8);
-    border-radius: 6px;
-    padding: 8px;
-    width: 80px;
-    text-align: center;
-    font-size: 1em;
-  }
+.custom-unlock-input:focus {
+  outline: none;
+  border-color: var(--ring);
+}
 `;
