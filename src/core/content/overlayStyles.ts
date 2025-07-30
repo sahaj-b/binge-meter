@@ -87,6 +87,7 @@ export const overlayCss = `
   font-size: 0.7em;
   font-weight: bold;
   margin-bottom: 1rem;
+  line-height: 1.2;
 }
 
 .unlock-actions {
@@ -104,12 +105,13 @@ export const overlayCss = `
 }
 
 .unlock-message {
-  font-size: 0.6em;
+  font-size: 2.7rem;
   color: var(--foreground);
   margin-bottom: 0.5rem;
 }
 
 .unlock-button {
+  font-size: 1.5rem;
   background: var(--primary);
   color: var(--primary-foreground);
   padding: 12px 24px;
@@ -117,7 +119,6 @@ export const overlayCss = `
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-weight: bold;
   transition: transform 0.1s ease;
   width: 100%;
 }
@@ -144,12 +145,13 @@ export const overlayCss = `
 .hidden { display: none; }
 
 .custom-unlock-input {
+  font-size: 1.5rem;
   background: var(--input);
   color: var(--foreground);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px;
-  width: 67px;
+  border-radius: 8px;
+  padding: 12px 24px;
+  width: 60px;
   height: 24px;
   text-align: center;
   }
