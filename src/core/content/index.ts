@@ -110,6 +110,11 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
       isActivated = true;
       sendEvalMsg(false);
       break;
+
+    case "BLOCK_OVERLAY":
+      console.log("BLOCK_OVERLAY received");
+      overlay.block();
+      break;
     default:
       break;
   }

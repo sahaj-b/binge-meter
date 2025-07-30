@@ -76,6 +76,14 @@ export function updateActiveSession(activeTabId: number | null) {
                 console.log(
                   `Blocking alarm set for ${Math.round(timeRemaining / 1000)}s from now.`,
                 );
+              } else if (timeLimit > 0 && timeSoFar >= timeLimit) {
+                // dont start new session if time limit is reached
+                await setStorageData({
+                  dailyTime: { ...dailyTime, total: newTotal },
+                  activeSession: null,
+                  analyticsData,
+                });
+                return;
               }
             }
 
@@ -101,6 +109,7 @@ export function updateActiveSession(activeTabId: number | null) {
                 setStorageData({
                   dailyTime: { ...dailyTime, total: newTotal },
                   activeSession: null,
+                  analyticsData,
                 });
               });
 

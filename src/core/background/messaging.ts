@@ -169,7 +169,8 @@ export async function handleEvaluatePage(
 
   if (timeLimitExceeded) {
     console.log("BLOCKING TIMEEEEEEEEEEEEee");
-    await chrome.tabs.sendMessage(tabId, { type: "BLOCK_PAGE" });
+    await chrome.tabs.sendMessage(tabId, { type: "BLOCK_OVERLAY" });
+    await updateActiveSession(null);
     return;
   }
 
@@ -178,7 +179,7 @@ export async function handleEvaluatePage(
     .then(async ([activeTab]) => {
       if (activeTab?.id === tabId) {
         // If we're not already blocking, send the activate message.
-        // (If BLOCK_PAGE was sent, this is redundant but harmless).
+        // (If BLOCK_OVERLAY was sent, this is redundant but harmless).
         if (!(timeLimitExceeded && isFullEval)) {
           await chrome.tabs.sendMessage(tabId, { type: "ACTIVATE_OVERLAY" });
         }

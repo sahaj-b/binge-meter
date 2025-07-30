@@ -44,20 +44,22 @@ export function setupLifecycleEvents() {
       analyticsData[date] = { total: 0 };
 
       // stop any running session before resetting time
-      updateActiveSession(null).then(() => {
-        setStorageData({
-          dailyTime: {
-            total: 0,
-            date: date,
-          },
-          analyticsData: analyticsData,
-        });
+      await updateActiveSession(null);
+      await setStorageData({
+        dailyTime: {
+          total: 0,
+          date: date,
+        },
+        analyticsData: analyticsData,
       });
     }
     if (alarm.name === "blockingLimitAlarm") {
       const { activeSession } = await getStorageData(["activeSession"]);
       if (activeSession)
-        chrome.tabs.sendMessage(activeSession.tabId, { type: "BLOCK_PAGE" });
+        await chrome.tabs.sendMessage(activeSession.tabId, {
+          type: "BLOCK_OVERLAY",
+        });
+      await updateActiveSession(null);
     }
   });
 }

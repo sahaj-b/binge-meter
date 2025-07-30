@@ -10,6 +10,9 @@ import {
   type Size,
 } from "./storeService";
 
+import { overlayCss } from "./overlayStyles";
+import { getStorageData } from "@/shared/storage";
+
 export class OverlayUI {
   element: HTMLDivElement | null = null;
   animationFrameId: number | null = null;
@@ -22,6 +25,8 @@ export class OverlayUI {
   onSizeSave: (size: Size) => void;
   absolute = false;
   fallbackPosition: Position;
+  isBlocked = false;
+  private stylesheetId = "binge-meter-stylesheet";
 
   constructor(
     parentElement: HTMLElement,
@@ -39,14 +44,22 @@ export class OverlayUI {
     this.fallbackPosition = fallbackPosition;
   }
 
-  async create(config?: OverlayConfig) {
+  async create(config?: OverlayConfig, blocking = false) {
     // this method can be also called to just revalidate the config cache
+    if (this.isBlocked) return;
 
     config = config ?? (await getConfig(true));
 
-    if (config.isHidden) {
+    if (!blocking && config.isHidden) {
       if (this.element) this.destroy();
       return;
+    }
+
+    if (!document.getElementById(this.stylesheetId)) {
+      const styleTag = document.createElement("style");
+      styleTag.id = this.stylesheetId;
+      styleTag.innerHTML = overlayCss;
+      document.head.appendChild(styleTag);
     }
 
     if (this.element) {
@@ -54,42 +67,25 @@ export class OverlayUI {
       return;
     }
 
-    chrome.runtime.sendMessage({ type: "DEBUG", message: "Creating overlay" });
-    // had to add !important. Thanks to Dark Reader for trying to murder my beloved colors.
     this.element = document.createElement("div");
     this.element.id = "binge-meter-overlay";
-    this.element.style.cssText = `
-    ${this.absolute ? "position: absolute;" : "position: fixed;"}
-    color: ${config.colors.fg} !important;
-    background: ${config.colors.bg} !important;
-    border: 1px solid ${config.colors.borderColor} !important;
-    border-radius: ${config.borderRadius}px
-    font-family: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    z-index: 10000;
-    backdrop-filter: blur(${config.blur}px);
-    cursor: move;
-    user-select: none;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  `;
 
     this.element.innerHTML = `
-    <div style="
-      position: absolute;
-      bottom: 1px;
-      right: 1px;
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-      cursor: se-resize;
-      opacity: 0;
-      transition: opacity 0.2s;
-      background: linear-gradient(-45deg,transparent 50%, #ffffff59 50% 60%, transparent 60% 100%) !important;
-    " class="binge-meter-resize-handle"></div>
-    <div class="time-display"></div>
-  `;
+      <div class="time-display"></div>
+      <div class="binge-meter-resize-handle"></div>
+    `;
+
+    // had to add !important. Thanks to Dark Reader for trying to murder my beloved colors.
+    this.element.style.position = this.absolute ? "absolute" : "fixed";
+    this.element.style.borderRadius = `${config.borderRadius}px`;
+    this.element.style.backdropFilter = `blur(${config.blur}px)`;
+    this.element.style.setProperty("color", config.colors.fg, "important");
+    this.element.style.setProperty("background", config.colors.bg, "important");
+    this.element.style.setProperty(
+      "border",
+      `1px solid ${config.colors.borderColor}`,
+      "important",
+    );
 
     this.element.addEventListener("mouseenter", () => {
       const handle = this.element?.querySelector(
@@ -97,7 +93,6 @@ export class OverlayUI {
       ) as HTMLElement;
       if (handle) handle.style.opacity = "1";
     });
-
     this.element.addEventListener("mouseleave", () => {
       const handle = this.element?.querySelector(
         ".binge-meter-resize-handle",
@@ -105,8 +100,17 @@ export class OverlayUI {
       if (handle) handle.style.opacity = "0";
     });
 
-    await this.loadSizeAndPosition();
-    await this.update(0);
+    if (blocking) this.setBlockingStyles();
+
+    document.body.appendChild(this.element);
+
+    if (!blocking) await this.loadSizeAndPosition();
+    await this.update(
+      (await getStorageData(["dailyTime"])).dailyTime.total,
+      true,
+      config,
+    );
+
     this.draggableController = new Draggable(
       this.element,
       async (pos) => {
@@ -120,43 +124,6 @@ export class OverlayUI {
       await setSizeForHost(this.hostname, size);
       this.onSizeSave(size);
     });
-
-    // this is for repositioning the overlay when the window resizes and it goes off-screen
-    // I think this is a bad idea, coz it saves the position permanently
-    // const windowResizeHandler = () => {
-    //   if (!this.element) return;
-    //
-    //   const rect = this.element.getBoundingClientRect();
-    //   const viewportWidth = window.innerWidth;
-    //   const viewportHeight = window.innerHeight;
-    //
-    //   let needsRepositioning = false;
-    //   let newLeft = rect.left;
-    //   let newTop = rect.top;
-    //
-    //   if (rect.right > viewportWidth) {
-    //     newLeft = viewportWidth - rect.width;
-    //     needsRepositioning = true;
-    //   }
-    //
-    //   if (rect.bottom > viewportHeight) {
-    //     newTop = viewportHeight - rect.height;
-    //     needsRepositioning = true;
-    //   }
-    //
-    //   if (newLeft < 0) newLeft = 0;
-    //   if (newTop < 0) newTop = 0;
-    //
-    //   if (needsRepositioning) {
-    //     this.element.style.left = `${newLeft}px`;
-    //     this.element.style.top = `${newTop}px`;
-    //
-    //     const newPosition = { left: `${newLeft}px`, top: `${newTop}px` };
-    //     setPositionForHost(this.hostname, newPosition);
-    //   }
-    // };
-    // window.addEventListener("resize", windowResizeHandler);
-    document.body.appendChild(this.element);
   }
 
   async loadSizeAndPosition() {
@@ -189,15 +156,106 @@ export class OverlayUI {
     const timeDisplay = this.element.querySelector(
       ".time-display",
     ) as HTMLElement;
-    if (timeDisplay) {
+    if (timeDisplay)
       timeDisplay.textContent = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-    }
 
     this.element.style.fontSize = `${getFontSize(this.element.offsetWidth, this.element.offsetHeight)}px`;
+
     overlayConfig = overlayConfig ?? (await getConfig());
     if (!overlayConfig) return;
+
     this.setStyles(overlayConfig);
     this.setThresholdColors(overlayConfig, totalMs, forceUpdateColors);
+  }
+
+  async block() {
+    if (!this.element) {
+      this.create(undefined, true).then(() => this.block());
+      return;
+    }
+
+    if (this.isBlocked) return;
+    this.isBlocked = true;
+
+    this.resizableController?.destroy();
+    this.draggableController?.destroy();
+    this.draggableController = null;
+    this.resizableController = null;
+
+    const blockContainer = document.createElement("div");
+    blockContainer.className = "blocking-ui-container";
+
+    blockContainer.innerHTML = `
+      <h1 class="blocking-title">Time Limit Reached</h1>
+      <div class="unlock-actions">
+        <span id="unlock-message" class="unlock-message">Unlock for:</span>
+        <button id="unlock-5" class="unlock-button">5 min</button>
+        <button id="unlock-15" class="unlock-button">15 min</button>
+      </div>
+      <button id="custom-unlock-toggle" class="custom-unlock-toggle">Custom duration</button>
+      <div id="custom-unlock-container" class="custom-unlock-container hidden">
+        <input type="number" id="custom-unlock-input" class="custom-unlock-input" placeholder="mins" min="1" />
+        <button id="custom-unlock-confirm" class="unlock-button">Unlock</button>
+      </div>
+    `;
+
+    this.setBlockingStyles();
+    this.element.append(blockContainer);
+
+    const resizeHandle = this.element.querySelector(
+      ".binge-meter-resize-handle",
+    ) as HTMLElement;
+    if (resizeHandle) resizeHandle.style.display = "none";
+    this.setThresholdColors(await getConfig(), 0, true);
+
+    function sendGraceRequest(minutes: number) {
+      chrome.runtime.sendMessage({
+        type: "REQUEST_GRACE_PERIOD",
+        duration: minutes * 60 * 1000,
+      });
+    }
+
+    this.element
+      .querySelector("#unlock-5")
+      ?.addEventListener("click", () => sendGraceRequest(5));
+    this.element
+      .querySelector("#unlock-15")
+      ?.addEventListener("click", () => sendGraceRequest(15));
+
+    const customContainer = this.element.querySelector<HTMLDivElement>(
+      "#custom-unlock-container",
+    );
+    this.element
+      .querySelector("#custom-unlock-toggle")
+      ?.addEventListener("click", () => {
+        customContainer?.classList.toggle("hidden");
+      });
+
+    this.element
+      .querySelector("#custom-unlock-confirm")
+      ?.addEventListener("click", () => {
+        const input = this.element?.querySelector<HTMLInputElement>(
+          "#custom-unlock-input",
+        );
+        const minutes = Number.parseInt(input?.value || "0", 10);
+        if (minutes > 0) sendGraceRequest(minutes);
+      });
+  }
+
+  private setBlockingStyles() {
+    if (!this.element) return;
+    this.element.style.background = "";
+    this.element.style.borderRadius = "";
+    this.element.style.backdropFilter = "";
+    this.element.style.border = "";
+    this.element.style.transition = "all 0.3s ease-in-out";
+    this.element.classList.add("blocking");
+  }
+
+  private removeBlockingStyles() {
+    if (!this.element) return;
+    this.element.classList.remove("blocking");
+    this.element.style.transition = "";
   }
 
   private setThresholdColors(
@@ -205,7 +263,7 @@ export class OverlayUI {
     totalMs: number,
     forceUpdate = false,
   ) {
-    if (!this.element) return;
+    if (!this.element || this.isBlocked) return;
 
     let targetThresholdState: "DEFAULT" | "WARN" | "DANGER" = "DEFAULT";
     let targetColors = overlayConfig.colors;
@@ -234,7 +292,7 @@ export class OverlayUI {
   }
 
   private setStyles(overlayConfig: OverlayConfig) {
-    if (!this.element) return;
+    if (!this.element || this.isBlocked) return;
     if (this.element.style.borderRadius !== `${overlayConfig.borderRadius}px`) {
       this.element.style.borderRadius = `${overlayConfig.borderRadius}px`;
     }
@@ -248,6 +306,9 @@ export class OverlayUI {
       this.element.remove();
       this.element = null;
     }
+
+    document.getElementById(this.stylesheetId)?.remove();
+
     if (this.draggableController) {
       this.draggableController.destroy();
       this.draggableController = null;
@@ -258,6 +319,7 @@ export class OverlayUI {
     }
   }
 }
+
 export function getFontSize(
   overlayWidth: number,
   overlayHeight: number,
