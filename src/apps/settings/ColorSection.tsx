@@ -24,7 +24,7 @@ export function ColorSection({ type, colors }: ColorSectionProps) {
   }, [colors.bg]);
 
   return (
-    <div className="p-4 border rounded-lg bg-card flex-1">
+    <div className="py-4 px-5 border rounded-lg bg-card flex-1">
       <Label className="text-sm font-medium">{title}</Label>
       <div className="space-y-3 mt-3">
         <ColorInput
@@ -49,7 +49,7 @@ export function ColorSection({ type, colors }: ColorSectionProps) {
           placeholder="#ffffff"
         />
 
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex items-center justify-between pt-2">
           <Label className="text-xs text-muted-foreground w-20">Opacity</Label>
 
           <Slider
@@ -60,7 +60,7 @@ export function ColorSection({ type, colors }: ColorSectionProps) {
             max={1}
             min={0}
             step={0.01}
-            className="flex-1"
+            className="w-[8.3rem]"
           />
         </div>
       </div>

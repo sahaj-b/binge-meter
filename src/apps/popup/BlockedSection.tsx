@@ -9,7 +9,8 @@ export function BlockedSection() {
   if (!isBlocked) return null;
   return (
     <Button
-      className="w-full font-bold"
+      variant="secondary"
+      className="w-full text-primary border"
       onClick={async () => {
         await updateBlockingException(
           usePopupStore.getState().activeURL?.href ?? "",

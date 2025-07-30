@@ -217,8 +217,8 @@ export default function Settings() {
 
   return (
     <div className="mx-auto p-10">
-      <div className="flex justify-start space-x-24">
-        <div className="relative hidden lg:block">
+      <div className="flex justify-center [@media(min-width:1130px)]:justify-start space-x-24">
+        <div className="relative hidden [@media(min-width:1130px)]:block">
           <SettingsNav activeId={activeId} />
         </div>
         <div className="w-full max-w-[60rem] space-y-8">

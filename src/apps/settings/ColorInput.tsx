@@ -56,28 +56,30 @@ export function ColorInput({
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between">
       <Label className="text-xs text-muted-foreground w-20">{label}</Label>
-      <Input
-        aria-invalid={!isValid}
-        type="text"
-        spellCheck="false"
-        className={"w-20 h-8 px-2 text-xs font-mono "}
-        value={input}
-        onChange={(e) => handleTextChange(e.target.value)}
-        onBlur={(e) => handleBlur(e.target.value)}
-        placeholder={placeholder}
-        maxLength={7}
-      />
-      <div className="relative">
+      <div className="flex gap-3">
         <Input
-          type="color"
-          className="w-10 h-8 p-0 border-0 rounded-md color-picker"
+          aria-invalid={!isValid}
+          type="text"
+          spellCheck="false"
+          className={"w-20 h-8 px-2 text-xs font-mono "}
           value={input}
-          onChange={(e) =>
-            debouncedOnChange(updateHexOpacity(e.target.value, opacity))
-          }
+          onChange={(e) => handleTextChange(e.target.value)}
+          onBlur={(e) => handleBlur(e.target.value)}
+          placeholder={placeholder}
+          maxLength={7}
         />
+        <div className="relative">
+          <Input
+            type="color"
+            className="w-10 h-8 p-0 border-0 rounded-md color-picker"
+            value={input}
+            onChange={(e) =>
+              debouncedOnChange(updateHexOpacity(e.target.value, opacity))
+            }
+          />
+        </div>
       </div>
     </div>
   );

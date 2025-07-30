@@ -20,7 +20,7 @@ export function Exceptions() {
         </>
       }
     >
-      <div className="flex flex-col lg:flex-row gap-3">
+      <div className="flex flex-col [@media(min-width:950px)]:flex-row gap-3">
         <ListContainer title="URLs">
           <ReusableList
             items={Object.entries(userRules?.urls ?? {})
@@ -54,7 +54,7 @@ export function Exceptions() {
         {isRedditTracked && (
           <>
             <Seperator />
-            <ListContainer title="productiveSubreddits">
+            <ListContainer title="Subreddits">
               <ReusableList
                 items={[...(userRules?.productiveSubreddits ?? [])].reverse()}
                 onAddItem={(item) =>

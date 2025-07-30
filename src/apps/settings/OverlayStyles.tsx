@@ -73,7 +73,7 @@ export function OverlayStyles() {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col [@media(min-width:950px)]:flex-row gap-4">
           <ColorSection type="normal" colors={config.colors} />
           <ColorSection type="warning" colors={config.warnColors} />
           <ColorSection type="danger" colors={config.dangerColors} />

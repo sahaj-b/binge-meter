@@ -84,9 +84,9 @@ export const overlayCss = `
 
 .blocking-title {
   color: var(--foreground);
-  font-size: 0.7em;
+  font-size: 2rem;
   font-weight: bold;
-  margin-bottom: 1rem;
+  margin: 0 0 1rem 0;
   line-height: 1.2;
 }
 
@@ -142,7 +142,7 @@ export const overlayCss = `
   align-items: center;
 }
 
-.hidden { display: none; }
+.custom-unlock-container .hidden { display: none; }
 
 .custom-unlock-input {
   font-size: 1.5rem;

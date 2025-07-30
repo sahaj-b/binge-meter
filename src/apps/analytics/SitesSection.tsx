@@ -16,7 +16,7 @@ export default function SitesSection({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 mb-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 [@media(min-width:950px)]:grid-cols-4 gap-4 mt-4 mb-2">
           {Object.entries(analyticsData[date] ?? {})
             .filter(([site]) => site !== "total")
             .sort(([, timeA], [, timeB]) => timeB - timeA)
