@@ -38,6 +38,7 @@ export const defaultBlockingSettings = {
     "https://www.youtube.com",
     "https://www.youtube.com/feed/subscriptions",
   ],
+  gracePeriodUntil: 0, // 0 means don't grace
 };
 
 export const defaultStorageData: StorageData = {

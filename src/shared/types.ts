@@ -18,6 +18,7 @@ export type BlockingSettings = {
   enabled: boolean;
   timeLimit: number;
   urlExceptions: string[];
+  gracePeriodUntil: number;
 };
 
 export type AnalyticsData = {

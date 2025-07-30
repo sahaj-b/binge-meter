@@ -8,6 +8,7 @@ import {
   handleEvaluatePage,
   updateUserRule,
   setBlockingExceptions,
+  setGracePeriod,
 } from "./messaging";
 import { setupDailyResetAlarm } from "./lifecycle";
 import { setStorageData } from "@/shared/storage";
@@ -146,6 +147,11 @@ export function setupListeners() {
             sendResponse({ success: false, error: error.message });
           });
         return true;
+
+      case "REQUEST_GRACE_PERIOD":
+        if (sender.tab?.id)
+          setGracePeriod(sender.tab.id, message.duration ?? 0);
+        break;
 
       case "BLOCK_URL":
         setBlockingExceptions(message.url ?? "", false)

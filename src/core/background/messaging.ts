@@ -139,19 +139,12 @@ export async function handleEvaluatePage(
   }
 
   // --- DISTRACTING PATH ---
-  const { blockingSettings, dailyTime } = await getStorageData([
-    "blockingSettings",
-    "dailyTime",
-  ]);
 
-  const toBlock =
-    isFullEval && // only block if this is a full evaluation, not premature URL-ONLY eval
-    blockingSettings.enabled &&
-    !blockingSettings.urlExceptions.some(
-      (exception) => metadata.url === exception,
-    );
-
-  if (!toBlock) {
+  if (await toBlockUrl(metadata.url)) {
+    console.log("BLOCKING TIMEEEEEEEEEEEEee");
+    await chrome.tabs.sendMessage(tabId, { type: "BLOCK_OVERLAY" });
+    await updateActiveSession(null);
+  } else {
     console.log("AINT BLOCKING THIS SHI");
     chrome.tabs
       .query({ active: true, currentWindow: true })
@@ -161,31 +154,7 @@ export async function handleEvaluatePage(
           await updateActiveSession(tabId);
         }
       });
-    return;
   }
-
-  const timeLimitExceeded =
-    blockingSettings.enabled && dailyTime.total >= blockingSettings.timeLimit;
-
-  if (timeLimitExceeded) {
-    console.log("BLOCKING TIMEEEEEEEEEEEEee");
-    await chrome.tabs.sendMessage(tabId, { type: "BLOCK_OVERLAY" });
-    await updateActiveSession(null);
-    return;
-  }
-
-  chrome.tabs
-    .query({ active: true, currentWindow: true })
-    .then(async ([activeTab]) => {
-      if (activeTab?.id === tabId) {
-        // If we're not already blocking, send the activate message.
-        // (If BLOCK_OVERLAY was sent, this is redundant but harmless).
-        if (!(timeLimitExceeded && isFullEval)) {
-          await chrome.tabs.sendMessage(tabId, { type: "ACTIVATE_OVERLAY" });
-        }
-        await updateActiveSession(tabId);
-      }
-    });
 }
 
 export async function updateUserRule(
@@ -263,6 +232,45 @@ export async function setBlockingExceptions(url: string, unblock: boolean) {
       if (tab.id && tab.url) await handleBlockingChecks(tab.id, tab.url);
     }
   }
+}
+
+export async function setGracePeriod(
+  tabId: number | null,
+  durationMin: number,
+) {
+  if (durationMin <= 0) {
+    console.warn("Invalid grace period duration:", durationMin);
+    return;
+  }
+  console.log(`Requesting grace period for tab ${tabId}`);
+  const { blockingSettings } = await getStorageData(["blockingSettings"]);
+
+  await setStorageData({
+    blockingSettings: {
+      ...blockingSettings,
+      gracePeriodUntil: Date.now() + durationMin * 60 * 1000, //ms
+    },
+  });
+
+  if (tabId) {
+    chrome.tabs.sendMessage(tabId, {
+      type: "UNBLOCK_OVERLAY",
+    });
+  }
+}
+
+export async function toBlockUrl(url: string) {
+  const { blockingSettings, dailyTime } = await getStorageData([
+    "blockingSettings",
+    "dailyTime",
+  ]);
+  const isException = blockingSettings.urlExceptions.includes(url);
+  const isTimeLimitExceeded =
+    blockingSettings.gracePeriodUntil > Date.now()
+      ? Date.now() >= blockingSettings.gracePeriodUntil
+      : blockingSettings.timeLimit > 0 &&
+        dailyTime.total >= blockingSettings.timeLimit;
+  return blockingSettings.enabled && !isException && isTimeLimitExceeded;
 }
 
 export async function sendMsgToAllTabs(url: string | string[], message: any) {

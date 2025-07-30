@@ -159,8 +159,10 @@ export async function isBlocked(url: string) {
     "dailyTime",
   ]);
   return (
+    blockingSettings.enabled &&
+    blockingSettings.gracePeriodUntil <= Date.now() &&
     dailyTime.total >= blockingSettings.timeLimit &&
-    !blockingSettings.urlExceptions.includes(url)
+    !blockingSettings.urlExceptions.some((exception) => url.includes(exception))
   );
 }
 

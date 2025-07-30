@@ -136,17 +136,24 @@ export async function handleBlockingChecks(tabId: number, tabUrl: string) {
   if (blockingSettings.enabled && !isException) {
     const timeLimit = blockingSettings.timeLimit;
     const timeSoFar = dailyTime.total;
+    const timeLimitExceeded =
+      blockingSettings.gracePeriodUntil > Date.now()
+        ? Date.now() >= blockingSettings.gracePeriodUntil
+        : timeSoFar >= timeLimit;
 
-    if (timeLimit > 0 && timeSoFar < timeLimit) {
+    if (timeLimit > 0 && !timeLimitExceeded) {
       // setting a time bomb for the blocking
       const timeRemaining = timeLimit - timeSoFar;
       chrome.alarms.create("blockingLimitAlarm", {
-        when: Date.now() + timeRemaining,
+        when:
+          blockingSettings.gracePeriodUntil > Date.now()
+            ? blockingSettings.gracePeriodUntil
+            : Date.now() + timeRemaining,
       });
       console.log(
-        `Blocking alarm set for tab ${tabId} in ${Math.round(timeRemaining / 1000)}s`,
+        `Blocking alarm set for tab ${tabId} in ${blockingSettings.gracePeriodUntil > Date.now() ? "grace period" : "time limit"} mode.`,
       );
-    } else if (timeLimit > 0 && timeSoFar >= timeLimit) {
+    } else if (timeLimit > 0 && timeLimitExceeded) {
       console.log(`Time limit exceeded, blocking tab ${tabId} immediately.`);
       chrome.tabs.sendMessage(tabId, { type: "BLOCK_OVERLAY" });
       return true;
