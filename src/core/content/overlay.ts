@@ -246,6 +246,13 @@ export class OverlayUI {
       });
   }
 
+  async unblock() {
+    if (!this.element || !this.isBlocked) return;
+    this.isBlocked = false;
+    this.destroy();
+    await this.create();
+  }
+
   private setBlockingStyles() {
     if (!this.element) return;
     // clearing coz this overrides the <styles>(overlayCss)
@@ -262,12 +269,6 @@ export class OverlayUI {
     this.element.style.transition = "all 0.3s ease-in-out";
 
     this.element.classList.add("blocking");
-  }
-
-  private removeBlockingStyles() {
-    if (!this.element) return;
-    this.element.classList.remove("blocking");
-    this.element.style.transition = "";
   }
 
   private setThresholdColors(

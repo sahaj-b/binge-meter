@@ -7,8 +7,7 @@ import {
   toggleOverlays,
   handleEvaluatePage,
   updateUserRule,
-  unblockURL,
-  blockURL,
+  setBlockingExceptions,
 } from "./messaging";
 import { setupDailyResetAlarm } from "./lifecycle";
 import { setStorageData } from "@/shared/storage";
@@ -37,11 +36,13 @@ export function setupListeners() {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case "TAB_FOCUS":
+        console.log("TAB_FOCUS received");
         if (!sender.tab?.id) return;
         updateActiveSession(sender.tab.id);
         break;
 
       case "TAB_BLUR":
+        console.log("TAB_BLUR received");
         if (!sender.tab?.id) return;
         updateActiveSession(null);
         break;
@@ -137,7 +138,7 @@ export function setupListeners() {
         return true;
 
       case "UNBLOCK_URL":
-        unblockURL(message.url ?? "")
+        setBlockingExceptions(message.url ?? "", true)
           .then(() => {
             sendResponse({ success: true });
           })
@@ -147,7 +148,7 @@ export function setupListeners() {
         return true;
 
       case "BLOCK_URL":
-        blockURL(message.url ?? "")
+        setBlockingExceptions(message.url ?? "", false)
           .then(() => {
             sendResponse({ success: true });
           })

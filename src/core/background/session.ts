@@ -5,19 +5,13 @@ let sessionLock = Promise.resolve();
 export function updateActiveSession(activeTabId: number | null) {
   const taskPromise = sessionLock
     .then(async () => {
-      const {
-        dailyTime,
-        trackedSites,
-        activeSession,
-        analyticsData,
-        blockingSettings,
-      } = await getStorageData([
-        "dailyTime",
-        "trackedSites",
-        "activeSession",
-        "analyticsData",
-        "blockingSettings",
-      ]);
+      const { dailyTime, trackedSites, activeSession, analyticsData } =
+        await getStorageData([
+          "dailyTime",
+          "trackedSites",
+          "activeSession",
+          "analyticsData",
+        ]);
       let newTotal = dailyTime.total;
       await chrome.alarms.clear("blockingLimitAlarm");
 
@@ -63,28 +57,19 @@ export function updateActiveSession(activeTabId: number | null) {
         try {
           const tab = await chrome.tabs.get(activeTabId);
           if (tab.url && trackedSites.some((site) => tab.url!.includes(site))) {
-            // setting a time bomb for the blocking
-            if (blockingSettings.enabled) {
-              const timeLimit = blockingSettings.timeLimit;
-              const timeSoFar = newTotal;
+            const timeLimitReached = await handleBlockingChecks(
+              activeTabId,
+              tab.url!,
+            );
 
-              if (timeLimit > 0 && timeSoFar < timeLimit) {
-                const timeRemaining = timeLimit - timeSoFar;
-                chrome.alarms.create("blockingLimitAlarm", {
-                  when: Date.now() + timeRemaining,
-                });
-                console.log(
-                  `Blocking alarm set for ${Math.round(timeRemaining / 1000)}s from now.`,
-                );
-              } else if (timeLimit > 0 && timeSoFar >= timeLimit) {
-                // dont start new session if time limit is reached
-                await setStorageData({
-                  dailyTime: { ...dailyTime, total: newTotal },
-                  activeSession: null,
-                  analyticsData,
-                });
-                return;
-              }
+            if (timeLimitReached) {
+              await setStorageData({
+                dailyTime: { ...dailyTime, total: newTotal },
+                activeSession: null,
+                analyticsData,
+              });
+              // dont start new session if time limit is reached
+              return;
             }
 
             const newSession = { tabId: activeTabId, startTime: Date.now() };
@@ -134,4 +119,38 @@ export function updateActiveSession(activeTabId: number | null) {
 
   sessionLock = taskPromise;
   return taskPromise;
+}
+
+export async function handleBlockingChecks(tabId: number, tabUrl: string) {
+  const { blockingSettings, dailyTime } = await getStorageData([
+    "blockingSettings",
+    "dailyTime",
+  ]);
+
+  await chrome.alarms.clear("blockingLimitAlarm");
+
+  const isException = blockingSettings.urlExceptions.some((exception) =>
+    tabUrl.includes(exception),
+  );
+
+  if (blockingSettings.enabled && !isException) {
+    const timeLimit = blockingSettings.timeLimit;
+    const timeSoFar = dailyTime.total;
+
+    if (timeLimit > 0 && timeSoFar < timeLimit) {
+      // setting a time bomb for the blocking
+      const timeRemaining = timeLimit - timeSoFar;
+      chrome.alarms.create("blockingLimitAlarm", {
+        when: Date.now() + timeRemaining,
+      });
+      console.log(
+        `Blocking alarm set for tab ${tabId} in ${Math.round(timeRemaining / 1000)}s`,
+      );
+    } else if (timeLimit > 0 && timeSoFar >= timeLimit) {
+      console.log(`Time limit exceeded, blocking tab ${tabId} immediately.`);
+      chrome.tabs.sendMessage(tabId, { type: "BLOCK_OVERLAY" });
+      return true;
+    }
+  }
+  return false;
 }

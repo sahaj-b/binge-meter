@@ -82,6 +82,7 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
     case "STOP_TICKING":
       ticker.stop();
       break;
+
     case "REVALIDATE_CACHE":
       chrome.runtime.sendMessage({
         type: "DEBUG",
@@ -89,10 +90,13 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
       });
       revalidateCache();
       break;
+
     case "UPDATE_FRAME":
       overlay.create().then(() => overlay.update(message.time));
       break;
+
     case "DEACTIVATE_OVERLAY":
+      if (overlay.isBlocked) return;
       overlay.destroy();
       ticker.stop();
       isActivated = false;
@@ -112,9 +116,13 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
       break;
 
     case "BLOCK_OVERLAY":
-      console.log("BLOCK_OVERLAY received");
       overlay.block();
       break;
+
+    case "UNBLOCK_OVERLAY":
+      overlay.unblock();
+      break;
+
     default:
       break;
   }

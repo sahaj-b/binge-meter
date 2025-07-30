@@ -8,7 +8,7 @@ import type {
 } from "@/shared/types";
 
 import { injectContentScript, registerContentScript } from "./scripting";
-import { updateActiveSession } from "./session";
+import { handleBlockingChecks, updateActiveSession } from "./session";
 import { getClassification } from "./classification";
 
 export async function checkSitePermission(site: string) {
@@ -239,26 +239,30 @@ export async function updateUserRule(
     );
 }
 
-export async function unblockURL(url: string) {
+export async function setBlockingExceptions(url: string, unblock: boolean) {
   if (!url) return;
   const { blockingSettings } = await getStorageData(["blockingSettings"]);
-  if (blockingSettings.urlExceptions.includes(url))
-    throw new Error(`'${url}' is already unblocked`);
-  blockingSettings.urlExceptions.push(url);
-  await setStorageData({ blockingSettings });
-  await sendMsgToAllTabs(url, { type: "RE-INITIALIZE_OVERLAY" });
-}
 
-export async function blockURL(url: string) {
-  if (!url) return;
-  const { blockingSettings } = await getStorageData(["blockingSettings"]);
-  if (!blockingSettings.urlExceptions.includes(url))
-    throw new Error(`'${url}' is already blocked`);
-  blockingSettings.urlExceptions = blockingSettings.urlExceptions.filter(
-    (exception) => exception !== url,
-  );
-  await setStorageData({ blockingSettings });
-  await sendMsgToAllTabs(url, { type: "RE-INITIALIZE_OVERLAY" });
+  const isCurrentlyBlocked = !blockingSettings.urlExceptions.includes(url);
+
+  if (unblock) {
+    if (!isCurrentlyBlocked) throw new Error(`'${url}' is already unblocked`);
+    blockingSettings.urlExceptions.push(url);
+    await setStorageData({ blockingSettings });
+
+    await sendMsgToAllTabs(url, { type: "UNBLOCK_OVERLAY" });
+  } else {
+    if (isCurrentlyBlocked) throw new Error(`'${url}' is already blocked`);
+    blockingSettings.urlExceptions = blockingSettings.urlExceptions.filter(
+      (exception) => exception !== url,
+    );
+    await setStorageData({ blockingSettings });
+
+    const matchingTabs = await chrome.tabs.query({ url });
+    for (const tab of matchingTabs) {
+      if (tab.id && tab.url) await handleBlockingChecks(tab.id, tab.url);
+    }
+  }
 }
 
 export async function sendMsgToAllTabs(url: string | string[], message: any) {
