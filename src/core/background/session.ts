@@ -128,9 +128,9 @@ export async function handleBlockingChecks(tabId: number, tabUrl: string) {
   ]);
 
   await chrome.alarms.clear("blockingLimitAlarm");
-
-  const isException = blockingSettings.urlExceptions.some((exception) =>
-    tabUrl.includes(exception),
+  if (tabUrl.endsWith("/")) tabUrl = tabUrl.slice(0, -1);
+  const isException = blockingSettings.urlExceptions.some(
+    (exception) => tabUrl === exception || tabUrl + "/" === exception,
   );
 
   if (blockingSettings.enabled && !isException) {

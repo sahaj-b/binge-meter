@@ -288,7 +288,12 @@ export async function toBlockUrl(url: string) {
     "blockingSettings",
     "dailyTime",
   ]);
-  const isException = blockingSettings.urlExceptions.includes(url);
+  if (url.endsWith("/")) url = url.slice(0, -1);
+  const isException =
+    blockingSettings.urlExceptions.includes(url) ||
+    blockingSettings.urlExceptions.includes(url + "/");
+  console.log("Is URL exception:", isException);
+  console.log(blockingSettings.urlExceptions);
   const isTimeLimitExceeded =
     blockingSettings.gracePeriodUntil > Date.now()
       ? Date.now() >= blockingSettings.gracePeriodUntil
