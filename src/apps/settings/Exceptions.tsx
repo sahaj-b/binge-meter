@@ -1,6 +1,9 @@
 import { useStore } from "./store";
 import { ReusableList } from "./ReusableList";
 import { Section } from "./Section";
+import type { ReactNode } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 export function Exceptions() {
   const userRules = useStore((state) => state.userRules);
@@ -21,7 +24,22 @@ export function Exceptions() {
       }
     >
       <div className="flex flex-col [@media(min-width:950px)]:flex-row gap-3">
-        <ListContainer title="URLs">
+        <ListContainer
+          title={
+            <div className="flex items-center gap-2">
+              URLs{" "}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="size-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Use '<span className="text-primary">*</span>' as a wildcard to
+                  match anything
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          }
+        >
           <ReusableList
             items={Object.entries(userRules?.urls ?? {})
               .reduce((acc, [key, value]) => {
@@ -76,7 +94,7 @@ export function Exceptions() {
 function ListContainer({
   title,
   children,
-}: { title: string; children: React.ReactNode }) {
+}: { title: string | ReactNode; children: React.ReactNode }) {
   return (
     <div className="basis-0 grow">
       <h3 className="text-lg mb-2">{title}</h3>

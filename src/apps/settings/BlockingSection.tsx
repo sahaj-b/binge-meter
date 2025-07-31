@@ -4,14 +4,10 @@ import { DurationPicker } from "@ui/duration-picker";
 import { useStore } from "./store";
 import { Section } from "./Section";
 import { ReusableList } from "./ReusableList";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 export function BlockingSection() {
-  // const {
-  //   blockingSettings,
-  //   updateBlockingSettings,
-  //   addBlockingException,
-  //   removeBlockingException,
-  // } = useStore();
   const blockingSettings = useStore((state) => state.blockingSettings);
   const updateBlockingSettings = useStore(
     (state) => state.updateBlockingSettings,
@@ -56,7 +52,18 @@ export function BlockingSection() {
         </div>
 
         <div>
-          <Label className="text-sm font-medium">URL Exceptions</Label>
+          <Label className="text-sm font-medium flex items-center gap-1">
+            URL Exceptions
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="size-3" />
+              </TooltipTrigger>
+              <TooltipContent>
+                Use '<span className="text-primary">*</span>' as a wildcard to
+                match anything
+              </TooltipContent>
+            </Tooltip>
+          </Label>
           <p className="text-xs text-muted-foreground mb-2">
             These urls will not be blocked
           </p>
