@@ -69,15 +69,12 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
     }
 
     case "START_TICKING":
-      overlay
-        .create()
-        .then(() =>
-          overlay
-            .update(message.startingDuration, true)
-            .then(() =>
-              ticker.start(message.startingDuration, message.startTime),
-            ),
-        );
+      (async () => {
+        await overlay.create();
+        await overlay.update(message.startingDuration, true);
+        await overlay.unblock(); // UNBLOCK on every start_ticking coz its kinda impossible to conditionally unblock on every settings change
+        ticker.start(message.startingDuration, message.startTime);
+      })();
       break;
 
     case "STOP_TICKING":

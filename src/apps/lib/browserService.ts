@@ -1,5 +1,5 @@
 import { sitePatterns } from "@/shared/utils";
-import type { Message } from "@/shared/types";
+import type { BlockingSettings, Message } from "@/shared/types";
 import { getStorageData } from "@/shared/storage";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
@@ -166,10 +166,12 @@ export async function isBlocked(url: string) {
   );
 }
 
-export async function updateBlockingException(url: string, remove: boolean) {
+export async function sendUpdateBlockingSettingsMsg(
+  updates: Partial<BlockingSettings>,
+) {
   await chrome.runtime.sendMessage({
-    type: remove ? "BLOCK_URL" : "UNBLOCK_URL",
-    url: url,
+    type: "UPDATE_BLOCKING_SETTINGS",
+    blockingUpdates: updates,
   } satisfies Message);
 }
 

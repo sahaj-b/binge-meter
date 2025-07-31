@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Metadata } from "@/shared/types";
+import type { BlockingSettings, Metadata } from "@/shared/types";
 import {
   sendToggleMessage,
   getCurrentTab,
@@ -12,6 +12,7 @@ import {
   markChannelAs,
   markURLAsDistracting,
   isBlocked,
+  sendUpdateBlockingSettingsMsg,
 } from "@lib/browserService";
 import { getStorageData } from "@/shared/storage";
 import {
@@ -50,6 +51,7 @@ interface PopupState {
   requestPermission: () => void;
   updateIsBlocked: () => Promise<void>;
   updateGracePeriod: () => Promise<void>;
+  addBlockingException: () => Promise<void>;
   markAs: (
     markDistracting: boolean,
     markChannelOrSubreddit?: boolean,
@@ -261,6 +263,16 @@ const usePopupStore = create<PopupState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+  addBlockingException: async () => {
+    const { blockingSettings } = await getStorageData(["blockingSettings"]);
+    const url = get().activeURL?.href;
+    if (!blockingSettings || !url) return;
+    const updates: Partial<BlockingSettings> = {
+      urlExceptions: [...blockingSettings.urlExceptions, url],
+    };
+    await sendUpdateBlockingSettingsMsg(updates);
+    get().updateIsBlocked();
   },
 }));
 

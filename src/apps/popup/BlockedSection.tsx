@@ -1,23 +1,18 @@
 import { Button } from "@ui/button";
 import usePopupStore from "./store";
-import { updateBlockingException } from "@lib/browserService";
 
 export function BlockedSection() {
   const isBlocked = usePopupStore((state) => state.isBlocked);
-  const updateIsBlocked = usePopupStore((state) => state.updateIsBlocked);
+  const addBlockingException = usePopupStore(
+    (state) => state.addBlockingException,
+  );
   console.log("BlockedSection isBlocked", isBlocked);
   if (!isBlocked) return null;
   return (
     <Button
       variant="secondary"
       className="w-full text-primary border"
-      onClick={async () => {
-        await updateBlockingException(
-          usePopupStore.getState().activeURL?.href ?? "",
-          false,
-        );
-        updateIsBlocked();
-      }}
+      onClick={addBlockingException}
     >
       Don't Block This Page
     </Button>

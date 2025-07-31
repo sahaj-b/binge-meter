@@ -17,7 +17,7 @@ import {
   markChannelAs,
   markSubredditAs,
   sendResetTimeMessage,
-  updateBlockingException,
+  sendUpdateBlockingSettingsMsg,
 } from "@lib/browserService";
 
 type StoreData = {
@@ -227,6 +227,7 @@ export const useStore = create<StoreType>()((set, get) => ({
       trackedSites: state.trackedSites?.filter((s) => s !== site) || [],
     }));
   },
+
   updateUserRule: async (ruleType, value, markDistracting) => {
     if (ruleType === "urls") {
       await markURLAs(value, markDistracting);
@@ -237,10 +238,12 @@ export const useStore = create<StoreType>()((set, get) => ({
     }
     get().fetchSettings();
   },
+
   setAiEnabled: async (enabled) => {
     set({ aiEnabled: enabled });
     await setStorageData({ aiEnabled: enabled });
   },
+
   toggleAiDisabledSite: async (site: string) => {
     const { aiDisabledSites } = get();
     if (!aiDisabledSites) return;
@@ -250,38 +253,61 @@ export const useStore = create<StoreType>()((set, get) => ({
     set({ aiDisabledSites: newSites });
     await setStorageData({ aiDisabledSites: newSites });
   },
+
   setApiKey: async (key) => {
     set({ geminiApiKey: key });
     await setStorageData({ geminiApiKey: key });
   },
+
   setCustomPrompt: async (prompt) => {
     set({ customPrompt: prompt });
     await setStorageData({ customPrompt: prompt });
   },
+
   setResetTime: async (time) => {
     set({ resetTime: time, miscError: null });
     await sendResetTimeMessage(time).catch((error) => {
       set({ miscError: "Failed to set time: " + error.message });
     });
   },
+
   updateBlockingSettings: async (updates: Partial<BlockingSettings>) => {
+    await sendUpdateBlockingSettingsMsg(updates);
     set((state) => {
       if (!state.blockingSettings) return state;
-      const newSettings = { ...state.blockingSettings, ...updates };
-      setStorageData({ blockingSettings: newSettings });
-      return { blockingSettings: newSettings };
+      return { blockingSettings: { ...state.blockingSettings, ...updates } };
     });
   },
+
   addBlockingException: async (url: string) => {
     set({ blockError: null });
-    await updateBlockingException(url, false).catch((error) => {
+    const urlExceptions = get().blockingSettings?.urlExceptions ?? [];
+    url = url.endsWith("/") ? url.slice(0, -1) : url;
+    const isAlreadyException =
+      urlExceptions.includes(url) || urlExceptions.includes(url + "/");
+    if (isAlreadyException) {
+      set({ blockError: `${url} is already an exception` });
+      return;
+    }
+    const updates: Partial<BlockingSettings> = {
+      urlExceptions: [...(get().blockingSettings?.urlExceptions || []), url],
+    };
+    await sendUpdateBlockingSettingsMsg(updates).catch((error) => {
       set({ blockError: `Failed to add ${url}: ` + error.message });
     });
     await get().fetchSettings();
   },
+
   removeBlockingException: async (url: string) => {
     set({ blockError: null });
-    await updateBlockingException(url, true).catch((error) => {
+    const urlExceptions = get().blockingSettings?.urlExceptions ?? [];
+    url = url.endsWith("/") ? url.slice(0, -1) : url;
+    const updates: Partial<BlockingSettings> = {
+      urlExceptions: urlExceptions.filter(
+        (exception) => exception !== url && exception !== url + "/",
+      ),
+    };
+    await sendUpdateBlockingSettingsMsg(updates).catch((error) => {
       set({ blockError: `Failed to remove ${url}: ` + error.message });
     });
     await get().fetchSettings();

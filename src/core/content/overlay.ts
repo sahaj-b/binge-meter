@@ -14,17 +14,17 @@ import { overlayCss } from "./overlayStyles";
 import { getStorageData } from "@/shared/storage";
 
 export class OverlayUI {
-  element: HTMLDivElement | null = null;
+  private element: HTMLDivElement | null = null;
   private shadowRoot: ShadowRoot | null = null;
-  currThresholdState: "DEFAULT" | "WARN" | "DANGER" | null = null;
-  parentElement: HTMLElement;
-  hostname: string;
-  draggableController: Draggable | null = null;
-  resizableController: Resizable | null = null;
-  onPositionSave: (position: Position) => void;
-  onSizeSave: (size: Size) => void;
-  absolute = false;
-  fallbackPosition: Position;
+  private parentElement: HTMLElement;
+  private currThresholdState: "DEFAULT" | "WARN" | "DANGER" | null = null;
+  private hostname: string;
+  private draggableController: Draggable | null = null;
+  private resizableController: Resizable | null = null;
+  private onPositionSave: (position: Position) => void;
+  private onSizeSave: (size: Size) => void;
+  private absolute = false;
+  private fallbackPosition: Position;
   isBlocked = false;
 
   constructor(
@@ -96,7 +96,7 @@ export class OverlayUI {
 
     if (blocking) this.setBlockingStyles();
 
-    document.body.appendChild(this.element);
+    this.parentElement.appendChild(this.element);
 
     if (!blocking) await this.loadSizeAndPosition();
     await this.update(
@@ -171,24 +171,14 @@ export class OverlayUI {
   }
 
   async block() {
-    console.log(
-      "BLOCK CALLED. Is blocked:",
-      this.isBlocked,
-      "Element exists:",
-      !!this.element,
-    );
-
     if (!this.element) {
-      this.create(undefined, true)
-        .then(() => {
-          console.log("INSIDE .then(), about to call block() again.");
-          this.block();
-        })
-        .catch((error) => {
-          console.error("HOLY FUCK, THE SECOND BLOCK CALL FAILED:", error);
-        });
+      this.create(undefined, true).then(() => {
+        this.block().catch((er) => console.error("Error blocking:", er));
+      });
       return;
     }
+
+    this.update((await getStorageData(["dailyTime"])).dailyTime.total, true);
 
     if (this.isBlocked) return;
     this.isBlocked = true;
@@ -234,6 +224,19 @@ export class OverlayUI {
     if (resizeHandle) resizeHandle.style.display = "none";
     this.setThresholdColors(await getConfig(), 0, true);
 
+    this.setBlockingEventListeners();
+  }
+
+  async unblock() {
+    if (!this.element || !this.isBlocked) return;
+    document.documentElement.style.overflow = "";
+    this.isBlocked = false;
+    this.destroy();
+    await this.create();
+  }
+
+  private setBlockingEventListeners() {
+    if (!this.element) return;
     function sendGraceRequest(minutes: number) {
       chrome.runtime.sendMessage({
         type: "REQUEST_GRACE_PERIOD",
@@ -270,14 +273,6 @@ export class OverlayUI {
         const minutes = Number.parseInt(input?.value || "0", 10);
         if (minutes > 0) sendGraceRequest(minutes);
       });
-  }
-
-  async unblock() {
-    if (!this.element || !this.isBlocked) return;
-    document.documentElement.style.overflow = "";
-    this.isBlocked = false;
-    this.destroy();
-    await this.create();
   }
 
   private setBlockingStyles() {

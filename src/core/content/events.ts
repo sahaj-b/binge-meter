@@ -48,6 +48,7 @@ export class Draggable {
           "binge-meter-resize-handle",
         )
       ) {
+        e.stopPropagation();
         return;
       }
 
@@ -81,6 +82,7 @@ export class Resizable {
 
     this.resizeHandle.addEventListener("mousedown", (e) => {
       e.preventDefault();
+      e.stopPropagation();
       this.isResizing = true;
     });
 
