@@ -1,8 +1,8 @@
 import type { DailyTime, UserRules, OverlayConfig, StorageData } from "./types";
 
 export const defaultOverlayConfig: OverlayConfig = {
-  thresholdWarn: 10 * 1000,
-  thresholdDanger: 20 * 1000,
+  thresholdWarn: 1 * 60 * 1000,
+  thresholdDanger: 2 * 60 * 1000,
   colors: { fg: "#ffffff", bg: "#0f0f0f80", borderColor: "#ffffff41" },
   warnColors: { fg: "#ffffff", bg: "#8e8e15cc", borderColor: "#ffffff41" },
   dangerColors: { fg: "#ffffff", bg: "#9b2308cc", borderColor: "#ffffff41" },
@@ -37,6 +37,7 @@ export const defaultBlockingSettings = {
   urlExceptions: [
     "https://www.youtube.com",
     "https://www.youtube.com/feed/subscriptions",
+    "https://www.youtube.com/results?search_query=*",
   ],
   gracePeriodUntil: 0, // 0 means don't grace
 };
