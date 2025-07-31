@@ -25,9 +25,7 @@ export function GraceSection() {
         </p>
         <Button
           onClick={async () => {
-            await sendClearGraceMessage(
-              usePopupStore.getState().activeURL?.href,
-            );
+            await sendClearGraceMessage();
             setTimeout(() => {
               usePopupStore.getState().updateGracePeriod();
               usePopupStore.getState().updateIsBlocked();

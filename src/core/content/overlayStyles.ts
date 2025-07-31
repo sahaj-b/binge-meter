@@ -32,7 +32,7 @@ export const overlayCss = `
   height: 95vh;
   top: 2.5vh;
   left: 2.5vw;
-  border-radius: 1.5rem;
+  border-radius: 24px;
   cursor: default;
   backdrop-filter: blur(16px);
   border: 2px solid var(--primary-border) !important;
@@ -42,9 +42,9 @@ export const overlayCss = `
 .lock-icon {
   position: absolute;
   top: 40%;
-  left: -39rem;
+  left: -624px;
   transform: translateY(-50%);
-  font-size: 40rem;
+  font-size: 640px;
   color: rgba(255, 255, 255, 0.03);
   z-index: -1;
   pointer-events: none;
@@ -53,9 +53,9 @@ export const overlayCss = `
 .lock-icon-2 {
   position: absolute;
   top: 40%;
-  right: -39rem;
+  right: -624px;
   transform: translateY(-50%);
-  font-size: 40rem;
+  font-size: 640px;
   color: rgba(255, 255, 255, 0.03);
   z-index: -1;
   pointer-events: none;
@@ -90,27 +90,27 @@ export const overlayCss = `
 .blocking-ui-container {
   position: relative;
   translate: 0 20%;
-  border-radius: 1rem;
-  padding: 2rem 4rem;
+  border-radius: 16px;
+  padding: 32px 64px;
   text-align: center;
   color: white;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 32px;
   justify-content: center;
 }
 
 .blocking-message {
   color: var(--foreground);
   letter-spacing: 0.03em;
-  font-size: 2rem;
+  font-size: 32px;
   font-weight: bold;
-  margin: 0 0 1rem 0;
+  margin: 0 0 16px 0;
   line-height: 1.2;
 }
 .blocking-message span {
-  margin-top: 0.5rem;
+  margin-top: 8px;
   display: block;
   color: var(--primary);
 }
@@ -119,7 +119,7 @@ export const overlayCss = `
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto auto auto;
-  gap: 1rem;
+  gap: 16px;
   align-items: center;
   justify-items: center;
 }
@@ -136,14 +136,14 @@ export const overlayCss = `
 
 .unlock-message {
   grid-column: 1 / 3; 
-  font-size: 1.8rem;
+  font-size: 28.8px;
   color: var(--foreground);
   opacity: 0.6;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 8px 0;
 }
 
 .unlock-button {
-  font-size: 1.5rem;
+  font-size: 24px;
   background: var(--primary);
   color: var(--primary-foreground);
   padding: 12px 24px;
@@ -186,7 +186,7 @@ export const overlayCss = `
 
 .custom-unlock-input {
   grid-column: 1;
-  font-size: 1.5rem;
+  font-size: 24px;
   background: var(--input);
   color: var(--foreground);
   border: 1px solid var(--border);

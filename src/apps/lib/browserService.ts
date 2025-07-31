@@ -173,9 +173,8 @@ export async function updateBlockingException(url: string, remove: boolean) {
   } satisfies Message);
 }
 
-export async function sendClearGraceMessage(url?: string | null) {
+export async function sendClearGraceMessage() {
   await chrome.runtime.sendMessage({
     type: "CLEAR_GRACE_PERIOD",
-    url: url ?? undefined,
   } satisfies Message);
 }

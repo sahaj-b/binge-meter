@@ -150,8 +150,7 @@ export function setupListeners() {
         return true;
 
       case "REQUEST_GRACE_PERIOD":
-        if (sender.tab?.id)
-          addGracePeriod(sender.tab.id, message.duration ?? 0);
+        if (sender.tab?.id) addGracePeriod(message.duration ?? 0);
         break;
 
       case "BLOCK_URL":
@@ -165,7 +164,7 @@ export function setupListeners() {
         return true;
 
       case "CLEAR_GRACE_PERIOD":
-        clearGracePeriod(message.url);
+        clearGracePeriod();
         break;
 
       case "DEBUG":

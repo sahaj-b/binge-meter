@@ -234,7 +234,7 @@ export async function setBlockingExceptions(url: string, unblock: boolean) {
   }
 }
 
-export async function addGracePeriod(tabId: number | null, durationMs: number) {
+export async function addGracePeriod(durationMs: number) {
   if (durationMs <= 0) {
     console.warn("Invalid grace period duration:", durationMs);
     return;
@@ -256,14 +256,10 @@ export async function addGracePeriod(tabId: number | null, durationMs: number) {
     },
   });
 
-  if (tabId) {
-    chrome.tabs.sendMessage(tabId, {
-      type: "UNBLOCK_OVERLAY",
-    });
-  }
+  await sendMsgToTrackedSites({ type: "UNBLOCK_OVERLAY" });
 }
 
-export async function clearGracePeriod(url?: string) {
+export async function clearGracePeriod() {
   const { blockingSettings } = await getStorageData(["blockingSettings"]);
   if (blockingSettings.gracePeriodUntil <= Date.now()) {
     console.warn("No active grace period to clear");
@@ -276,11 +272,7 @@ export async function clearGracePeriod(url?: string) {
     },
   });
 
-  if (!url) return;
-  const matchingTabs = await chrome.tabs.query({ url });
-  for (const tab of matchingTabs) {
-    if (tab.id && tab.url) await handleBlockingChecks(tab.id, tab.url);
-  }
+  await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
 }
 
 export async function toBlockUrl(url: string) {
