@@ -15,7 +15,7 @@ import { getStorageData } from "@/shared/storage";
 
 export class OverlayUI {
   element: HTMLDivElement | null = null;
-  animationFrameId: number | null = null;
+  private shadowRoot: ShadowRoot | null = null;
   currThresholdState: "DEFAULT" | "WARN" | "DANGER" | null = null;
   parentElement: HTMLElement;
   hostname: string;
@@ -26,7 +26,6 @@ export class OverlayUI {
   absolute = false;
   fallbackPosition: Position;
   isBlocked = false;
-  private stylesheetId = "binge-meter-stylesheet";
 
   constructor(
     parentElement: HTMLElement,
@@ -55,13 +54,6 @@ export class OverlayUI {
       return;
     }
 
-    if (!document.getElementById(this.stylesheetId)) {
-      const styleTag = document.createElement("style");
-      styleTag.id = this.stylesheetId;
-      styleTag.innerHTML = overlayCss;
-      document.head.appendChild(styleTag);
-    }
-
     if (this.element) {
       this.loadSizeAndPosition();
       return;
@@ -70,7 +62,9 @@ export class OverlayUI {
     this.element = document.createElement("div");
     this.element.id = "binge-meter-overlay";
 
-    this.element.innerHTML = `
+    this.shadowRoot = this.element.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML = `
+      <style>${overlayCss}</style>
       <div class="time-display"></div>
       <div class="binge-meter-resize-handle"></div>
     `;
@@ -88,13 +82,13 @@ export class OverlayUI {
     );
 
     this.element.addEventListener("mouseenter", () => {
-      const handle = this.element?.querySelector(
+      const handle = this.shadowRoot?.querySelector(
         ".binge-meter-resize-handle",
       ) as HTMLElement;
       if (handle) handle.style.opacity = "1";
     });
     this.element.addEventListener("mouseleave", () => {
-      const handle = this.element?.querySelector(
+      const handle = this.shadowRoot?.querySelector(
         ".binge-meter-resize-handle",
       ) as HTMLElement;
       if (handle) handle.style.opacity = "0";
@@ -119,11 +113,19 @@ export class OverlayUI {
       },
       this.absolute,
     );
-
-    this.resizableController = new Resizable(this.element, async (size) => {
-      await setSizeForHost(this.hostname, size);
-      this.onSizeSave(size);
-    });
+    const handle = this.shadowRoot.querySelector(
+      ".binge-meter-resize-handle",
+    ) as HTMLElement;
+    if (handle) {
+      this.resizableController = new Resizable(
+        this.element,
+        handle,
+        async (size) => {
+          await setSizeForHost(this.hostname, size);
+          this.onSizeSave(size);
+        },
+      );
+    }
   }
 
   async loadSizeAndPosition() {
@@ -153,7 +155,7 @@ export class OverlayUI {
     const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((totalMs % (1000 * 60)) / 1000);
 
-    const timeDisplay = this.element.querySelector(
+    const timeDisplay = this.shadowRoot?.querySelector(
       ".time-display",
     ) as HTMLElement;
     if (timeDisplay)
@@ -169,13 +171,33 @@ export class OverlayUI {
   }
 
   async block() {
+    console.log(
+      "BLOCK CALLED. Is blocked:",
+      this.isBlocked,
+      "Element exists:",
+      !!this.element,
+    );
+
     if (!this.element) {
-      this.create(undefined, true).then(() => this.block());
+      this.create(undefined, true)
+        .then(() => {
+          console.log("INSIDE .then(), about to call block() again.");
+          this.block();
+        })
+        .catch((error) => {
+          console.error("HOLY FUCK, THE SECOND BLOCK CALL FAILED:", error);
+        });
       return;
     }
 
     if (this.isBlocked) return;
     this.isBlocked = true;
+
+    // disable scrolling and pause all vids
+    document.documentElement.style.overflow = "hidden";
+    for (const video of document.querySelectorAll("video")) {
+      if (!video.paused) video.pause();
+    }
 
     this.resizableController?.destroy();
     this.draggableController?.destroy();
@@ -186,25 +208,27 @@ export class OverlayUI {
     blockContainer.className = "blocking-ui-container";
 
     blockContainer.innerHTML = `
-      <h1 class="blocking-title">Time Limit Reached</h1>
+      <div class="lock-icon">
+        <svg fill="currentColor" width="1em" height="1em" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M800 384h-32V261.872C768 115.024 661.744 0 510.816 0 359.28 0 256 117.472 256 261.872V384h-32c-70.592 0-128 57.408-128 128v384c0 70.592 57.408 128 128 128h576c70.592 0 128-57.408 128-128V512c0-70.592-57.408-128-128-128zM320 261.872C320 152.784 394.56 64 510.816 64 625.872 64 704 150.912 704 261.872V384H320V261.872zM864.001 896c0 35.28-28.72 64-64 64h-576c-35.28 0-64-28.72-64-64V512c0-35.28 28.72-64 64-64h576c35.28 0 64 28.72 64 64v384zm-352-320c-35.344 0-64 28.656-64 64 0 23.632 12.96 44.032 32 55.12V800c0 17.664 14.336 32 32 32s32-14.336 32-32V695.12c19.04-11.088 32-31.504 32-55.12 0-35.344-28.656-64-64-64z"/></svg>
+      </div>
+      <div class="lock-icon-2">
+        <svg fill="currentColor" width="1em" height="1em" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M800 384h-32V261.872C768 115.024 661.744 0 510.816 0 359.28 0 256 117.472 256 261.872V384h-32c-70.592 0-128 57.408-128 128v384c0 70.592 57.408 128 128 128h576c70.592 0 128-57.408 128-128V512c0-70.592-57.408-128-128-128zM320 261.872C320 152.784 394.56 64 510.816 64 625.872 64 704 150.912 704 261.872V384H320V261.872zM864.001 896c0 35.28-28.72 64-64 64h-576c-35.28 0-64-28.72-64-64V512c0-35.28 28.72-64 64-64h576c35.28 0 64 28.72 64 64v384zm-352-320c-35.344 0-64 28.656-64 64 0 23.632 12.96 44.032 32 55.12V800c0 17.664 14.336 32 32 32s32-14.336 32-32V695.12c19.04-11.088 32-31.504 32-55.12 0-35.344-28.656-64-64-64z"/></svg>
+      </div>
+      <p class="blocking-message">You've hit your daily limit. <span> Get back to what matters.</span></p>
       <div class="unlock-actions">
-        <span id="unlock-message" class="unlock-message">Unlock for:</span>
-        <div class="unlock-buttons">
-          <button id="unlock-5" class="unlock-button">5 min</button>
-          <button id="unlock-15" class="unlock-button">15 min</button>
-        </div>
-        <button id="custom-unlock-button" class="unlock-button custom-unlock-button">Custom duration</button>
-        <div id="custom-unlock-container" class="custom-unlock-container display-none">
-          <input type="number" id="custom-unlock-input" class="custom-unlock-input" placeholder="mins" min="1" />
-          <button id="custom-unlock-confirm" class="unlock-button">Unlock</button>
-        </div>
+        <div id="unlock-message" class="unlock-message">or Unlock for:</div>
+        <button id="unlock-1" class="unlock-button">5 min</button>
+        <button id="unlock-2" class="unlock-button">15 min</button>
+        <button id="custom-duration-button" class="unlock-button">Custom duration</button>
+       <input type="number" id="custom-unlock-input" class="custom-unlock-input custom-unlock-stuff display-none" placeholder="mins" min="1" />
+       <button id="custom-unlock-confirm" class="unlock-button custom-unlock-stuff display-none">Unlock</button>
       </div>
     `;
 
     this.setBlockingStyles();
-    this.element.append(blockContainer);
+    this.shadowRoot?.appendChild(blockContainer);
 
-    const resizeHandle = this.element.querySelector(
+    const resizeHandle = this.shadowRoot?.querySelector(
       ".binge-meter-resize-handle",
     ) as HTMLElement;
     if (resizeHandle) resizeHandle.style.display = "none";
@@ -217,28 +241,30 @@ export class OverlayUI {
       });
     }
 
-    this.element
-      .querySelector("#unlock-5")
+    this.shadowRoot
+      ?.querySelector("#unlock-1")
       ?.addEventListener("click", () => sendGraceRequest(5));
-    this.element
-      .querySelector("#unlock-15")
+    this.shadowRoot
+      ?.querySelector("#unlock-2")
       ?.addEventListener("click", () => sendGraceRequest(15));
 
-    const customContainer = this.element.querySelector<HTMLDivElement>(
-      "#custom-unlock-container",
-    );
-    const customUnlockButton = this.element.querySelector<HTMLButtonElement>(
-      "#custom-unlock-button",
-    );
-    customUnlockButton?.addEventListener("click", () => {
-      customContainer?.classList.remove("display-none");
-      customUnlockButton.classList.add("display-none");
+    const customStuff =
+      this.shadowRoot?.querySelectorAll<HTMLInputElement>(
+        ".custom-unlock-stuff",
+      ) || [];
+    const customDurationButton =
+      this.shadowRoot?.querySelector<HTMLButtonElement>(
+        "#custom-duration-button",
+      );
+    customDurationButton?.addEventListener("click", () => {
+      for (const el of customStuff) el.classList.remove("display-none");
+      customDurationButton.classList.add("display-none");
     });
 
-    this.element
-      .querySelector("#custom-unlock-confirm")
+    this.shadowRoot
+      ?.querySelector("#custom-unlock-confirm")
       ?.addEventListener("click", () => {
-        const input = this.element?.querySelector<HTMLInputElement>(
+        const input = this.shadowRoot?.querySelector<HTMLInputElement>(
           "#custom-unlock-input",
         );
         const minutes = Number.parseInt(input?.value || "0", 10);
@@ -248,6 +274,7 @@ export class OverlayUI {
 
   async unblock() {
     if (!this.element || !this.isBlocked) return;
+    document.documentElement.style.overflow = "";
     this.isBlocked = false;
     this.destroy();
     await this.create();
@@ -318,9 +345,8 @@ export class OverlayUI {
     if (this.element) {
       this.element.remove();
       this.element = null;
+      this.shadowRoot = null;
     }
-
-    document.getElementById(this.stylesheetId)?.remove();
 
     if (this.draggableController) {
       this.draggableController.destroy();

@@ -1,48 +1,31 @@
 export const overlayCss = `
+  :host {
+    all: initial;
+    position: fixed;
+    font-family: 'SF Pro Display', 'Segoe UI', 'Roboto', 'Inter', 'Helvetica Neue', 'Arial', sans-serif !important;
+    z-index: 2147483647;
+    backdrop-filter: blur(10px);
+    cursor: move;
+    user-select: none;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    overflow: hidden;
+    /* transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); */
+    --background: oklch(0.2046 0 0 /0.95);
+    --foreground: oklch(0.9219 0 0 /0.9);
+    --primary: hsl(38 92% 50% / 90%);
+    --primary-border: hsl(38 92% 50% / 50%);
+    --primary-foreground: oklch(0 0 0 /0.9);
+    --secondary: oklch(0.2686 0 0 /0.9);
+    --secondary-foreground: oklch(0.9219 0 0 /0.9);
+    --border: oklch(0.3715 0 0 /0.9);
+    --input: #333333e6;
+  }
 
-#binge-meter-overlay.blocking {
-  --background: oklch(0.2046 0 0 /0.9);
-  --foreground: oklch(0.9219 0 0 /0.9);
-  --card: #1f1f1f42;
-  --primary: hsl(38 92% 50% / 90%);
-  --primary-foreground: oklch(0 0 0 /0.9);
-  --secondary: oklch(0.2686 0 0 /0.9);
-  --secondary-foreground: oklch(0.9219 0 0 /0.9);
-  --border: oklch(0.3715 0 0 /0.9);
-  --input: #333333e6;
-  --ring: var(--primary);
-}
-
-#binge-meter-overlay {
-  position: fixed;
-  font-family: 'SF Pro Display', 'Segoe UI', 'Roboto', 'Inter', 'Helvetica Neue', 'Arial', sans-serif !important;
-  z-index: 2147483647;
-  backdrop-filter: blur(10px);
-  cursor: move;
-  user-select: none;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  overflow: hidden;
-  /* transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); */
-}
-
-#binge-meter-overlay .time-display {
-  pointer-events: none;
-  transition: all;
-}
-
-#binge-meter-overlay.blocking .time-display {
-  position: absolute;
-  top: 20%;
-  color: var(--foreground) !important;
-  opacity: 0.9 !important;
-  font-size: 2em !important;
-}
-
-#binge-meter-overlay.blocking {
+:host(.blocking) {
   background: var(--background) !important;
   color: var(--foreground) !important;
   width: 95vw;
@@ -51,10 +34,47 @@ export const overlayCss = `
   left: 2.5vw;
   border-radius: 1.5rem;
   cursor: default;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
+  border: 2px solid var(--primary-border) !important;
 }
 
-#binge-meter-overlay .binge-meter-resize-handle {
+
+.lock-icon {
+  position: absolute;
+  top: 40%;
+  left: -39rem;
+  transform: translateY(-50%);
+  font-size: 40rem;
+  color: rgba(255, 255, 255, 0.03);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.lock-icon-2 {
+  position: absolute;
+  top: 40%;
+  right: -39rem;
+  transform: translateY(-50%);
+  font-size: 40rem;
+  color: rgba(255, 255, 255, 0.03);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.time-display {
+  pointer-events: none;
+  transition: all;
+}
+
+:host(.blocking) .time-display {
+  position: absolute;
+  top: 10%;
+  color: var(--foreground) !important;
+  opacity: 0.9 !important;
+  font-size: 2em !important;
+}
+
+.binge-meter-resize-handle {
   position: absolute;
   bottom: 1px;
   right: 1px;
@@ -68,11 +88,10 @@ export const overlayCss = `
 }
 
 .blocking-ui-container {
+  position: relative;
   translate: 0 20%;
-  border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 2rem 4rem;
-  background: var(--card);
   text-align: center;
   color: white;
   display: flex;
@@ -82,32 +101,45 @@ export const overlayCss = `
   justify-content: center;
 }
 
-.blocking-title {
+.blocking-message {
   color: var(--foreground);
+  letter-spacing: 0.03em;
   font-size: 2rem;
   font-weight: bold;
   margin: 0 0 1rem 0;
   line-height: 1.2;
 }
-
-.unlock-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
+.blocking-message span {
+  margin-top: 0.5rem;
+  display: block;
+  color: var(--primary);
 }
 
-.unlock-buttons {
-  display: flex;
+.unlock-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto auto;
   gap: 1rem;
-  justify-content: center;
+  align-items: center;
+  justify-items: center;
+}
+
+#unlock-1 {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+#unlock-2 {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .unlock-message {
-  font-size: 2.7rem;
+  grid-column: 1 / 3; 
+  font-size: 1.8rem;
   color: var(--foreground);
-  margin-bottom: 0.5rem;
+  opacity: 0.6;
+  margin: 0 0 0.5rem 0;
 }
 
 .unlock-button {
@@ -123,41 +155,53 @@ export const overlayCss = `
   width: 100%;
 }
 
-#custom-unlock-button {
+
+#custom-duration-button {
+  grid-column: 1 / 3;
+  grid-row: 3;
   background: var(--secondary);
   color: var(--secondary-foreground);
   border: 1px solid var(--border);
 }
 
-#custom-unlock-button:hover {
+#custom-duration-button:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+#custom-duration-button:hover {
   background: var(--input);
 }
 
 .unlock-button:hover { opacity: 0.9; }
 .unlock-button:active { opacity: 0.8; }
 
-.custom-unlock-container {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
+.display-none {
+  display: none;
 }
 
-.display-none { display: none; }
+.custom-unlock-stuff.hidden {
+  display: none;
+}
 
 .custom-unlock-input {
+  grid-column: 1;
   font-size: 1.5rem;
   background: var(--input);
   color: var(--foreground);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 24px;
-  width: 60px;
-  height: 24px;
   text-align: center;
-  }
+  width: 69px;
+}
+
+#custom-unlock-confirm {
+  grid-column: 2;
+}
 
 .custom-unlock-input:focus {
   outline: none;
-  border-color: var(--ring);
+  border-color: var(--primary);
 }
 `;

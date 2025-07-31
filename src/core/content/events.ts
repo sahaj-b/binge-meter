@@ -68,17 +68,16 @@ export class Draggable {
 
 export class Resizable {
   isResizing = false;
-  resizeHandle: HTMLElement | null = null;
+  resizeHandle: HTMLElement;
   resizeMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
   resizeMouseUpHandler: (() => void) | null = null;
 
   constructor(
     element: HTMLElement,
+    handle: HTMLElement,
     onResizeEnd: (size: { width: number; height: number }) => void,
   ) {
-    this.resizeHandle = element.querySelector(
-      ".binge-meter-resize-handle",
-    ) as HTMLElement;
+    this.resizeHandle = handle;
 
     this.resizeHandle.addEventListener("mousedown", (e) => {
       e.preventDefault();
