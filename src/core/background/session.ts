@@ -1,4 +1,5 @@
 import { getStorageData, setStorageData } from "@/shared/storage";
+import { matchUrl } from "@/shared/utils";
 
 let sessionLock = Promise.resolve();
 
@@ -128,9 +129,8 @@ export async function handleBlockingChecks(tabId: number, tabUrl: string) {
   ]);
 
   await chrome.alarms.clear("blockingLimitAlarm");
-  if (tabUrl.endsWith("/")) tabUrl = tabUrl.slice(0, -1);
-  const isException = blockingSettings.urlExceptions.some(
-    (exception) => tabUrl === exception || tabUrl + "/" === exception,
+  const isException = blockingSettings.urlExceptions.some((pattern) =>
+    matchUrl(tabUrl, pattern),
   );
 
   if (blockingSettings.enabled && !isException) {

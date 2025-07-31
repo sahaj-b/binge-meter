@@ -26,7 +26,7 @@ export async function getClassification(
 async function classifyByAI(
   metadata: Metadata,
 ): Promise<"distracting" | "productive"> {
-  const MAX_CACHE_SIZE = 500;
+  const MAX_CACHE_SIZE = 2000;
   console.log("Classifying by AI");
   const { aiCache, geminiApiKey } = await getStorageData([
     "aiCache",

@@ -1,5 +1,5 @@
 import { getStorageData, setStorageData } from "@/shared/storage";
-import { sitePatterns } from "@/shared/utils";
+import { isUrlBlocked, matchUrl, sitePatterns } from "@/shared/utils";
 import type {
   BlockingSettings,
   Message,
@@ -138,7 +138,7 @@ export async function handleEvaluatePage(
 
   // --- DISTRACTING PATH ---
 
-  if (await toBlockUrl(metadata.url)) {
+  if (await isUrlBlocked(metadata.url)) {
     console.log("BLOCKING TIMEEEEEEEEEEEEee");
     await chrome.tabs.sendMessage(tabId, { type: "BLOCK_OVERLAY" });
     await updateActiveSession(null);
@@ -184,11 +184,40 @@ export async function updateUserRule(
       }
     } else {
       // url is a special case
-      if (value[1] === "productive") {
-        userRules.urls[value[0]] = ["productive", extraMetadata];
+      const newPattern = value[0];
+      const classification = value[1];
+
+      // only check for (url pattern) conflicts when adding/updating a rule.
+      if (!deleteDistractingURL || classification === "productive") {
+        let matchedPattern = "";
+        const alreadyExists = Object.keys(userRules.urls).some(
+          (existingPattern) => {
+            // if updating classification of the *exact same* pattern, it's not a conflict
+            if (newPattern === existingPattern) return false;
+
+            if (matchUrl(newPattern, existingPattern)) {
+              matchedPattern = existingPattern;
+              return true;
+            }
+            return false;
+          },
+        );
+
+        if (alreadyExists) {
+          throw new Error(
+            `'${newPattern}' already matches '${matchedPattern}'`,
+          );
+        }
+      }
+
+      if (classification === "productive") {
+        userRules.urls[newPattern] = ["productive", extraMetadata];
       } else {
-        if (deleteDistractingURL) delete userRules.urls[value[0]];
-        else userRules.urls[value[0]] = ["distracting", extraMetadata];
+        if (deleteDistractingURL) {
+          delete userRules.urls[newPattern];
+        } else {
+          userRules.urls[newPattern] = ["distracting", extraMetadata];
+        }
       }
       changed = true;
     }
@@ -258,25 +287,6 @@ export async function clearGracePeriod() {
   });
 
   await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
-}
-
-export async function toBlockUrl(url: string) {
-  const { blockingSettings, dailyTime } = await getStorageData([
-    "blockingSettings",
-    "dailyTime",
-  ]);
-  if (url.endsWith("/")) url = url.slice(0, -1);
-  const isException =
-    blockingSettings.urlExceptions.includes(url) ||
-    blockingSettings.urlExceptions.includes(url + "/");
-  console.log("Is URL exception:", isException);
-  console.log(blockingSettings.urlExceptions);
-  const isTimeLimitExceeded =
-    blockingSettings.gracePeriodUntil > Date.now()
-      ? Date.now() >= blockingSettings.gracePeriodUntil
-      : blockingSettings.timeLimit > 0 &&
-        dailyTime.total >= blockingSettings.timeLimit;
-  return blockingSettings.enabled && !isException && isTimeLimitExceeded;
 }
 
 export async function sendMsgToAllTabs(url: string | string[], message: any) {

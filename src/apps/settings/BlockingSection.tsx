@@ -20,8 +20,6 @@ export function BlockingSection() {
   const removeBlockingException = useStore(
     (state) => state.removeBlockingException,
   );
-  const blockError = useStore((state) => state.blockError);
-
   if (!blockingSettings) return null;
 
   const { enabled, timeLimit, urlExceptions } = blockingSettings;
@@ -67,7 +65,6 @@ export function BlockingSection() {
             onAddItem={addBlockingException}
             onRemoveItem={removeBlockingException}
             placeholder="https://google.com"
-            error={blockError}
           />
         </div>
       </div>

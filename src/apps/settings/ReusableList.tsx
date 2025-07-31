@@ -28,6 +28,7 @@ export function ReusableList({
   );
 
   async function handleAddItem() {
+    setError("");
     setIsAddingLoading(true);
     await onAddItem(newItem).catch((e) => {
       setError(e.message);
@@ -37,6 +38,7 @@ export function ReusableList({
   }
 
   async function handleRemoveItem(item: string) {
+    setError("");
     setRemovingLoadingSet((prev) => new Set(prev).add(item));
     await onRemoveItem(item);
     setRemovingLoadingSet((prev) => {

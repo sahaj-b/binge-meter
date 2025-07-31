@@ -19,6 +19,7 @@ import {
   sendResetTimeMessage,
   sendUpdateBlockingSettingsMsg,
 } from "@lib/browserService";
+import { matchUrl } from "@/shared/utils";
 
 type StoreData = {
   loading: boolean;
@@ -35,7 +36,6 @@ type StoreData = {
   resetTime: { hours: number; minutes: number } | null;
   blockingSettings: BlockingSettings | null;
   miscError: string | null;
-  blockError: string | null;
 };
 type StoreActions = {
   fetchSettings: () => Promise<void>;
@@ -86,7 +86,6 @@ const initialData: StoreData = {
   resetTime: null,
   blockingSettings: null,
   miscError: null,
-  blockError: null,
 };
 
 export const useStore = create<StoreType>()((set, get) => ({
@@ -280,35 +279,33 @@ export const useStore = create<StoreType>()((set, get) => ({
   },
 
   addBlockingException: async (url: string) => {
-    set({ blockError: null });
-    const urlExceptions = get().blockingSettings?.urlExceptions ?? [];
-    url = url.endsWith("/") ? url.slice(0, -1) : url;
-    const isAlreadyException =
-      urlExceptions.includes(url) || urlExceptions.includes(url + "/");
-    if (isAlreadyException) {
-      set({ blockError: `${url} is already an exception` });
-      return;
-    }
-    const updates: Partial<BlockingSettings> = {
-      urlExceptions: [...(get().blockingSettings?.urlExceptions || []), url],
-    };
-    await sendUpdateBlockingSettingsMsg(updates).catch((error) => {
-      set({ blockError: `Failed to add ${url}: ` + error.message });
+    const { blockingSettings } = await getStorageData(["blockingSettings"]);
+    if (!blockingSettings || !url) return;
+    let matchedPattern = "";
+    const alradyExists = blockingSettings.urlExceptions.some((pattern) => {
+      if (matchUrl(url, pattern)) {
+        matchedPattern = pattern;
+        return true;
+      }
     });
-    await get().fetchSettings();
+
+    if (alradyExists)
+      throw new Error(`'${url}' already matches '${matchedPattern}'`);
+
+    const updates: Partial<BlockingSettings> = {
+      urlExceptions: [...blockingSettings.urlExceptions, url],
+    };
+    await sendUpdateBlockingSettingsMsg(updates);
+    get().fetchSettings();
   },
 
   removeBlockingException: async (url: string) => {
-    set({ blockError: null });
     const urlExceptions = get().blockingSettings?.urlExceptions ?? [];
-    url = url.endsWith("/") ? url.slice(0, -1) : url;
     const updates: Partial<BlockingSettings> = {
-      urlExceptions: urlExceptions.filter(
-        (exception) => exception !== url && exception !== url + "/",
-      ),
+      urlExceptions: urlExceptions.filter((exception) => exception !== url),
     };
     await sendUpdateBlockingSettingsMsg(updates).catch((error) => {
-      set({ blockError: `Failed to remove ${url}: ` + error.message });
+      throw new Error(`Failed to remove ${url}` + error.message);
     });
     await get().fetchSettings();
   },

@@ -11,7 +11,6 @@ import {
   markSubredditAs,
   markChannelAs,
   markURLAsDistracting,
-  isBlocked,
   sendUpdateBlockingSettingsMsg,
 } from "@lib/browserService";
 import { getStorageData } from "@/shared/storage";
@@ -19,6 +18,8 @@ import {
   isChannelDistracting,
   classifyByUserRules,
   isSubredditDistracting,
+  isUrlBlocked,
+  matchUrl,
 } from "@/shared/utils";
 
 interface PopupState {
@@ -145,7 +146,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
       set({ isLoading: false });
       setTimeout(async () => {
         const { dailyTime } = await getStorageData(["dailyTime"]);
-        const blocked = await isBlocked(get().activeURL?.href ?? "");
+        const blocked = await isUrlBlocked(get().activeURL?.href ?? "");
         set({ dailyTime: dailyTime.total, isBlocked: blocked });
       }, 500);
     }
@@ -173,7 +174,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
   updateIsBlocked: async () => {
     const { activeURL } = get();
     if (activeURL) {
-      const blocked = await isBlocked(activeURL.href);
+      const blocked = await isUrlBlocked(activeURL.href);
       set({ isBlocked: blocked });
     }
   },
@@ -268,6 +269,12 @@ const usePopupStore = create<PopupState>((set, get) => ({
     const { blockingSettings } = await getStorageData(["blockingSettings"]);
     const url = get().activeURL?.href;
     if (!blockingSettings || !url) return;
+    const alradyExists = blockingSettings.urlExceptions.some((pattern) =>
+      matchUrl(url, pattern),
+    );
+
+    if (alradyExists) return;
+
     const updates: Partial<BlockingSettings> = {
       urlExceptions: [...blockingSettings.urlExceptions, url],
     };

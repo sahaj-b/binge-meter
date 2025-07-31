@@ -1,6 +1,5 @@
 import { sitePatterns } from "@/shared/utils";
 import type { BlockingSettings, Message } from "@/shared/types";
-import { getStorageData } from "@/shared/storage";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
   if (!site) return false;
@@ -151,19 +150,6 @@ export async function sendResetTimeMessage(time: {
     type: "SET_RESET_TIME",
     resetTime: time,
   } satisfies Message);
-}
-
-export async function isBlocked(url: string) {
-  const { blockingSettings, dailyTime } = await getStorageData([
-    "blockingSettings",
-    "dailyTime",
-  ]);
-  return (
-    blockingSettings.enabled &&
-    blockingSettings.gracePeriodUntil <= Date.now() &&
-    dailyTime.total >= blockingSettings.timeLimit &&
-    !blockingSettings.urlExceptions.some((exception) => url.includes(exception))
-  );
 }
 
 export async function sendUpdateBlockingSettingsMsg(
