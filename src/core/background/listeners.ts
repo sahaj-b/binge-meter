@@ -7,9 +7,9 @@ import {
   toggleOverlays,
   handleEvaluatePage,
   updateUserRule,
-  setBlockingExceptions,
   addGracePeriod,
   clearGracePeriod,
+  updateBlockingSettings,
 } from "./messaging";
 import { setupDailyResetAlarm } from "./lifecycle";
 import { setStorageData } from "@/shared/storage";
@@ -38,13 +38,13 @@ export function setupListeners() {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case "TAB_FOCUS":
-        console.log("TAB_FOCUS received");
+        // console.log("TAB_FOCUS received");
         if (!sender.tab?.id) return;
         updateActiveSession(sender.tab.id);
         break;
 
       case "TAB_BLUR":
-        console.log("TAB_BLUR received");
+        // console.log("TAB_BLUR received");
         if (!sender.tab?.id) return;
         updateActiveSession(null);
         break;
@@ -139,22 +139,8 @@ export function setupListeners() {
           });
         return true;
 
-      case "UNBLOCK_URL":
-        setBlockingExceptions(message.url ?? "", true)
-          .then(() => {
-            sendResponse({ success: true });
-          })
-          .catch((error) => {
-            sendResponse({ success: false, error: error.message });
-          });
-        return true;
-
-      case "REQUEST_GRACE_PERIOD":
-        if (sender.tab?.id) addGracePeriod(message.duration ?? 0);
-        break;
-
-      case "BLOCK_URL":
-        setBlockingExceptions(message.url ?? "", false)
+      case "UPDATE_BLOCKING_SETTINGS":
+        updateBlockingSettings(message.blockingUpdates ?? {})
           .then(() => {
             sendResponse({ success: true });
           })
@@ -165,6 +151,10 @@ export function setupListeners() {
 
       case "CLEAR_GRACE_PERIOD":
         clearGracePeriod();
+        break;
+
+      case "REQUEST_GRACE_PERIOD":
+        if (sender.tab?.id) addGracePeriod(message.duration ?? 0);
         break;
 
       case "DEBUG":

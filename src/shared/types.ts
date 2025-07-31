@@ -78,6 +78,7 @@ export type Message = {
   time?: number;
   resetTime?: { hours: number; minutes: number };
   rule?: UserRulesInput;
+  blockingUpdates?: Partial<BlockingSettings>;
   extraMetadata?: string;
 };
 export type PageMeta = {

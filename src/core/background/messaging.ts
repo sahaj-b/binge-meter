@@ -1,6 +1,7 @@
 import { getStorageData, setStorageData } from "@/shared/storage";
 import { sitePatterns } from "@/shared/utils";
 import type {
+  BlockingSettings,
   Message,
   Metadata,
   UserRules,
@@ -8,7 +9,7 @@ import type {
 } from "@/shared/types";
 
 import { injectContentScript, registerContentScript } from "./scripting";
-import { handleBlockingChecks, updateActiveSession } from "./session";
+import { updateActiveSession } from "./session";
 import { getClassification } from "./classification";
 
 export async function checkSitePermission(site: string) {
@@ -76,9 +77,6 @@ export async function addSite(site: string) {
         await chrome.tabs.sendMessage(tab.id, {
           type: "RE-INITIALIZE_OVERLAY",
         });
-        console.log(
-          `Sent RE-INITIALIZE_OVERLAY to already-injected script in tab ${tab.id}`,
-        );
       } catch (e) {
         console.log(`Script not found in tab ${tab.id}, injecting fresh.`);
         await injectContentScript(tab.id);
@@ -208,30 +206,17 @@ export async function updateUserRule(
     );
 }
 
-export async function setBlockingExceptions(url: string, unblock: boolean) {
-  if (!url) return;
+export async function updateBlockingSettings(
+  updates: Partial<BlockingSettings>,
+) {
+  if (!updates) return;
   const { blockingSettings } = await getStorageData(["blockingSettings"]);
-
-  const isCurrentlyBlocked = !blockingSettings.urlExceptions.includes(url);
-
-  if (unblock) {
-    if (!isCurrentlyBlocked) throw new Error(`'${url}' is already unblocked`);
-    blockingSettings.urlExceptions.push(url);
-    await setStorageData({ blockingSettings });
-
-    await sendMsgToAllTabs(url, { type: "UNBLOCK_OVERLAY" });
-  } else {
-    if (isCurrentlyBlocked) throw new Error(`'${url}' is already blocked`);
-    blockingSettings.urlExceptions = blockingSettings.urlExceptions.filter(
-      (exception) => exception !== url,
-    );
-    await setStorageData({ blockingSettings });
-
-    const matchingTabs = await chrome.tabs.query({ url });
-    for (const tab of matchingTabs) {
-      if (tab.id && tab.url) await handleBlockingChecks(tab.id, tab.url);
-    }
-  }
+  const newSettings = {
+    ...blockingSettings,
+    ...updates,
+  };
+  await setStorageData({ blockingSettings: newSettings });
+  await sendMsgToTrackedSites({ type: "RE-INITIALIZE_OVERLAY" });
 }
 
 export async function addGracePeriod(durationMs: number) {

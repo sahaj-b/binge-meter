@@ -5,19 +5,13 @@ let sessionLock = Promise.resolve();
 export function updateActiveSession(activeTabId: number | null) {
   const taskPromise = sessionLock
     .then(async () => {
-      const {
-        dailyTime,
-        trackedSites,
-        activeSession,
-        analyticsData,
-        blockingSettings,
-      } = await getStorageData([
-        "dailyTime",
-        "trackedSites",
-        "activeSession",
-        "analyticsData",
-        "blockingSettings",
-      ]);
+      const { dailyTime, trackedSites, activeSession, analyticsData } =
+        await getStorageData([
+          "dailyTime",
+          "trackedSites",
+          "activeSession",
+          "analyticsData",
+        ]);
       let newTotal = dailyTime.total;
       await chrome.alarms.clear("blockingLimitAlarm");
 
@@ -158,10 +152,6 @@ export async function handleBlockingChecks(tabId: number, tabUrl: string) {
       });
       console.log(
         `Blocking alarm set for tab ${tabId} in ${blockingSettings.gracePeriodUntil > Date.now() ? "grace period" : "time limit"} mode.`,
-      );
-      console.log(
-        "Grace Period Until:",
-        new Date(blockingSettings.gracePeriodUntil).toLocaleString(),
       );
     } else if (timeLimit > 0 && timeLimitExceeded) {
       console.log(`Time limit exceeded, blocking tab ${tabId} immediately.`);

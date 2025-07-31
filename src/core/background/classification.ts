@@ -7,9 +7,10 @@ export async function getClassification(
   metadata: Metadata,
   ai = true,
 ): Promise<"productive" | "distracting"> {
-  const distracting = await classifyByUserRules(metadata);
-  if (distracting !== null || !ai)
-    return distracting !== "productive" ? "distracting" : "productive";
+  const classification = await classifyByUserRules(metadata);
+  console.log("User rules classification:", classification);
+  if (classification !== null || !ai)
+    return classification !== "productive" ? "distracting" : "productive";
 
   const { aiEnabled, aiDisabledSites } = await getStorageData([
     "aiEnabled",
@@ -17,7 +18,9 @@ export async function getClassification(
   ]);
   if (aiEnabled && !aiDisabledSites.some((site) => metadata.url.includes(site)))
     return await classifyByAI(metadata);
-  return distracting ? "distracting" : "productive";
+
+  // no user rules and AI is disabled
+  return "distracting";
 }
 
 async function classifyByAI(
