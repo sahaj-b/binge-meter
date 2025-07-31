@@ -194,7 +194,7 @@ export class OverlayUI {
           <button id="unlock-15" class="unlock-button">15 min</button>
         </div>
         <button id="custom-unlock-button" class="unlock-button custom-unlock-button">Custom duration</button>
-        <div id="custom-unlock-container" class="custom-unlock-container hidden">
+        <div id="custom-unlock-container" class="custom-unlock-container display-none">
           <input type="number" id="custom-unlock-input" class="custom-unlock-input" placeholder="mins" min="1" />
           <button id="custom-unlock-confirm" class="unlock-button">Unlock</button>
         </div>
@@ -231,8 +231,8 @@ export class OverlayUI {
       "#custom-unlock-button",
     );
     customUnlockButton?.addEventListener("click", () => {
-      customContainer?.classList.remove("hidden");
-      customUnlockButton.classList.add("hidden");
+      customContainer?.classList.remove("display-none");
+      customUnlockButton.classList.add("display-none");
     });
 
     this.element

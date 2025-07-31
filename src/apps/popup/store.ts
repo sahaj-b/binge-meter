@@ -39,6 +39,7 @@ interface PopupState {
   currentSite: string;
   aiEnabled: boolean;
   isBlocked: boolean;
+  gracePeriod: number;
 
   initialize: () => Promise<void>;
   updateDistractingStatuses: (metadata: Metadata) => Promise<void>;
@@ -48,6 +49,7 @@ interface PopupState {
   removeSite: () => void;
   requestPermission: () => void;
   updateIsBlocked: () => Promise<void>;
+  updateGracePeriod: () => Promise<void>;
   markAs: (
     markDistracting: boolean,
     markChannelOrSubreddit?: boolean,
@@ -70,6 +72,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
   isChannelOrSubredditDistracting: true,
   aiEnabled: false,
   isBlocked: false,
+  gracePeriod: 0,
 
   initialize: async () => {
     set({ isLoading: true });
@@ -80,6 +83,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
         "trackedSites",
         "userRules",
         "aiEnabled",
+        "blockingSettings",
       ]);
       set({
         dailyTime: data.dailyTime.total,
@@ -90,6 +94,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
         },
         trackedSites: data.trackedSites,
         aiEnabled: data.aiEnabled,
+        gracePeriod: data.blockingSettings?.gracePeriodUntil,
       });
 
       const tab = await getCurrentTab();
@@ -215,6 +220,13 @@ const usePopupStore = create<PopupState>((set, get) => ({
         set({ error: "Failed to get permission" });
       }
     }
+  },
+
+  updateGracePeriod: async () => {
+    const { blockingSettings } = await getStorageData(["blockingSettings"]);
+    set({
+      gracePeriod: blockingSettings.gracePeriodUntil,
+    });
   },
 
   markAs: async (markDistracting: boolean, markChannelOrSubreddit = false) => {

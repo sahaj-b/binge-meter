@@ -153,6 +153,10 @@ export async function handleBlockingChecks(tabId: number, tabUrl: string) {
       console.log(
         `Blocking alarm set for tab ${tabId} in ${blockingSettings.gracePeriodUntil > Date.now() ? "grace period" : "time limit"} mode.`,
       );
+      console.log(
+        "Grace Period Until:",
+        new Date(blockingSettings.gracePeriodUntil).toLocaleString(),
+      );
     } else if (timeLimit > 0 && timeLimitExceeded) {
       console.log(`Time limit exceeded, blocking tab ${tabId} immediately.`);
       chrome.tabs.sendMessage(tabId, { type: "BLOCK_OVERLAY" });

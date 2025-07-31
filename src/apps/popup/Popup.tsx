@@ -8,6 +8,7 @@ import CurrentSiteTracker from "./CurrentSiteTracker";
 import { ClassificationSection } from "./ClassificationSection";
 import { openAnalyticsPage, openSettingsPage } from "../lib/browserService";
 import { BlockedSection } from "./BlockedSection";
+import { GraceSection } from "./GraceSection";
 
 export default function Popup() {
   const isCurrentSiteTracked = usePopupStore(
@@ -63,8 +64,9 @@ export default function Popup() {
 
         {isCurrentSiteTracked && (
           <>
-            <BlockedSection />
             <ClassificationSection />
+            <BlockedSection />
+            <GraceSection />
           </>
         )}
 

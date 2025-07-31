@@ -234,21 +234,25 @@ export async function setBlockingExceptions(url: string, unblock: boolean) {
   }
 }
 
-export async function setGracePeriod(
-  tabId: number | null,
-  durationMin: number,
-) {
-  if (durationMin <= 0) {
-    console.warn("Invalid grace period duration:", durationMin);
+export async function addGracePeriod(tabId: number | null, durationMs: number) {
+  if (durationMs <= 0) {
+    console.warn("Invalid grace period duration:", durationMs);
     return;
   }
-  console.log(`Requesting grace period for tab ${tabId}`);
   const { blockingSettings } = await getStorageData(["blockingSettings"]);
-
+  const newGracePeriod =
+    blockingSettings.gracePeriodUntil > Date.now()
+      ? blockingSettings.gracePeriodUntil + durationMs
+      : Date.now() + durationMs;
+  console.log("Current time:", new Date(Date.now()).toLocaleString());
+  console.log(
+    "New grace period until:",
+    new Date(newGracePeriod).toLocaleString(),
+  );
   await setStorageData({
     blockingSettings: {
       ...blockingSettings,
-      gracePeriodUntil: Date.now() + durationMin * 60 * 1000, //ms
+      gracePeriodUntil: newGracePeriod,
     },
   });
 
@@ -256,6 +260,26 @@ export async function setGracePeriod(
     chrome.tabs.sendMessage(tabId, {
       type: "UNBLOCK_OVERLAY",
     });
+  }
+}
+
+export async function clearGracePeriod(url?: string) {
+  const { blockingSettings } = await getStorageData(["blockingSettings"]);
+  if (blockingSettings.gracePeriodUntil <= Date.now()) {
+    console.warn("No active grace period to clear");
+    return;
+  }
+  await setStorageData({
+    blockingSettings: {
+      ...blockingSettings,
+      gracePeriodUntil: 0,
+    },
+  });
+
+  if (!url) return;
+  const matchingTabs = await chrome.tabs.query({ url });
+  for (const tab of matchingTabs) {
+    if (tab.id && tab.url) await handleBlockingChecks(tab.id, tab.url);
   }
 }
 

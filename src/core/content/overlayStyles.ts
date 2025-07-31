@@ -142,7 +142,7 @@ export const overlayCss = `
   align-items: center;
 }
 
-.custom-unlock-container .hidden { display: none; }
+.display-none { display: none; }
 
 .custom-unlock-input {
   font-size: 1.5rem;

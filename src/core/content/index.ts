@@ -79,6 +79,7 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
             ),
         );
       break;
+
     case "STOP_TICKING":
       ticker.stop();
       break;
@@ -120,7 +121,10 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
       break;
 
     case "UNBLOCK_OVERLAY":
-      overlay.unblock();
+      overlay.unblock().then(() => {
+        if (document.hasFocus() && isActivated)
+          chrome.runtime.sendMessage({ type: "TAB_FOCUS" });
+      });
       break;
 
     default:
