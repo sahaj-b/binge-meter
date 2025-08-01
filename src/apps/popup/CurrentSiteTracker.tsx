@@ -95,7 +95,7 @@ export default function CurrentSiteTracker() {
                 <TooltipTrigger asChild>
                   <HelpCircle
                     size={12}
-                    className="text-muted-foreground hover:text-foreground cursor-help"
+                    className="text-muted-foreground hover:text-foreground"
                   />
                 </TooltipTrigger>
                 <TooltipContent>

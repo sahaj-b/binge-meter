@@ -1,7 +1,5 @@
 import { useEffect } from "react";
 import { Button } from "@ui/button";
-import { Switch } from "@ui/switch";
-import { Label } from "@ui/label";
 import { Settings, BarChart3 } from "lucide-react";
 import usePopupStore from "./store";
 import CurrentSiteTracker from "./CurrentSiteTracker";
@@ -9,18 +7,15 @@ import { ClassificationSection } from "./ClassificationSection";
 import { openAnalyticsPage, openSettingsPage } from "../lib/browserService";
 import { BlockedSection } from "./BlockedSection";
 import { GraceSection } from "./GraceSection";
+import { TogglesSection } from "./TogglesSection";
 
 export default function Popup() {
   const isCurrentSiteTracked = usePopupStore(
     (state) => state.isCurrentSiteTracked,
   );
   const dailyTime = usePopupStore((state) => state.dailyTime);
-  const overlayHidden = usePopupStore((state) => state.overlayHidden);
-  const thresholds = usePopupStore((state) => state.thresholds);
-  const aiEnabled = usePopupStore((state) => state.aiEnabled);
   const initialize = usePopupStore((state) => state.initialize);
-  const toggleOverlay = usePopupStore((state) => state.toggleOverlay);
-  const toggleAI = usePopupStore((state) => state.toggleAI);
+  const thresholds = usePopupStore((state) => state.thresholds);
   useEffect(() => {
     initialize();
   }, [initialize]);
@@ -37,29 +32,7 @@ export default function Popup() {
           </p>
         </div>
 
-        <div className="p-3 bg-card/60 border rounded-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="overlay-toggle">Show Overlay</Label>
-            </div>
-            <Switch
-              id="overlay-toggle"
-              checked={!overlayHidden}
-              onCheckedChange={toggleOverlay}
-            />
-          </div>
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="ai-toggle">Enable AI Classification</Label>
-            </div>
-            <Switch
-              id="ai-toggle"
-              checked={aiEnabled}
-              onCheckedChange={toggleAI}
-            />
-          </div>
-        </div>
-
+        <TogglesSection />
         <CurrentSiteTracker />
 
         {isCurrentSiteTracked && (

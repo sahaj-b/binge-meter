@@ -56,7 +56,7 @@ export function BlockingSection() {
             URL Exceptions
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="size-3" />
+                <HelpCircle className="size-3 relative top-[0.5px]" />
               </TooltipTrigger>
               <TooltipContent>
                 Use '<span className="text-primary">*</span>' as a wildcard to

@@ -67,7 +67,10 @@ export default function Settings() {
       const headerElement = document.getElementById("overlay-styles-header");
       if (headerElement) {
         const rect = headerElement.getBoundingClientRect();
-        return { left: "50%", top: `${rect.top + window.scrollY}px` };
+        return {
+          left: `${rect.left + window.scrollX + rect.width / 2 - 75}px`,
+          top: `${rect.top + window.scrollY}px`,
+        };
       }
       return { left: "50%", top: "20px" };
     };

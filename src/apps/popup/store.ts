@@ -42,6 +42,7 @@ interface PopupState {
   aiEnabled: boolean;
   isBlocked: boolean;
   gracePeriod: number;
+  hasAPIKey?: boolean;
 
   initialize: () => Promise<void>;
   updateDistractingStatuses: (metadata: Metadata) => Promise<void>;
@@ -87,6 +88,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
         "userRules",
         "aiEnabled",
         "blockingSettings",
+        "geminiApiKey",
       ]);
       set({
         dailyTime: data.dailyTime.total,
@@ -98,6 +100,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
         trackedSites: data.trackedSites,
         aiEnabled: data.aiEnabled,
         gracePeriod: data.blockingSettings?.gracePeriodUntil,
+        hasAPIKey: !!data.geminiApiKey,
       });
 
       const tab = await getCurrentTab();

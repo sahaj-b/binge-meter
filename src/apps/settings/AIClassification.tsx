@@ -49,11 +49,11 @@ export function AIClassification() {
         />
       </div>
       <div className="flex flex-col justify-between gap-y-3 text-nowrap">
-        <Label htmlFor="custom-prompt">
+        <Label htmlFor="custom-prompt" className="flex items-center gap-1">
           Custom Instructions for AI
           <Tooltip>
             <TooltipTrigger asChild>
-              <HelpCircle className="size-3" />
+              <HelpCircle className="size-3 relative top-[0.5px]" />
             </TooltipTrigger>
             <TooltipContent>
               Your personal rules defining what's productive and what's not.
