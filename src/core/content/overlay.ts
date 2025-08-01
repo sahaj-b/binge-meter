@@ -13,6 +13,7 @@ import {
 import { overlayCss } from "./overlayStyles";
 import { getStorageData } from "@/shared/storage";
 
+const BLOCKED_TIMER_FONT_SIZE = "60px";
 export class OverlayUI {
   private element: HTMLDivElement | null = null;
   private shadowRoot: ShadowRoot | null = null;
@@ -25,6 +26,7 @@ export class OverlayUI {
   private onSizeSave: (size: Size) => void;
   private absolute = false;
   private fallbackPosition: Position;
+  private timeDisplayElement: HTMLElement | null = null;
   isBlocked = false;
 
   constructor(
@@ -99,6 +101,7 @@ export class OverlayUI {
     this.parentElement.appendChild(this.element);
 
     if (!blocking) await this.loadSizeAndPosition();
+    this.updateTimeDisplayElement();
     await this.update(
       (await getStorageData(["dailyTime"])).dailyTime.total,
       true,
@@ -155,13 +158,14 @@ export class OverlayUI {
     const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((totalMs % (1000 * 60)) / 1000);
 
-    const timeDisplay = this.shadowRoot?.querySelector(
-      ".time-display",
-    ) as HTMLElement;
-    if (timeDisplay)
-      timeDisplay.textContent = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    if (!this.timeDisplayElement) this.updateTimeDisplayElement();
 
-    this.element.style.fontSize = `${getFontSize(this.element.offsetWidth, this.element.offsetHeight)}px`;
+    if (this.timeDisplayElement)
+      this.timeDisplayElement.textContent = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+    if (this.isBlocked) this.element.style.fontSize = BLOCKED_TIMER_FONT_SIZE;
+    else
+      this.element.style.fontSize = `${getFontSize(this.element.offsetWidth, this.element.offsetHeight)}px`;
 
     overlayConfig = overlayConfig ?? (await getConfig());
     if (!overlayConfig) return;
@@ -177,8 +181,18 @@ export class OverlayUI {
       });
       return;
     }
+    this.updateTimeDisplayElement();
 
-    this.update((await getStorageData(["dailyTime"])).dailyTime.total, true);
+    this.element.style.fontSize = BLOCKED_TIMER_FONT_SIZE;
+
+    setTimeout(
+      async () =>
+        this.update(
+          (await getStorageData(["dailyTime"])).dailyTime.total,
+          true,
+        ),
+      2000, // delay to let dailyTime update in storage
+    );
 
     if (this.isBlocked) return;
     this.isBlocked = true;
@@ -233,6 +247,13 @@ export class OverlayUI {
     this.isBlocked = false;
     this.destroy();
     await this.create();
+  }
+
+  private updateTimeDisplayElement() {
+    if (!this.element) return;
+    this.timeDisplayElement = this.shadowRoot?.querySelector(
+      ".time-display",
+    ) as HTMLElement;
   }
 
   private setBlockingEventListeners() {
