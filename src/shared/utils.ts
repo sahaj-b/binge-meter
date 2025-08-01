@@ -1,5 +1,6 @@
 import { getStorageData } from "@/shared/storage";
 import type { UserRules, Metadata } from "@/shared/types";
+import { debugLog } from "./logger";
 
 export function sitePatterns(site: string): string[] {
   return [`*://${site}/*`, `*://www.${site}/*`];
@@ -94,7 +95,7 @@ export async function isChannelDistracting(
 ): Promise<boolean> {
   if (!userRules) userRules = (await getStorageData(["userRules"])).userRules;
 
-  console.log(
+  debugLog(
     "is",
     channel,
     "distracting?",

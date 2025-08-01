@@ -4,6 +4,7 @@ import { OverlayUI } from "./overlay";
 import { getMetadata, setLastScrapedYtTitle } from "./scraper";
 import { revalidateCache } from "./storeService";
 import { TickerController } from "./tickerController";
+import { sendDebugMsg } from "@/shared/logger";
 
 const overlay = new OverlayUI(document.body, window.location.hostname);
 const ticker = new TickerController(overlay);
@@ -27,10 +28,7 @@ setupNavigation(
     chrome.runtime.sendMessage({ type: "URL_ONLY_EVALUATE", url });
   },
   () => {
-    chrome.runtime.sendMessage({
-      type: "DEBUG",
-      message: "FULLLLLLLL METADATA SENDDDDDDDDDDDDDDdd",
-    });
+    sendDebugMsg("FULLLLLLLL METADATA SENDDDDDDDDDDDDDDdd");
     sendEvalMsg();
   },
 );
@@ -43,24 +41,15 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
     message.type !== "SEND_METADATA"
   )
     return;
-  chrome.runtime.sendMessage({
-    type: "DEBUG",
-    message: message.type,
-  });
+  sendDebugMsg(message.type);
   switch (message.type) {
     case "SEND_METADATA": {
       if (cachedMetadata) {
-        chrome.runtime.sendMessage({
-          type: "DEBUG",
-          message: "SENDING METADATA " + JSON.stringify(cachedMetadata),
-        });
+        sendDebugMsg("SENDING METADATA " + JSON.stringify(cachedMetadata));
         sendResponse({ metadata: cachedMetadata });
       } else {
         getMetadata().then((metadata) => {
-          chrome.runtime.sendMessage({
-            type: "DEBUG",
-            message: "SENDING METADATA " + JSON.stringify(metadata),
-          });
+          sendDebugMsg("SENDING METADATA " + JSON.stringify(metadata));
           cachedMetadata = metadata;
           sendResponse({ metadata: metadata });
         });
@@ -82,10 +71,6 @@ chrome.runtime.onMessage.addListener((message: any, _, sendResponse) => {
       break;
 
     case "REVALIDATE_CACHE":
-      chrome.runtime.sendMessage({
-        type: "DEBUG",
-        message: "Revalidating cache",
-      });
       revalidateCache();
       break;
 

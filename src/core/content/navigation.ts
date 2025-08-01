@@ -8,6 +8,8 @@
 //  - instantly fire the URL change handler which will evaluate the page only based on URL
 //  - after title change OR yt-navigate-finish, or after FALLBACK_DELAY ms, fire the fullMetadataHandler which will normally evaluate the page
 
+import { sendDebugMsg } from "@/shared/logger";
+
 // BRUH monkey-patching history.pushState and replaceState ain't working for SPA nav
 // so I be polling url every X ms
 
@@ -45,10 +47,7 @@ export function setupNavigation(
   }
 
   function handleNavigation(observeTitle = true) {
-    chrome.runtime.sendMessage({
-      type: "DEBUG",
-      message: "NAVIGATION DETECTED. previousUrl: " + previousUrl,
-    });
+    sendDebugMsg("NAVIGATION DETECTED. previousUrl: " + previousUrl);
     if (previousUrl) {
       setTimeout(() => {
         instantUrlHandler(window.location.href);
@@ -64,10 +63,7 @@ export function setupNavigation(
     startTitleObserver();
 
     fallbackTimer = setTimeout(() => {
-      chrome.runtime.sendMessage({
-        type: "DEBUG",
-        message: "Title did not change. Firing fallback.",
-      });
+      sendDebugMsg("Title did not change. Firing fallback.");
       onTitleChange();
     }, FALLBACK_DELAY);
   }

@@ -172,9 +172,9 @@ export default function Settings() {
   // not using IntersectionObserver coz FUCK YOU FIREFOX. doesnt work on FF no matter what I try
   // useEffect(() => {
   //   const handleObserver = (entries: IntersectionObserverEntry[]) => {
-  //     console.log("--- Observer Fired ---");
+  //     debugLog("--- Observer Fired ---");
   //     for (const entry of entries) {
-  //       console.log({
+  //       debugLog({
   //         id: entry.target.id,
   //         isIntersecting: entry.isIntersecting,
   //         ratio: entry.intersectionRatio,

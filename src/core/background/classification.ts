@@ -2,13 +2,14 @@ import { getStorageData, setStorageData } from "@/shared/storage";
 import type { Metadata } from "@/shared/types";
 import { classifyByUserRules } from "@/shared/utils";
 import { callGeminiAPI } from "./aiService";
+import { debugLog } from "@/shared/logger";
 
 export async function getClassification(
   metadata: Metadata,
   ai = true,
 ): Promise<"productive" | "distracting"> {
   const classification = await classifyByUserRules(metadata);
-  console.log("User rules classification:", classification);
+  debugLog("User rules classification:", classification);
   if (classification !== null || !ai)
     return classification !== "productive" ? "distracting" : "productive";
 
@@ -27,14 +28,14 @@ async function classifyByAI(
   metadata: Metadata,
 ): Promise<"distracting" | "productive"> {
   const MAX_CACHE_SIZE = 2000;
-  console.log("Classifying by AI");
+  debugLog("Classifying by AI");
   const { aiCache, geminiApiKey } = await getStorageData([
     "aiCache",
     "geminiApiKey",
   ]);
   const aiCacheEntry = aiCache.find(([url]) => url === metadata.url);
   if (aiCacheEntry) {
-    console.log("AI cache hit");
+    debugLog("AI cache hit");
     return aiCacheEntry[1];
   }
 
@@ -42,13 +43,12 @@ async function classifyByAI(
     await getPrompt(metadata),
     geminiApiKey,
   ).catch(() => "");
-  console.log("AI response:", aiResponse);
+  debugLog("AI response:", aiResponse);
 
   const classification = aiResponse.toLowerCase().includes("productive")
     ? "productive"
     : "distracting";
 
-  console.log("Updating AI cache");
   aiCache.push([metadata.url, classification]);
   if (aiCache.length > MAX_CACHE_SIZE) aiCache.shift();
 
@@ -122,8 +122,8 @@ async function getPrompt(metadata: Metadata) {
     ${ytPrompt}
     ${redditPrompt}
     `;
-  // console.log("Metadata prompt:", metadataPrompt);
-  // console.log(userRulesSection);
+  debugLog(metadataPrompt);
+  debugLog(userRulesSection);
   return `
     You are a classification engine for a productivity application called BingeMeter. Your sole purpose is to analyze webpage metadata and determine if the content is "PRODUCTIVE" or "DISTRACTING" for a user trying to focus on work or learning.
 

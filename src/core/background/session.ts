@@ -1,3 +1,4 @@
+import { debugLog } from "@/shared/logger";
 import { getStorageData, setStorageData } from "@/shared/storage";
 import { matchUrl } from "@/shared/utils";
 
@@ -46,7 +47,7 @@ export function updateActiveSession(activeTabId: number | null) {
         await chrome.tabs
           .sendMessage(activeSession.tabId, { type: "STOP_TICKING" })
           .catch((err) => {
-            console.error(
+            console.warn(
               `Error sending STOP_TICKING to tab ${activeSession.tabId}:`,
               err,
             );
@@ -150,11 +151,11 @@ export async function handleBlockingChecks(tabId: number, tabUrl: string) {
             ? blockingSettings.gracePeriodUntil
             : Date.now() + timeRemaining,
       });
-      console.log(
+      debugLog(
         `Blocking alarm set for tab ${tabId} in ${blockingSettings.gracePeriodUntil > Date.now() ? "grace period" : "time limit"} mode.`,
       );
     } else if (timeLimit > 0 && timeLimitExceeded) {
-      console.log(`Time limit exceeded, blocking tab ${tabId} immediately.`);
+      debugLog(`Time limit exceeded, blocking tab ${tabId} immediately.`);
       chrome.tabs.sendMessage(tabId, { type: "BLOCK_OVERLAY" });
       return true;
     }

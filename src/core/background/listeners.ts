@@ -13,6 +13,7 @@ import {
 } from "./messaging";
 import { setupDailyResetAlarm } from "./lifecycle";
 import { setStorageData } from "@/shared/storage";
+import { debugLog } from "@/shared/logger";
 
 export function setupListeners() {
   // this chrome API fuckin SUCKS. can't handle focus changes outside the browser instance (for my WM atleast)
@@ -38,24 +39,24 @@ export function setupListeners() {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case "TAB_FOCUS":
-        // console.log("TAB_FOCUS received");
+        // debugLog("TAB_FOCUS received");
         if (!sender.tab?.id) return;
         updateActiveSession(sender.tab.id);
         break;
 
       case "TAB_BLUR":
-        // console.log("TAB_BLUR received");
+        // debugLog("TAB_BLUR received");
         if (!sender.tab?.id) return;
         updateActiveSession(null);
         break;
 
       case "TOGGLE_ALL_OVERLAYS":
-        console.log("TOGGLE_ALL_OVERLAYS received");
+        debugLog("TOGGLE_ALL_OVERLAYS received");
         toggleOverlays();
         break;
 
       case "REVALIDATE_ALL_OVERLAYS":
-        console.log(
+        debugLog(
           `REVALIDATE_ALL_OVERLAYS received from tab: ${sender.tab?.id}`,
         );
         revalidateCacheForAllTabs();
@@ -67,14 +68,14 @@ export function setupListeners() {
         break;
 
       case "EVALUATE_PAGE":
-        console.log("EVALUATE_PAGE received");
+        debugLog("EVALUATE_PAGE received");
         if (!sender.tab?.id) return;
         handleEvaluatePage(sender.tab.id, message.metadata);
         break;
 
       case "URL_ONLY_EVALUATE":
         if (!sender.tab?.id || !message.url) return;
-        console.log("URL_ONLY_EVALUATE received");
+        debugLog("URL_ONLY_EVALUATE received");
         handleEvaluatePage(sender.tab.id, { url: message.url }, false);
         break;
 
@@ -158,7 +159,7 @@ export function setupListeners() {
         break;
 
       case "DEBUG":
-        console.log(sender.tab?.id, message.message);
+        debugLog(sender.tab?.id, message.message);
         break;
 
       default:

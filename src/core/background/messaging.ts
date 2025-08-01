@@ -11,6 +11,7 @@ import type {
 import { injectContentScript, registerContentScript } from "./scripting";
 import { updateActiveSession } from "./session";
 import { getClassification } from "./classification";
+import { debugLog } from "@/shared/logger";
 
 export async function checkSitePermission(site: string) {
   const permissionsToRequest = {
@@ -29,16 +30,13 @@ export async function revalidateCacheForAllTabs() {
       tab.id &&
       trackedSites.some((site: string) => tab.url!.includes(site))
     ) {
-      console.log("Sending REVALIDATE_CACHE to", tab.id);
-      await chrome.tabs.sendMessage(tab.id, {
-        type: "REVALIDATE_CACHE",
-      });
+      await revalidateCacheForTab(tab.id);
     }
   }
 }
 
 export async function revalidateCacheForTab(tabId: number) {
-  console.log("Sending REVALIDATE_CACHE to", tabId);
+  debugLog("Sending REVALIDATE_CACHE to", tabId);
   await chrome.tabs.sendMessage(tabId, {
     type: "REVALIDATE_CACHE",
   });
@@ -78,7 +76,7 @@ export async function addSite(site: string) {
           type: "RE-INITIALIZE_OVERLAY",
         });
       } catch (e) {
-        console.log(`Script not found in tab ${tab.id}, injecting fresh.`);
+        debugLog(`Script not found in tab ${tab.id}, injecting fresh`);
         await injectContentScript(tab.id);
       }
     }
@@ -116,9 +114,9 @@ export async function handleEvaluatePage(
 ) {
   if (!metadata?.url) return;
 
-  console.log(`Evaluating page for tab ${tabId}`, metadata);
+  debugLog(`Evaluating page for tab ${tabId}`, metadata);
   const classification = await getClassification(metadata, isFullEval);
-  console.log(`Page is ${classification}`);
+  debugLog(`Page is ${classification}`);
 
   // --- PRODUCTIVE PATH ---
   if (classification === "productive") {
@@ -126,9 +124,7 @@ export async function handleEvaluatePage(
       .query({ active: true, currentWindow: true })
       .then(async ([activeTab]) => {
         if (activeTab?.id === tabId) {
-          console.log(
-            "Productive page is active, ensuring session is stopped.",
-          );
+          debugLog("Productive page is active, ensuring session is stopped.");
           await updateActiveSession(null);
         }
       });
@@ -139,11 +135,10 @@ export async function handleEvaluatePage(
   // --- DISTRACTING PATH ---
 
   if (await isUrlBlocked(metadata.url)) {
-    console.log("BLOCKING TIMEEEEEEEEEEEEee");
+    debugLog("BLOCKING TIMEEEEEEEEEEEE");
     await chrome.tabs.sendMessage(tabId, { type: "BLOCK_OVERLAY" });
     await updateActiveSession(null);
   } else {
-    console.log("AINT BLOCKING THIS SHI");
     chrome.tabs
       .query({ active: true, currentWindow: true })
       .then(async ([activeTab]) => {
@@ -260,11 +255,6 @@ export async function addGracePeriod(durationMs: number) {
     blockingSettings.gracePeriodUntil > Date.now()
       ? blockingSettings.gracePeriodUntil + durationMs
       : Date.now() + durationMs;
-  console.log("Current time:", new Date(Date.now()).toLocaleString());
-  console.log(
-    "New grace period until:",
-    new Date(newGracePeriod).toLocaleString(),
-  );
   await setStorageData({
     blockingSettings: {
       ...blockingSettings,
@@ -297,9 +287,9 @@ export async function sendMsgToAllTabs(url: string | string[], message: any) {
     if (tab.id) {
       try {
         await chrome.tabs.sendMessage(tab.id, message);
-        console.log(`Sent ${message.type} to tab ${tab.id}`);
+        debugLog(`Sent ${message.type} to tab ${tab.id}`);
       } catch (e) {
-        console.error(`Error sending ${message.type} to tab ${tab.id}:`, e);
+        console.warn(`Error sending ${message.type} to tab ${tab.id}:`, e);
       }
     }
   }

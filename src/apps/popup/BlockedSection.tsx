@@ -6,7 +6,6 @@ export function BlockedSection() {
   const addBlockingException = usePopupStore(
     (state) => state.addBlockingException,
   );
-  console.log("BlockedSection isBlocked", isBlocked);
   if (!isBlocked) return null;
   return (
     <Button

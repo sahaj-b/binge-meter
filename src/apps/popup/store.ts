@@ -21,6 +21,7 @@ import {
   isUrlBlocked,
   matchUrl,
 } from "@/shared/utils";
+import { debugLog } from "@/shared/logger";
 
 interface PopupState {
   dailyTime: number;
@@ -128,9 +129,9 @@ const usePopupStore = create<PopupState>((set, get) => ({
               const response = await chrome.tabs.sendMessage(tab.id, {
                 type: "SEND_METADATA",
               });
-              console.log("Metadata response:", response);
+              debugLog("Metadata response:", response);
               if (response?.metadata) {
-                console.log("Metadata received:", response.metadata);
+                debugLog("Metadata received:", response.metadata);
                 set({ metadata: response.metadata });
                 get().updateDistractingStatuses(response.metadata);
               }

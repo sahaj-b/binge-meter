@@ -1,8 +1,8 @@
 import type { DailyTime, UserRules, OverlayConfig, StorageData } from "./types";
 
 export const defaultOverlayConfig: OverlayConfig = {
-  thresholdWarn: 1 * 60 * 1000,
-  thresholdDanger: 2 * 60 * 1000,
+  thresholdWarn: 1 * 60 * 60 * 1000,
+  thresholdDanger: 2 * 60 * 60 * 1000,
   colors: { fg: "#ffffff", bg: "#0f0f0f80", borderColor: "#ffffff41" },
   warnColors: { fg: "#ffffff", bg: "#8e8e15cc", borderColor: "#ffffff41" },
   dangerColors: { fg: "#ffffff", bg: "#9b2308cc", borderColor: "#ffffff41" },
@@ -76,5 +76,5 @@ export async function setStorageData(
   data: Partial<StorageData>,
 ): Promise<void> {
   await chrome.storage.local.set(data);
-  // console.log("SAVED", data);
+  // debugLog("SAVED", data);
 }

@@ -1,3 +1,4 @@
+import { debugLog, sendDebugMsg } from "@/shared/logger";
 import { getStorageData } from "@/shared/storage";
 import type {
   Metadata,
@@ -30,10 +31,7 @@ export async function getMetadata(): Promise<Metadata> {
     metadata.url.includes("youtube.com/watch") ||
     metadata.url.includes("youtube.com/@")
   ) {
-    chrome.runtime.sendMessage({
-      type: "DEBUG",
-      message: "waiting for youtube metadata",
-    });
+    sendDebugMsg("waiting for youtube metadata");
     metadata.youtube = await getYoutubeMetadata(metadata);
   } else if (metadata.url.includes("reddit.com/r/")) {
     metadata.reddit = getRedditMetadata(metadata);
@@ -116,11 +114,7 @@ async function scrapeChannelPage(metadata: Metadata): Promise<YoutubeMetadata> {
       ? h1.getAttribute("aria-label")?.split(",")[0].trim()
       : null;
   } catch (error) {
-    console.log(error as Error);
-    chrome.runtime.sendMessage({
-      type: "DEBUG",
-      message: (error as Error).message,
-    });
+    sendDebugMsg((error as Error).message);
     ytMetadata.channelName = null;
     ytMetadata.channelId = null;
   }
@@ -204,19 +198,16 @@ function waitForElement(
             return;
           }
           const descendant = (node as Element).querySelector?.(selector);
-          console.log("MUTATION, textContent: ", descendant?.textContent);
+          debugLog("MUTATION, textContent: ", descendant?.textContent);
           if (waitForText && descendant?.textContent) {
-            console.log(
-              "DISCONNECTING, text content: ",
-              descendant.textContent,
-            );
+            debugLog("DISCONNECTING, text content: ", descendant.textContent);
             observer.disconnect();
             timeoutId && clearTimeout(timeoutId);
             resolve(descendant);
             return;
           }
           if (!waitForText && descendant) {
-            console.log("DISCONNECTING, element:", descendant);
+            debugLog("DISCONNECTING, element:", descendant);
             observer.disconnect();
             timeoutId && clearTimeout(timeoutId);
             resolve(descendant);

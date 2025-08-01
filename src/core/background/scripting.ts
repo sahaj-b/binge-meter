@@ -1,5 +1,6 @@
 // @ts-ignore
 import contentScriptPath from "../content/index?script";
+import { debugLog } from "@/shared/logger";
 import { getStorageData, setStorageData } from "@/shared/storage";
 import { sitePatterns } from "@/shared/utils";
 
@@ -20,25 +21,25 @@ export async function syncRegisteredScriptsForAllowedSites() {
   if (sitesWithPermissions.length < trackedSites.length) {
     await setStorageData({ trackedSites: sitesWithPermissions });
   }
-  console.log("sitesWithPermissions", sitesWithPermissions);
-  console.log("trackedSites", trackedSites);
+  debugLog("sitesWithPermissions", sitesWithPermissions);
+  debugLog("trackedSites", trackedSites);
 
   const registered = await chrome.scripting.getRegisteredContentScripts();
-  console.log("registered", registered);
+  debugLog("registered", registered);
   const registeredIds = registered.map((s) => s.id);
-  console.log("registeredIds", registeredIds);
+  debugLog("registeredIds", registeredIds);
 
   const scriptsToRegister = sitesWithPermissions.filter(
     (site) => !registeredIds.includes(site),
   );
-  console.log("scriptsToRegister", scriptsToRegister);
+  debugLog("scriptsToRegister", scriptsToRegister);
   await injectContentScriptToAllTabs(scriptsToRegister);
   await registerContentScript(scriptsToRegister);
 
   const idsToUnregister = registeredIds.filter(
     (site) => !sitesWithPermissions.includes(site),
   );
-  console.log("idsToUnregister", idsToUnregister);
+  debugLog("idsToUnregister", idsToUnregister);
   if (idsToUnregister.length > 0) {
     await chrome.scripting.unregisterContentScripts({ ids: idsToUnregister });
   }
@@ -56,7 +57,7 @@ export async function registerContentScript(site: string | string[]) {
     }),
   );
   await chrome.scripting.registerContentScripts(scripts);
-  console.log("Registered content scripts for", sites);
+  debugLog("Registered content scripts for", sites);
 }
 
 export async function injectContentScriptToAllTabs(site: string | string[]) {
@@ -71,13 +72,12 @@ export async function injectContentScriptToAllTabs(site: string | string[]) {
 
 export async function injectContentScript(tabId?: number) {
   if (!tabId) return;
-  console.log("trying to inject content script in", tabId);
   try {
     await chrome.scripting.executeScript({
       target: { tabId },
       files: [contentScriptPath],
     });
-    console.log("injected content script in", tabId);
+    debugLog("injected content script in", tabId);
   } catch (e) {
     console.error("Couldn't inject content script:", e);
   }

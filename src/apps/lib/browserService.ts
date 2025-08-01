@@ -1,5 +1,6 @@
 import { sitePatterns } from "@/shared/utils";
 import type { BlockingSettings, Message } from "@/shared/types";
+import { debugLog } from "@/shared/logger";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
   if (!site) return false;
@@ -8,7 +9,7 @@ export async function checkSitePermission(site: string): Promise<boolean> {
     origins: sitePatterns(site),
   };
 
-  console.log(chrome.permissions);
+  debugLog("Permissions: " + chrome.permissions);
   return chrome.permissions.contains(permissionsToRequest);
 }
 
@@ -19,7 +20,7 @@ export async function requestSitePermission(site: string) {
   };
   // removing this coz firefox doesnt trust waiting this much for asking permission duh
   // if (await checkSitePermission(site)) {
-  //   console.log(`Permission already granted for '${site}'`);
+  //   debugLog(`Permission already granted for '${site}'`);
   //   return;
   // }
 
@@ -64,7 +65,7 @@ export async function sendAddSiteMessage(site: string) {
     site: site,
   } satisfies Message);
   if (response?.success) {
-    console.log(`Added site: ${site}`);
+    debugLog(`Added site: ${site}`);
   } else {
     throw new Error(response?.error ?? "Unknown error occurred");
   }
@@ -76,7 +77,7 @@ export async function sendRemoveSiteMessage(site: string) {
     site: site,
   } satisfies Message);
   if (response?.success) {
-    console.log(`Removed site: ${site}`);
+    debugLog(`Removed site: ${site}`);
   } else {
     throw new Error(response?.error ?? "Unknown error occurred");
   }
