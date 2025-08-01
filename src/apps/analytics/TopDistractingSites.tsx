@@ -8,7 +8,7 @@ import {
   ChartTooltipContent,
 } from "@ui/chart";
 import { formatTimeMs } from "./utils";
-import type { TimeRange } from "./Analytics";
+import { daysMap, type TimeRange } from "./Analytics";
 import { useMemo } from "react";
 
 export function TopDistractingSites({
@@ -55,27 +55,12 @@ export function TopDistractingSites({
     return chartData.reduce((acc, curr) => acc + curr.time, 0);
   }, [chartData]);
 
-  const getTimeRangeText = () => {
-    switch (timeRange) {
-      case "7d":
-        return "Last 7 days";
-      case "30d":
-        return "Last 30 days";
-      case "90d":
-        return "Last 3 months";
-      case "inf":
-        return "All time";
-      default:
-        return "Last 30 days";
-    }
-  };
-
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center border-b flex justify-between">
         <CardTitle className="text-2xl">Top Distracting Sites</CardTitle>
         <div className="text-muted-foreground text-sm">
-          {getTimeRangeText()}
+          {daysMap[timeRange][1]}
         </div>
       </CardHeader>
       <CardContent className="flex-1 pb-0">

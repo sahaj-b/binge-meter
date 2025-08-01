@@ -7,7 +7,12 @@ import SitesSection from "./SitesSection";
 import { TopDistractingSites } from "./TopDistractingSites";
 import { getStorageData } from "@/shared/storage";
 
-const daysMap = { "30d": 30, "7d": 7, "90d": 90, inf: -1 };
+export const daysMap = {
+  "7d": [7, "Last 7 days"],
+  "30d": [30, "Last 30 days"],
+  "90d": [90, "Last 3 months"],
+  inf: [0, "All time"],
+} as const;
 export type TimeRange = keyof typeof daysMap;
 
 export default function Analytics() {
@@ -22,9 +27,7 @@ export default function Analytics() {
       setLoading(true);
       const data = (await getStorageData(["analyticsData"])).analyticsData;
       setAnalyticsData(data);
-
-      // setAnalyticsData(dummyData);
-      // setLoading(false);
+      setLoading(false);
     }
     fetchAnalyticsData();
   }, []);
@@ -36,7 +39,7 @@ export default function Analytics() {
       const itemDate = new Date(date);
       const cutoffDate = new Date();
 
-      const daysToSubtract = daysMap[timeRange];
+      const daysToSubtract = daysMap[timeRange][0];
 
       cutoffDate.setDate(cutoffDate.getDate() - daysToSubtract);
       return itemDate >= cutoffDate;

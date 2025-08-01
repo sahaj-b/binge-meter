@@ -70,7 +70,8 @@ async function scrapeWatchPage(metadata: Metadata): Promise<YoutubeMetadata> {
 
   try {
     const h1Element = await waitForElementChange(
-      "h1.title.style-scope.ytd-video-primary-info-renderer",
+      // "h1.title.style-scope.ytd-video-primary-info-renderer",
+      "#title h1 yt-formatted-string",
       lastScrapedYtTitle,
     ).catch(() => {
       ytMetadata.videoTitle = null;
@@ -79,7 +80,8 @@ async function scrapeWatchPage(metadata: Metadata): Promise<YoutubeMetadata> {
     lastScrapedYtTitle = ytMetadata.videoTitle;
 
     const channelLinkElement = await waitForElement(
-      "#above-the-fold #channel-name a.yt-simple-endpoint",
+      // "#above-the-fold #channel-name a.yt-simple-endpoint",
+      "#owner #channel-name a.yt-simple-endpoint",
       true,
     );
     ytMetadata.channelName = channelLinkElement?.textContent?.trim() ?? null;

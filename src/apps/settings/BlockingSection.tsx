@@ -3,7 +3,7 @@ import { Switch } from "@ui/switch";
 import { DurationPicker } from "@ui/duration-picker";
 import { useStore } from "./store";
 import { Section } from "./Section";
-import { ReusableList } from "./ReusableList";
+import { DynamicList } from "./DynamicList";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
 import { HelpCircle } from "lucide-react";
 
@@ -67,7 +67,7 @@ export function BlockingSection() {
           <p className="text-xs text-muted-foreground mb-2">
             These urls will not be blocked
           </p>
-          <ReusableList
+          <DynamicList
             items={urlExceptions}
             onAddItem={addBlockingException}
             onRemoveItem={removeBlockingException}

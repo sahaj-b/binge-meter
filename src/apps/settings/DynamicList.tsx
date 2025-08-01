@@ -4,7 +4,7 @@ import { Button } from "@ui/button";
 import { Input } from "@ui/input";
 import { Trash2, Plus, Loader2 } from "lucide-react";
 
-interface ReusableListProps {
+interface DynamicListProps {
   items: string[];
   onAddItem: (item: string) => Promise<void>;
   onRemoveItem: (item: string) => Promise<void>;
@@ -13,13 +13,13 @@ interface ReusableListProps {
   actions?: (item: string) => ReactNode;
 }
 
-export function ReusableList({
+export function DynamicList({
   items,
   onAddItem,
   onRemoveItem,
   placeholder,
   actions,
-}: ReusableListProps) {
+}: DynamicListProps) {
   const [newItem, setNewItem] = useState("");
   const [isAddingLoading, setIsAddingLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,11 +30,14 @@ export function ReusableList({
   async function handleAddItem() {
     setError("");
     setIsAddingLoading(true);
-    await onAddItem(newItem).catch((e) => {
-      setError(e.message);
-    });
-    setNewItem("");
-    setIsAddingLoading(false);
+    try {
+      await onAddItem(newItem);
+      setNewItem("");
+      setIsAddingLoading(false);
+    } catch (err: any) {
+      setError(err.message ?? "Failed to add item");
+      setIsAddingLoading(false);
+    }
   }
 
   async function handleRemoveItem(item: string) {
@@ -55,7 +58,10 @@ export function ReusableList({
           placeholder={placeholder}
           className="text-sm"
           value={newItem}
-          onChange={(e) => setNewItem(e.target.value)}
+          onChange={(e) => {
+            setError("");
+            setNewItem(e.target.value);
+          }}
           onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
           disabled={isAddingLoading}
         />

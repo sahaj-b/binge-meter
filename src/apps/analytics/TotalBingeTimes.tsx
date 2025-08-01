@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui/select";
-import type { TimeRange } from "./Analytics";
+import { daysMap, type TimeRange } from "./Analytics";
 
 export function TotalBingeTime({
   timeChartData,
@@ -36,13 +36,14 @@ export function TotalBingeTime({
             className="hidden w-[160px] sm:ml-auto sm:flex"
             aria-label="Select a value"
           >
-            <SelectValue placeholder="Last 7 days" />
+            <SelectValue placeholder={daysMap["7d"][1]} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="inf">All time</SelectItem>
-            <SelectItem value="90d">Last 3 months</SelectItem>
-            <SelectItem value="30d">Last 30 days</SelectItem>
-            <SelectItem value="7d">Last 7 days</SelectItem>
+            {Object.entries(daysMap).map(([days, [_, label]]) => (
+              <SelectItem key={days} value={days}>
+                {label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </CardHeader>

@@ -1,5 +1,5 @@
 import { useStore } from "./store";
-import { ReusableList } from "./ReusableList";
+import { DynamicList } from "./DynamicList";
 import { Section } from "./Section";
 import { Toggle } from "@ui/toggle";
 import { Slash } from "lucide-react";
@@ -24,7 +24,7 @@ export function TrackedSites() {
           <p className="text-sm text-destructive">{inputError}</p>
         </div>
       )}
-      <ReusableList
+      <DynamicList
         items={[...(trackedSites ?? [])].reverse()}
         onAddItem={addSite}
         onRemoveItem={removeSite}

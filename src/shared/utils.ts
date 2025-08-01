@@ -117,7 +117,7 @@ export async function isUrlBlocked(url: string) {
     "blockingSettings",
     "dailyTime",
   ]);
-  if (blockingSettings.enabled) return false;
+  if (!blockingSettings.enabled) return false;
 
   const timeLimitExceeded =
     blockingSettings.gracePeriodUntil <= Date.now() &&

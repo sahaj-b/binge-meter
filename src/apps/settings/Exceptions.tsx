@@ -1,5 +1,5 @@
 import { useStore } from "./store";
-import { ReusableList } from "./ReusableList";
+import { DynamicList } from "./DynamicList";
 import { Section } from "./Section";
 import type { ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
@@ -40,7 +40,7 @@ export function Exceptions() {
             </div>
           }
         >
-          <ReusableList
+          <DynamicList
             items={Object.entries(userRules?.urls ?? {})
               .reduce((acc, [key, value]) => {
                 if (value[0] === "productive") acc.push(key);
@@ -56,7 +56,7 @@ export function Exceptions() {
           <>
             <Seperator />
             <ListContainer title="Youtube Channels">
-              <ReusableList
+              <DynamicList
                 items={[...(userRules?.productiveYtChannels ?? [])].reverse()}
                 onAddItem={(item) =>
                   updateUserRule("productiveYtChannels", item, false)
@@ -73,7 +73,7 @@ export function Exceptions() {
           <>
             <Seperator />
             <ListContainer title="Subreddits">
-              <ReusableList
+              <DynamicList
                 items={[...(userRules?.productiveSubreddits ?? [])].reverse()}
                 onAddItem={(item) =>
                   updateUserRule("productiveSubreddits", item, false)
