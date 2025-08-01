@@ -204,9 +204,11 @@ export async function updateUserRule(
         );
 
         if (alreadyExists) {
-          throw new Error(
-            `'${newPattern}' already matches '${matchedPattern}'`,
-          );
+          if (userRules.urls[matchedPattern][0] === classification)
+            throw new Error(
+              `'${newPattern}' already matches '${matchedPattern}'`,
+            );
+          userRules.urls[matchedPattern][0] = classification;
         }
       }
 
