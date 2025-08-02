@@ -4,6 +4,12 @@ export default defineManifest({
   manifest_version: 3,
   name: "BingeMeter",
   version: "1.0.0",
+  // @ts-ignore
+  browser_specific_settings: {
+    gecko: {
+      id: "binge-meter@idk.com",
+    },
+  },
   icons: {
     "16": "icon-16.png",
     "32": "icon-32.png",
