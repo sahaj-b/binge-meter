@@ -83,7 +83,7 @@ export function ClassificationSection() {
         <Button
           variant="secondary"
           disabled={isLoading}
-          className="w-full justify-between"
+          className="w-full justify-center"
           onClick={() => markAs(markAsDistracting, true)}
         >
           {displayEle}
@@ -94,7 +94,7 @@ export function ClassificationSection() {
             <Button
               variant="secondary"
               disabled={isLoading}
-              className="w-full"
+              className="w-full justify-center"
               onClick={() => markAs(!isCurrentlyDistracting)}
             >
               Mark this Page as

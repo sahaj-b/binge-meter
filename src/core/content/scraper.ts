@@ -110,9 +110,7 @@ async function scrapeChannelPage(metadata: Metadata): Promise<YoutubeMetadata> {
     );
 
     const h1 = headerElement.querySelector("h1[aria-label]");
-    ytMetadata.channelName = h1
-      ? h1.getAttribute("aria-label")?.split(",")[0].trim()
-      : null;
+    ytMetadata.channelName = h1?.textContent?.trim() ?? null;
   } catch (error) {
     sendDebugMsg((error as Error).message);
     ytMetadata.channelName = null;
