@@ -43,6 +43,7 @@ interface PopupState {
   aiEnabled: boolean;
   isBlocked: boolean;
   gracePeriod: number;
+  blockTimeLimit: number;
   hasAPIKey?: boolean;
 
   initialize: () => Promise<void>;
@@ -78,6 +79,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
   aiEnabled: false,
   isBlocked: false,
   gracePeriod: 0,
+  blockTimeLimit: 0,
 
   initialize: async () => {
     set({ isLoading: true });
@@ -100,7 +102,8 @@ const usePopupStore = create<PopupState>((set, get) => ({
         },
         trackedSites: data.trackedSites,
         aiEnabled: data.aiEnabled,
-        gracePeriod: data.blockingSettings?.gracePeriodUntil,
+        gracePeriod: data.blockingSettings.gracePeriodUntil,
+        blockTimeLimit: data.blockingSettings.timeLimit,
         hasAPIKey: !!data.geminiApiKey,
       });
 

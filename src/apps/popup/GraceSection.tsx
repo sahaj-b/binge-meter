@@ -8,7 +8,14 @@ export function GraceSection() {
   );
   const gracePeriod = usePopupStore((state) => state.gracePeriod);
   const isBlocked = usePopupStore((state) => state.isBlocked);
-  if (isBlocked || !isCurrentlyDistracting || gracePeriod < Date.now())
+  const blockTimeLimit = usePopupStore((state) => state.blockTimeLimit);
+  const dailyTime = usePopupStore((state) => state.dailyTime);
+  if (
+    isBlocked ||
+    !isCurrentlyDistracting ||
+    gracePeriod < Date.now() ||
+    blockTimeLimit >= dailyTime
+  )
     return null;
 
   const formatedGracePeriod = new Date(gracePeriod).toLocaleTimeString([], {
