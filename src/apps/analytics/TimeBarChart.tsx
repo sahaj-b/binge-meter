@@ -32,6 +32,13 @@ export function TimeBarChart({
   const selectedTime = timeChartData.find(
     (entry) => entry.date === selectedDate,
   )?.time;
+  if (timeChartData.length === 0) {
+    return (
+      <div className="flex min-h-[50px] items-center justify-center text-muted-foreground -mt-4">
+        No data available
+      </div>
+    );
+  }
   return (
     <div className="min-h-[50px] relative">
       {hoveredTime != null && (

@@ -65,6 +65,11 @@ export default function SitesSection({
                 <span className="text-lg font-medium text-center">{site}</span>
               </div>
             ))}
+          {Object.keys(analyticsData[date] ?? {}).length === 0 ? (
+            <div className="col-span-2 sm:col-span-3 [@media(min-width:950px)]:col-span-4 flex items-center justify-center text-muted-foreground">
+              No data available
+            </div>
+          ) : null}
         </div>
       </CardContent>
     </Card>

@@ -25,9 +25,15 @@ export default function Analytics() {
   useEffect(() => {
     async function fetchAnalyticsData() {
       setLoading(true);
-      const data = (await getStorageData(["analyticsData"])).analyticsData;
-      setAnalyticsData(data);
-      setLoading(false);
+      try {
+        const data = (await getStorageData(["analyticsData"])).analyticsData;
+        setAnalyticsData(data);
+      } catch (error) {
+        console.error("Failed to fetch analytics data:", error);
+        setAnalyticsData({});
+      } finally {
+        setLoading(false);
+      }
     }
     fetchAnalyticsData();
   }, []);
@@ -46,7 +52,7 @@ export default function Analytics() {
     }),
   );
 
-  if (loading || !analyticsData || Object.keys(analyticsData).length === 0)
+  if (loading)
     return (
       <div className="flex min-h-screen items-center justify-center text-xl">
         Loading...
