@@ -1,9 +1,11 @@
-<p align="center">
-  <img src="public/icon.svg" width="60" height="60" style="vertical-align: middle; margin-right: 12px;"/>
-  <span style="font-size: 2.5em; font-weight: bold; vertical-align: middle;">Binge Meter</span>
-</p>
-  <p align="center" style="font-size: 1.5em; margin-top: 8px;">This extension shoves your wasted time in your face</p>
+<div align="center">
+  <img src="icon.svg" width="100" height="100" alt="Binge Meter Logo">
+  <h1>Binge Meter</h1>
+</div>
 
+<h3 align="center">
+  This extension shoves your wasted time in your face
+</h3>
 
 Tired of falling down rabbit holes on YouTube, Reddit, or X and wondering where the hell your day went? <br /> **Binge Meter** is a browser extension that tracks your time on distracting sites and uses (optional) AI to classify what's a waste of time, so you can actually get your work done
 
@@ -11,7 +13,7 @@ Tired of falling down rabbit holes on YouTube, Reddit, or X and wondering where 
 
 ## Features
 
-- 🧠 **Self-Improving AI**: Uses a Bring-Your-Own-Key model for Google's Gemini to classify current page. It learns from your manual classifications and your Custom Instructions
+- 🧠 **Self-Improving AI**: Uses Google's Gemini to figure out if current page is *productive* or *distracting*. It learns from your manual classifications and your Custom Instructions
 
 - ⏱️ **On-Screen Timer**: A customizable overlay that shows your binge time in real-time on distracting sites
 
@@ -27,7 +29,16 @@ Tired of falling down rabbit holes on YouTube, Reddit, or X and wondering where 
 
 ---
 
-## Getting Started 🚀
+> [!NOTE]
+> ### A Quick Heads-Up on the opt-in AI Feature
+>
+> - **BYOK (Bring Your Own Key):** You'll need to provide your own Google AI API key to enable it. The extension uses the **Gemini 2.0 Flash model**
+> - **Rate Limits:** See [Free tier Gemini rate limits](https://ai.google.dev/gemini-api/docs/rate-limits)
+> - Each **new** page you visit on a tracked site counts as one request (if it doesn't match any existing rules)
+> - In future, I will add support for other gemini/gemma models (configurable), and fallback models so you don't have to care about rate limits
+
+
+## Get Started 🚀
 
 1. **Install the Extension**: 
    - (Publising on Chrome Web Store and Firefox Add-ons is pending)
@@ -94,3 +105,12 @@ pnpm build
 > - Dev mode is only supported in Chromium-based browsers
 > - For Firefox build, uncomment the `browser` line in `vite.config.ts` before building
 > - For enabling debug messages in production build, set `VITE_DEBUG_MODE` environment variable to `true` before building
+
+## Planned stuff for Future 🚧
+
+- Allow users to choose between different Gemini/Gemma models
+- Use a fallback model when the primary one hits rate limits
+- Display (in popup) whether the classifcation was done by AI or manually
+- Add a "Delete Data" button in Analytics page
+- Require unlimited storage permission (or delete old data) when analytics data grows too large
+- Double-click overlay to mark as distracting
