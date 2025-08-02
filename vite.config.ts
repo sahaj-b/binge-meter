@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import manifest from "./manifest";
 import { crx } from "@crxjs/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import zip from "vite-plugin-zip-pack";
 import path from "node:path";
 
 // https://vite.dev/config/
@@ -18,6 +19,7 @@ export default defineConfig({
       manifest,
       // browser: "firefox", // for firefox build
     }),
+    zip({ outDir: "release", outFileName: "binge-meter.zip" }),
   ],
   build: {
     rollupOptions: {
