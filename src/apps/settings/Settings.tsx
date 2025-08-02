@@ -10,46 +10,7 @@ import { SettingsIcon } from "lucide-react";
 import { MiscSettings } from "./MiscSettings";
 import { BlockingSection } from "./BlockingSection";
 import { Underline } from "@lib/utils";
-
-const NAV_ITEMS = [
-  { id: "ai", title: "AI Classification" },
-  { id: "site-tracking", title: "Site Tracking" },
-  { id: "blocking", title: "Blocking" },
-  { id: "overlay", title: "Overlay" },
-  { id: "misc", title: "Misc" },
-];
-
-function SettingsNav({ activeId }: { activeId: string }) {
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
-
-  return (
-    <nav className="sticky top-1/2 -translate-y-1/2 text-nowrap">
-      <ul className="space-y-2">
-        {NAV_ITEMS.map((item) => (
-          <li key={item.id}>
-            <button
-              type="button"
-              onClick={() => scrollTo(item.id)}
-              className={
-                "w-full px-3 py-2 text-left text-sm font-medium " +
-                (activeId === item.id
-                  ? "text-primary hover:text-primary/80"
-                  : "text-foreground/70 hover:text-foreground")
-              }
-            >
-              {item.title}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-}
+import NavSideBar, { NAV_ITEMS } from "./NavSideBar";
 
 export default function Settings() {
   const fetchSettings = useStore((state) => state.fetchSettings);
@@ -220,9 +181,9 @@ export default function Settings() {
 
   return (
     <div className="mx-auto p-10">
-      <div className="flex justify-center [@media(min-width:1130px)]:justify-start space-x-24">
+      <div className="flex justify-center space-x-24">
         <div className="relative hidden [@media(min-width:1130px)]:block">
-          <SettingsNav activeId={activeId} />
+          <NavSideBar activeId={activeId} />
         </div>
         <div className="w-full max-w-[60rem] space-y-8">
           <h1 className="flex items-center justify-center text-center text-3xl font-bold tracking-wide">
