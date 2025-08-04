@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:firefox": "tsc -b && FIREFOX=1 vite build",
     "lint": "biome lint src/",
     "preview": "vite preview"
   },
