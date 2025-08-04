@@ -41,7 +41,8 @@ Tired of falling down rabbit holes on YouTube, Reddit, or X and wondering where 
 ## Get Started 🚀
 
 1. **Install the Extension**: 
-   - (Publising on Chrome Web Store and Firefox Add-ons is pending)
+   - Chromium-based browsers: [Chrome Web Store](https://chromewebstore.google.com/detail/binge-meter/jlbijnlhiaaophloidngjkdfmdopnagh)
+   - Firefox/Firefox-based: Awaiting review on Firefox Add-ons... will be available soon
 
 2. **Track Your First Site**
    - Go to a site you want to monitor (e.g., `youtube.com`)
