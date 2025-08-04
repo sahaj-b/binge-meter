@@ -96,15 +96,16 @@ pnpm install
 pnpm dev
 # This will create unpacked extension in dist/ dir and watch for changes
 
-# Create a production build
+# Create a production build for chromium-based browsers
 pnpm build
+# OR for firefox-based browsers
+pnpm build:firefox
 # This will generate a production-ready, zipped package in the release/ directory, and an unpacked version in dist/
 ```
 
 > [!NOTE]
 >
 > - Dev mode is only supported in Chromium-based browsers
-> - For Firefox build, uncomment the `browser` line in `vite.config.ts` before building
 > - For enabling debug messages in production build, set `VITE_DEBUG_MODE` environment variable to `true` before building
 
 ## Planned stuff for Future 🚧
