@@ -16,7 +16,7 @@ import {
 import { getStorageData } from "@/shared/storage";
 import {
   isChannelDistracting,
-  classifyByUserRules,
+  classifyMetadata,
   isSubredditDistracting,
   isUrlBlocked,
   matchUrl,
@@ -141,7 +141,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
             }
           } else {
             const distracting =
-              (await classifyByUserRules({ url: url.href })) !== "productive";
+              (await classifyMetadata({ url: url.href })) !== "productive";
             set({ isCurrentlyDistracting: distracting });
           }
         }
@@ -160,7 +160,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
   },
 
   updateDistractingStatuses: async (metadata: Metadata) => {
-    const distracting = (await classifyByUserRules(metadata)) !== "productive";
+    const distracting = (await classifyMetadata(metadata)) !== "productive";
     set({ isCurrentlyDistracting: distracting });
 
     const isYoutube = metadata.youtube?.channelId;

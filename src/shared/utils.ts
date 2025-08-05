@@ -33,20 +33,34 @@ export function matchUrl(url: string, pattern: string): boolean {
   return false;
 }
 
-export async function classifyByUserRules(
+export async function classifyMetadata(
   metadata: Metadata,
   userRules?: UserRules,
 ): Promise<"distracting" | "productive" | null> {
-  // null means not in user rules(for url only)
-  if (!userRules) userRules = (await getStorageData(["userRules"])).userRules;
-  const urlDistracting = await isURLDistracting(metadata.url, userRules);
-  if (urlDistracting !== null)
-    return urlDistracting ? "distracting" : "productive";
+  const data = await getStorageData([
+    "userRules",
+    "aiCache",
+    "aiEnabled",
+    "aiDisabledSites",
+  ]);
+  if (!userRules) userRules = data.userRules;
+  const url = metadata.url;
+
+  // direct URL checks
+  for (const pattern in userRules.urls) {
+    if (matchUrl(url, pattern)) return userRules.urls[pattern][0];
+  }
+  if (url.includes("youtube.com/shorts")) return "distracting";
+
+  // yt channel/subreddit checks
+  const channelId = metadata.youtube?.channelId;
+  const channelName = metadata.youtube?.channelName;
+  console.log(channelId, channelName);
+  if (channelId) debugLog(await isChannelDistracting(channelId, userRules));
+  if (channelName) debugLog(await isChannelDistracting(channelName, userRules));
   if (
-    metadata.youtube?.channelId &&
-    metadata.youtube?.channelName &&
-    (!(await isChannelDistracting(metadata.youtube.channelId, userRules)) ||
-      !(await isChannelDistracting(metadata.youtube.channelName, userRules)))
+    (channelId && !(await isChannelDistracting(channelId, userRules))) ||
+    (channelName && !(await isChannelDistracting(channelName, userRules)))
   ) {
     return "productive";
   }
@@ -58,34 +72,15 @@ export async function classifyByUserRules(
     return "productive";
   }
 
-  return null;
-}
-
-export async function isURLDistracting(
-  url: string,
-  userRules?: UserRules,
-): Promise<boolean | null> {
-  const data = await getStorageData([
-    "userRules",
-    "aiCache",
-    "aiEnabled",
-    "aiDisabledSites",
-  ]);
-  if (!userRules) userRules = data.userRules;
-
-  for (const pattern in userRules.urls) {
-    if (matchUrl(url, pattern))
-      return userRules.urls[pattern][0] === "distracting";
-  }
-
-  if (url.includes("youtube.com/shorts")) return true;
+  // AI cache check
   if (
     data.aiEnabled &&
     !data.aiDisabledSites.some((site) => url.includes(site))
   ) {
     const aiEntry = data.aiCache.find(([uurl]) => uurl === url);
-    if (aiEntry) return aiEntry[1] === "distracting";
+    if (aiEntry) return aiEntry[1];
   }
+
   return null;
 }
 

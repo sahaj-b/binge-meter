@@ -1,6 +1,6 @@
 import { getStorageData, setStorageData } from "@/shared/storage";
 import type { Metadata } from "@/shared/types";
-import { classifyByUserRules } from "@/shared/utils";
+import { classifyMetadata } from "@/shared/utils";
 import { callGeminiAPI } from "./aiService";
 import { debugLog } from "@/shared/logger";
 
@@ -8,7 +8,7 @@ export async function getClassification(
   metadata: Metadata,
   ai = true,
 ): Promise<"productive" | "distracting"> {
-  const classification = await classifyByUserRules(metadata);
+  const classification = await classifyMetadata(metadata);
   debugLog("User rules classification:", classification);
   if (classification !== null || !ai)
     return classification !== "productive" ? "distracting" : "productive";
