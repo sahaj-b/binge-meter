@@ -72,7 +72,7 @@ Tired of falling down rabbit holes on YouTube, Reddit, or X and wondering where 
   - Tailwind CSS
   - Zustand
   - Shadcn UI
-  - Recharta
+  - Recharts
 - **Build**: Vite + CRXJS
 
 ---
@@ -115,3 +115,36 @@ pnpm build:firefox
 - Add a "Delete Data" button in Analytics page
 - Require unlimited storage permission (or delete old data) when analytics data grows too large
 - Double-click overlay to mark as distracting
+
+## FAQ 💬
+
+**Q: Are you stealing my Browse history?**
+
+**A:** Hell no. All your data, your tracked sites, time logs, settings, everything is saved **locally on your own computer** using the browser's storage. It never gets sent anywhere, unless you *explicitly* enable AI classification, in which case the page's metadata is sent to Google's AI API for classification.
+
+**Q: Do I have to use the AI? Is it free?**
+
+**A:** The AI is **100% optional**. The extension works perfectly fine as a manual time tracker without it. Google offers a generous free tier that is more than enough for heavy personal use. see the [AI section](#a-quick-heads-up-on-the-opt-in-ai-feature) above for more details.
+
+**Q: Are AI calls made on every navigation?**
+
+**A:** No. AI calls are only made when you visit a **new** page on a tracked site that doesn't match any existing rules. If you navigate to a page that has already been classified by AI, it will use the cached classification. you can see the free tier rate limits in the Settings page.
+
+**Q: What exactly is sent to the AI?**
+
+**A:** To be clear, none of your personal info is sent. The AI only gets the page's metadata to judge its content, which includes:
+  - The page's full URL and Title
+  - `<meta>` tags (like description, keywords, etc.)
+  - On specific sites like YouTube, it also includes video details like the title, description, channel name, and channel ID.
+
+**Q: Can I sync my data between different computers or browsers?**
+
+**A:** Not right now. Because all data is stored locally for privacy, it's tied to the specific browser profile on the computer you're using. And there's no cloud sync functionality.
+
+**Q: The AI classifies stuff wrong. What to do?**
+
+**A:** That's exactly what manual rules ans Custom Instructions are for. If the AI gets it wrong, manually mark the page distracting/productive, the AI will learn from your manual classifications over time. You can also set Custom Instructions to tell the AI what you consider productive or distracting in Settings
+
+**Q: Can I contribute to the project?**
+
+**A:** Hell yes. This is an open-source project, if you find a bug, have a feature idea, or want to improve something, please open an issue on the [GitHub Issues page](https://github.com/sahaj-b/binge-meter/issues) to discuss it. Pull requests are always welcome.
