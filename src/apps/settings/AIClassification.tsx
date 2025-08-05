@@ -6,6 +6,7 @@ import { useStore } from "./store";
 import { Section } from "./Section";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
 import { HelpCircle } from "lucide-react";
+import { ModelSelector } from "./ModelSelector";
 
 export function AIClassification() {
   const aiEnabled = useStore((state) => state.aiEnabled);
@@ -25,6 +26,7 @@ export function AIClassification() {
           onCheckedChange={(checked) => setAiEnabled(checked)}
         />
       </div>
+      <ModelSelector />
       <div className="flex justify-between text-nowrap">
         <div>
           <Label htmlFor="gemini-api-key">Gemini API Key</Label>

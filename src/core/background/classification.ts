@@ -29,9 +29,10 @@ async function classifyByAI(
 ): Promise<"distracting" | "productive"> {
   const MAX_CACHE_SIZE = 2000;
   debugLog("Classifying by AI");
-  const { aiCache, geminiApiKey } = await getStorageData([
+  const { aiCache, geminiApiKey, aiModel } = await getStorageData([
     "aiCache",
     "geminiApiKey",
+    "aiModel",
   ]);
   const aiCacheEntry = aiCache.find(([url]) => url === metadata.url);
   if (aiCacheEntry) {
@@ -42,6 +43,7 @@ async function classifyByAI(
   const aiResponse = await callGeminiAPI(
     await getPrompt(metadata),
     geminiApiKey,
+    aiModel,
   ).catch(() => "");
   debugLog("AI response:", aiResponse);
 

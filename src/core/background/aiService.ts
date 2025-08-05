@@ -1,3 +1,4 @@
+import { debugLog } from "@/shared/logger";
 import { getStorageData } from "@/shared/storage";
 
 export async function callGeminiAPI(
@@ -8,7 +9,7 @@ export async function callGeminiAPI(
   model = model ?? (await getStorageData(["aiModel"])).aiModel;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
-  const requestBody = {
+  let requestBody: any = {
     contents: [
       {
         parts: [
@@ -18,13 +19,28 @@ export async function callGeminiAPI(
         ],
       },
     ],
-    generationConfig: {
-      thinkingConfig: {
-        thinkingBudget: 0,
-      },
-    },
   };
 
+  if (model === "gemini-2.5-flash") {
+    requestBody = {
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
+      },
+    };
+  }
+
+  debugLog("Calling ", model);
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -34,7 +50,7 @@ export async function callGeminiAPI(
     body: JSON.stringify(requestBody),
   });
 
-  if (!response.ok) {
+  if (!response.ok || response.status >= 400) {
     const errorData = await response.json();
     throw new Error(
       errorData.error?.message || `HTTP error: ${response.status}`,

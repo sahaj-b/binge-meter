@@ -30,6 +30,7 @@ type StoreData = {
   userRules: UserRules | null;
   aiEnabled: boolean | null;
   aiDisabledSites: string[] | null;
+  aiModel: string | null;
   geminiApiKey: string | null;
   customPrompt: string | null;
   dummyTime: number;
@@ -61,6 +62,7 @@ type StoreActions = {
   ) => Promise<void>;
   setAiEnabled: (enabled: boolean) => Promise<void>;
   toggleAiDisabledSite: (site: string) => Promise<void>;
+  setAiModel: (model: string) => Promise<void>;
   setApiKey: (key: string) => Promise<void>;
   setCustomPrompt: (prompt: string) => Promise<void>;
   setResetTime: (time: { hours: number; minutes: number }) => Promise<void>;
@@ -80,6 +82,7 @@ const initialData: StoreData = {
   userRules: null,
   aiEnabled: null,
   aiDisabledSites: null,
+  aiModel: null,
   geminiApiKey: null,
   customPrompt: null,
   dummyTime: 369000,
@@ -98,6 +101,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         "userRules",
         "aiEnabled",
         "aiDisabledSites",
+        "aiModel",
         "geminiApiKey",
         "customPrompt",
         "resetTime",
@@ -110,6 +114,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         userRules: data.userRules,
         aiEnabled: data.aiEnabled,
         aiDisabledSites: data.aiDisabledSites,
+        aiModel: data.aiModel,
         geminiApiKey: data.geminiApiKey,
         customPrompt: data.customPrompt,
         resetTime: data.resetTime,
@@ -241,6 +246,11 @@ export const useStore = create<StoreType>()((set, get) => ({
   setAiEnabled: async (enabled) => {
     set({ aiEnabled: enabled });
     await setStorageData({ aiEnabled: enabled });
+  },
+
+  setAiModel: async (model) => {
+    set({ aiModel: model });
+    await setStorageData({ aiModel: model });
   },
 
   toggleAiDisabledSite: async (site: string) => {
