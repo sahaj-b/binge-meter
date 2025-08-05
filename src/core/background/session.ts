@@ -23,10 +23,9 @@ export function updateActiveSession(activeTabId: number | null) {
         newTotal += elapsed;
 
         const date = dailyTime.date;
-        if (!analyticsData[date]) {
-          analyticsData[date] = { total: 0 };
-        }
-        analyticsData[date].total = (analyticsData[date].total ?? 0) + elapsed;
+        if (!analyticsData[date]) analyticsData[date] = { total: 0 };
+
+        analyticsData[date].total = newTotal;
 
         try {
           const tab = await chrome.tabs.get(activeSession.tabId);
