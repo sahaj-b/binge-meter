@@ -32,10 +32,10 @@ Tired of falling down rabbit holes on YouTube, Reddit, or X and wondering where 
 > [!NOTE]
 > ### A Quick Heads-Up on the opt-in AI Feature
 >
-> - **BYOK (Bring Your Own Key):** You'll need to provide your own Google AI API key to enable it. The extension uses the **Gemini 2.0 Flash model**
-> - **Rate Limits:** See [Free tier Gemini rate limits](https://ai.google.dev/gemini-api/docs/rate-limits)
+> - **BYOK (Bring Your Own Key):** You'll need to provide your own Google AI API key to enable it.
+> - **Model:** By default, it uses the **Gemini 2.5 Flash Lite** model. You can change this in the settings.
+> - **Rate Limits:** See [Free tier Gemini rate limits](https://ai.google.dev/gemini-api/docs/rate-limits) (Also available in the Settings page)
 > - Each **new** page you visit on a tracked site counts as one request (if it doesn't match any existing rules)
-> - In future, I will add support for other gemini/gemma models (configurable), and fallback models so you don't have to care about rate limits
 
 
 ## Get Started 🚀
@@ -110,8 +110,7 @@ pnpm build:firefox
 
 ## Planned stuff for Future 🚧
 
-- Allow users to choose between different Gemini/Gemma models
-- Use a fallback model when the primary one hits rate limits
+- Display AI API call errors in popup/settings
 - Display (in popup) whether the classifcation was done by AI or manually
 - Add a "Delete Data" button in Analytics page
 - Require unlimited storage permission (or delete old data) when analytics data grows too large

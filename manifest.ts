@@ -3,7 +3,7 @@ import { defineManifest } from "@crxjs/vite-plugin";
 export default defineManifest({
   manifest_version: 3,
   name: "Binge Meter",
-  version: "1.0.1",
+  version: "1.1.0",
   description:
     "Tracks time on distracting sites with a live on-screen timer. Features AI-powered classification, blocking & analytics",
   // @ts-ignore
