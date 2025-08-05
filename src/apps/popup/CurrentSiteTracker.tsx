@@ -51,7 +51,7 @@ export default function CurrentSiteTracker() {
         <Plus size={14} className="mr-1" />
       )}
       {isLoading
-        ? "..."
+        ? ""
         : !hasPermission
           ? "Grant Permission"
           : isCurrentSiteTracked

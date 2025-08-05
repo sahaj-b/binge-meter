@@ -7,6 +7,7 @@ export type StorageData = {
   aiCache: [string, "productive" | "distracting"][];
   aiEnabled: boolean;
   aiDisabledSites: string[];
+  aiModel: string;
   geminiApiKey: string;
   customPrompt: string;
   analyticsData: AnalyticsData;

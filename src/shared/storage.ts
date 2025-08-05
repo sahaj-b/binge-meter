@@ -50,6 +50,7 @@ export const defaultStorageData: StorageData = {
   aiCache: [],
   aiEnabled: false,
   aiDisabledSites: [],
+  aiModel: "gemini-2.5-flash-lite",
   activeSession: null,
   geminiApiKey: "",
   customPrompt: "",

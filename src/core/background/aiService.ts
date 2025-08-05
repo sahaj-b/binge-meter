@@ -1,8 +1,11 @@
+import { getStorageData } from "@/shared/storage";
+
 export async function callGeminiAPI(
   prompt: string,
   apiKey: string,
+  model?: string,
 ): Promise<string> {
-  const model = "gemini-2.0-flash";
+  model = model ?? (await getStorageData(["aiModel"])).aiModel;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
   const requestBody = {
@@ -15,6 +18,11 @@ export async function callGeminiAPI(
         ],
       },
     ],
+    generationConfig: {
+      thinkingConfig: {
+        thinkingBudget: 0,
+      },
+    },
   };
 
   const response = await fetch(url, {
