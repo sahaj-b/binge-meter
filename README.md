@@ -1,11 +1,42 @@
 <div align="center">
-  <img src="icon.svg" width="100" height="100" alt="Binge Meter Logo">
+  <img src="assets/icon.svg" width="100" height="100" alt="Binge Meter Logo">
   <h1>Binge Meter</h1>
 </div>
 
 <h3 align="center">
   This extension shoves your wasted time in your face
 </h3>
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/popup.jpg" alt="Popup Screenshot" width="300"><br>
+    <sub>Popup</sub>
+    </td>
+    <td align="center">
+      <img src="assets/analytics.jpg" alt="Analytics Screenshot" width="300"><br>
+    <sub>Analytics</sub>
+    </td>
+    <td align="center">
+      <img src="assets/settings.jpg" alt="Settings Screenshot" width="300"><br>
+    <sub>Settings</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/overlay.jpg" alt="Overlay Screenshot" width="300"><br>
+      <sub>Overlay</sub>
+    </td>
+    <td align="center">
+      <img src="assets/block.jpg" alt="Blocking Screenshot" width="300"><br>
+      <sub>Blocking</sub>
+    </td>
+    <td align="center">
+      <img src="assets/styles.jpg" alt="Styles Screenshot" width="300"><br>
+      <sub>Styles</sub>
+    </td>
+  </tr>
+</table>
 
 Tired of falling down rabbit holes on YouTube, Reddit, or X and wondering where the hell your day went? <br /> **Binge Meter** is a browser extension that tracks your time on distracting sites and uses (optional) AI to classify what's a waste of time, so you can actually get your work done
 
