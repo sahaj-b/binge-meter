@@ -56,6 +56,10 @@ export function setupLifecycleEvents() {
       const today = now.toISOString().split("T")[0];
       const newAnalyticsData = { ...analyticsData, [today]: { total: 0 } };
 
+      console.log(
+        `DAILY RESET: ${dailyTime.date} -> ${today}, oldTotal=${Math.round(dailyTime.total / 60000)}m`,
+      );
+
       await updateActiveSession(null);
       await setStorageData({
         dailyTime: { total: 0, date: today },
@@ -72,8 +76,16 @@ export function setupLifecycleEvents() {
 
   chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === "dailyReset") {
-      const { analyticsData } = await getStorageData(["analyticsData"]);
+      const { analyticsData, dailyTime } = await getStorageData([
+        "analyticsData",
+        "dailyTime",
+      ]);
       const date = new Date().toISOString().split("T")[0];
+
+      console.log(
+        `SCHEDULED DAILY RESET: ${dailyTime.date} -> ${date}, oldTotal=${Math.round(dailyTime.total / 60000)}m`,
+      );
+
       analyticsData[date] = { total: 0 };
 
       // stop any running session before resetting time

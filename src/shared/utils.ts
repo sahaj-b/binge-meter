@@ -55,7 +55,9 @@ export async function classifyMetadata(
   // yt channel/subreddit checks
   const channelId = metadata.youtube?.channelId;
   const channelName = metadata.youtube?.channelName;
-  console.log(channelId, channelName);
+  if (channelId || channelName) {
+    console.log("YouTube metadata:", { channelId, channelName });
+  }
   if (channelId) debugLog(await isChannelDistracting(channelId, userRules));
   if (channelName) debugLog(await isChannelDistracting(channelName, userRules));
   if (

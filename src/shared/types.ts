@@ -54,6 +54,7 @@ export type DailyTime = {
 export type activeSession = {
   tabId: number;
   startTime: number;
+  hostname: string;
 } | null;
 
 export type OverlayConfig = {

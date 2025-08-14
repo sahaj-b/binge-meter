@@ -25,20 +25,43 @@ export function updateActiveSession(activeTabId: number | null) {
         const date = dailyTime.date;
         if (!analyticsData[date]) analyticsData[date] = { total: 0 };
 
+        const oldTotal = analyticsData[date].total;
         analyticsData[date].total = newTotal;
 
-        try {
-          const tab = await chrome.tabs.get(activeSession.tabId);
-          if (tab.url) {
-            const hostname = new URL(tab.url).hostname.replace(/^www\./, "");
-            analyticsData[date][hostname] =
-              (analyticsData[date][hostname] ?? 0) + elapsed;
+        debugLog(
+          `SESSION END: elapsed=${Math.round(elapsed / 1000)}s, oldTotal=${Math.round(oldTotal / 60000)}m, newTotal=${Math.round(newTotal / 60000)}m, date=${date}`,
+        );
+
+        // attribute time to stored hostname first, then fallback to tab fetch, then unknown
+        let hostname = activeSession.hostname;
+        let attributionMethod = "stored";
+
+        if (!hostname) {
+          try {
+            const tab = await chrome.tabs.get(activeSession.tabId);
+            if (tab.url) {
+              hostname = new URL(tab.url).hostname.replace(/^www\./, "");
+              attributionMethod = "fetched";
+            }
+          } catch (error) {
+            debugLog(
+              `Failed to get tab info for tabId ${activeSession.tabId}:`,
+              error,
+            );
           }
-        } catch (error) {
-          // tab got closed bruh. time is still added to daily total, but can't attribute it to a specific site, acceptable loss tbh
-          console.error(
-            `Failed to get tab info for tabId ${activeSession.tabId}:`,
-            error,
+        }
+
+        if (hostname) {
+          const oldSiteTime = analyticsData[date][hostname] ?? 0;
+          analyticsData[date][hostname] = oldSiteTime + elapsed;
+          debugLog(
+            `SITE TIME UPDATE (${attributionMethod}): ${hostname} - oldTime=${Math.round(oldSiteTime / 60000)}m, elapsed=${Math.round(elapsed / 1000)}s, newTime=${Math.round(analyticsData[date][hostname] / 60000)}m`,
+          );
+        } else {
+          const unknownTime = analyticsData[date].unknown ?? 0;
+          analyticsData[date].unknown = unknownTime + elapsed;
+          debugLog(
+            `UNKNOWN TIME: elapsed=${Math.round(elapsed / 1000)}s added to unknown category, total unknown=${Math.round(analyticsData[date].unknown / 60000)}m`,
           );
         }
 
@@ -73,7 +96,11 @@ export function updateActiveSession(activeTabId: number | null) {
               return;
             }
 
-            const newSession = { tabId: activeTabId, startTime: Date.now() };
+            const newSession = {
+              tabId: activeTabId,
+              startTime: Date.now(),
+              hostname: new URL(tab.url).hostname.replace(/^www\./, ""),
+            };
             await setStorageData({
               dailyTime: { ...dailyTime, total: newTotal },
               activeSession: newSession,

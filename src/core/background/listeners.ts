@@ -16,6 +16,15 @@ import { setStorageData } from "@/shared/storage";
 import { debugLog } from "@/shared/logger";
 
 export function setupListeners() {
+  // stop sessions when tab closes
+  chrome.tabs.onRemoved.addListener(async (tabId) => {
+    const { activeSession } = await chrome.storage.local.get(["activeSession"]);
+    if (activeSession?.tabId === tabId) {
+      debugLog(`TAB CLOSED: Forcing session end for tab ${tabId}`);
+      await updateActiveSession(null);
+    }
+  });
+
   // this chrome API fuckin SUCKS. can't handle focus changes outside the browser instance (for my WM atleast)
   // the TAB_FOCUS/TAB_BLUR messages will handle that for now
   // chrome.windows.onFocusChanged.addListener(async (windowId) => {
