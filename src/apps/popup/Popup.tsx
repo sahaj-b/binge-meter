@@ -8,6 +8,7 @@ import { openAnalyticsPage, openSettingsPage } from "../lib/browserService";
 import { BlockedSection } from "./BlockedSection";
 import { GraceSection } from "./GraceSection";
 import { TogglesSection } from "./TogglesSection";
+import { AIErrorNotification } from "./AIErrorNotification";
 
 export default function Popup() {
   const isCurrentSiteTracked = usePopupStore(
@@ -23,6 +24,8 @@ export default function Popup() {
   return (
     <div className="p-6">
       <div className="space-y-6">
+        <AIErrorNotification />
+
         <div className="text-center">
           <p className="text-xl mb-2">Today's Binge Time</p>
           <p

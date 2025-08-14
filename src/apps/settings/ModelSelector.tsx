@@ -23,6 +23,15 @@ export function ModelSelector() {
   const selectedModel =
     aiModels.find((model) => model.name === aiModel) || aiModels[0];
 
+  function getModelItemDisplay(model: (typeof aiModels)[0]) {
+    return (
+      <>
+        {model.displayName}
+        <span className="text-muted-foreground">{"(" + model.role + ")"}</span>
+      </>
+    );
+  }
+
   return (
     <div className="flex justify-between text-nowrap">
       <div>
@@ -33,9 +42,7 @@ export function ModelSelector() {
       </div>
       <Select value={aiModel ?? aiModels[0].name} onValueChange={setAiModel}>
         <SelectTrigger className="w-1/3" id="ai-model">
-          <SelectValue>
-            {selectedModel.displayName} {selectedModel.role}
-          </SelectValue>
+          <SelectValue>{getModelItemDisplay(selectedModel)}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {aiModels.map((model) => (
@@ -43,7 +50,7 @@ export function ModelSelector() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <SelectItem value={model.name} className="cursor-pointer">
-                    {model.displayName} {model.role}
+                    {getModelItemDisplay(model)}
                   </SelectItem>
                 </TooltipTrigger>
                 <TooltipContent side="left" className="max-w-[280px]">

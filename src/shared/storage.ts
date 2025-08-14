@@ -1,4 +1,10 @@
-import type { DailyTime, UserRules, OverlayConfig, StorageData } from "./types";
+import type {
+  DailyTime,
+  UserRules,
+  OverlayConfig,
+  StorageData,
+  AIError,
+} from "./types";
 
 export const defaultOverlayConfig: OverlayConfig = {
   thresholdWarn: 1 * 60 * 60 * 1000,
@@ -57,6 +63,7 @@ export const defaultStorageData: StorageData = {
   analyticsData: {},
   resetTime: { hours: 3, minutes: 0 }, // 3 AM daily reset
   blockingSettings: defaultBlockingSettings,
+  aiError: null,
 };
 
 export async function getStorageData<K extends keyof StorageData>(
@@ -78,4 +85,37 @@ export async function setStorageData(
 ): Promise<void> {
   await chrome.storage.local.set(data);
   // debugLog("SAVED", data);
+}
+
+export async function setAIError(
+  message: string,
+  severity: "warning" | "error" = "error",
+): Promise<void> {
+  await setStorageData({
+    aiError: {
+      message,
+      timestamp: Date.now(),
+      shown: false,
+      severity,
+    },
+  });
+}
+
+export async function getAIError(): Promise<AIError | null> {
+  const { aiError } = await getStorageData(["aiError"]);
+
+  if (!aiError) return null;
+
+  // Auto-expire errors older than 5 minutes
+  const EXPIRY_TIME = 5 * 60 * 1000;
+  if (Date.now() - aiError.timestamp > EXPIRY_TIME) {
+    await clearAIError();
+    return null;
+  }
+
+  return aiError;
+}
+
+export async function clearAIError(): Promise<void> {
+  await setStorageData({ aiError: null });
 }

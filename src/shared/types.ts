@@ -13,6 +13,7 @@ export type StorageData = {
   analyticsData: AnalyticsData;
   resetTime: { hours: number; minutes: number };
   blockingSettings: BlockingSettings;
+  aiError: AIError | null;
 };
 
 export type BlockingSettings = {
@@ -111,4 +112,11 @@ export type Metadata = {
   pageMeta?: PageMeta | null;
   youtube?: YoutubeMetadata | null;
   reddit?: RedditMetadata | null;
+};
+
+export type AIError = {
+  message: string;
+  timestamp: number;
+  shown: boolean;
+  severity: "warning" | "error";
 };
