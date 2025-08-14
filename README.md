@@ -141,7 +141,6 @@ pnpm build:firefox
 
 ## Planned stuff for Future 🚧
 
-- Display AI API call errors in popup/settings
 - Display (in popup) whether the classifcation was done by AI or manually
 - Add a "Delete Data" button in Analytics page
 - Require unlimited storage permission (or delete old data) when analytics data grows too large
