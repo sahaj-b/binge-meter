@@ -26,6 +26,7 @@ export function OverlayStyles() {
           Reset to default
         </Button>
       }
+      id="overlay-styles-header"
     >
       <div className="space-y-6">
         <div className="space-y-4">

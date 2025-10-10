@@ -3,11 +3,13 @@ export function Section({
   description,
   children,
   rightElement,
+  id,
 }: {
   title: string;
   description?: string | React.ReactNode;
   children: React.ReactNode;
   rightElement?: React.ReactNode;
+  id?: string;
 }) {
   if (!rightElement) {
     return (
@@ -22,10 +24,7 @@ export function Section({
   }
   return (
     <div className="space-y-6 p-6 border rounded-lg bg-card/60">
-      <div
-        className="flex items-center justify-between"
-        id="overlay-styles-header"
-      >
+      <div className="flex items-center justify-between" id={id}>
         <h2 className="text-lg font-semibold">{title}</h2>
         {rightElement}
       </div>

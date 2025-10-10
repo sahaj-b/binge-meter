@@ -1,5 +1,5 @@
 import { Button } from "@ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@ui/dialog";
 import { Toggle } from "@ui/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
 import { Slash, TriangleAlert } from "lucide-react";
@@ -30,7 +30,7 @@ export function TrackedSites() {
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <div className="flex flex-col gap-4">
-          <h3 className="text-lg font-medium">Track All Sites</h3>
+          <DialogTitle>Enable Track All Sites</DialogTitle>
           <p className="text-sm text-muted-foreground">
             This will track time spent on ALL websites, not just the ones you've
             added.

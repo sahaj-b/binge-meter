@@ -1,5 +1,11 @@
 import { Button } from "@ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogTitle,
+  DialogTrigger,
+} from "@ui/dialog";
 import { DurationPicker } from "@ui/duration-picker";
 import { Input } from "@ui/input";
 import { Label } from "@ui/label";
@@ -100,7 +106,7 @@ export function BlockingSection() {
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <div className="flex flex-col gap-4">
-          <h3 className="text-lg font-medium">Set Blocking Password</h3>
+          <DialogTitle>Set Blocking Password</DialogTitle>
           <p className="text-sm text-muted-foreground -mt-2">
             Will prevent you from changing blocking settings without entering
             it.
