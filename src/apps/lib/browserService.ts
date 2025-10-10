@@ -1,6 +1,6 @@
-import { sitePatterns } from "@/shared/utils";
-import type { BlockingSettings, Message } from "@/shared/types";
 import { debugLog } from "@/shared/logger";
+import type { BlockingSettings, Message } from "@/shared/types";
+import { sitePatterns } from "@/shared/utils";
 
 export async function checkSitePermission(site: string): Promise<boolean> {
   if (!site) return false;

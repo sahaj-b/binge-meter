@@ -1,17 +1,17 @@
+import { getStorageData } from "@/shared/storage";
 import type { OverlayConfig } from "@/shared/types";
 import { Draggable, Resizable } from "./events";
+
+import { overlayCss } from "./overlayStyles";
 import {
   getConfig,
   getPositionForHost,
   getSizeForHost,
-  setPositionForHost,
-  setSizeForHost,
   type Position,
   type Size,
+  setPositionForHost,
+  setSizeForHost,
 } from "./storeService";
-
-import { overlayCss } from "./overlayStyles";
-import { getStorageData } from "@/shared/storage";
 
 const BLOCKED_TIMER_FONT_SIZE = "60px";
 export class OverlayUI {

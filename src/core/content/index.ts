@@ -1,10 +1,10 @@
+import { sendDebugMsg } from "@/shared/logger";
 import type { Metadata } from "@/shared/types";
 import { setupNavigation } from "./navigation";
 import { OverlayUI } from "./overlay";
 import { getMetadata, setLastScrapedYtTitle } from "./scraper";
 import { revalidateCache } from "./storeService";
 import { TickerController } from "./tickerController";
-import { sendDebugMsg } from "@/shared/logger";
 
 const overlay = new OverlayUI(document.body, window.location.hostname);
 const ticker = new TickerController(overlay);

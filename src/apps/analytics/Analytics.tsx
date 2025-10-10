@@ -1,11 +1,11 @@
-import type { AnalyticsData } from "@/shared/types";
-import { useEffect, useState } from "react";
-import { TotalBingeTime } from "./TotalBingeTimes";
-import { BarChart3Icon } from "lucide-react";
 import { Underline } from "@lib/utils";
+import { BarChart3Icon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getStorageData } from "@/shared/storage";
+import type { AnalyticsData } from "@/shared/types";
 import SitesSection from "./SitesSection";
 import { TopDistractingSites } from "./TopDistractingSites";
-import { getStorageData } from "@/shared/storage";
+import { TotalBingeTime } from "./TotalBingeTimes";
 
 export const daysMap = {
   "7d": [7, "Last 7 days"],

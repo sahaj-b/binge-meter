@@ -1,11 +1,14 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/card";
 import type { AnalyticsData } from "@/shared/types";
 import { formatDate, formatTimeMs } from "./utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@ui/card";
 
 export default function SitesSection({
   analyticsData,
   date,
-}: { analyticsData: AnalyticsData; date: string }) {
+}: {
+  analyticsData: AnalyticsData;
+  date: string;
+}) {
   const todaysTime = analyticsData[date]?.total ?? 0;
   return (
     <Card>

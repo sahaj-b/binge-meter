@@ -1,8 +1,8 @@
-// @ts-ignore
-import contentScriptPath from "../content/index?script";
 import { debugLog } from "@/shared/logger";
 import { getStorageData, setStorageData } from "@/shared/storage";
 import { sitePatterns } from "@/shared/utils";
+// @ts-expect-error
+import contentScriptPath from "../content/index?script";
 
 export async function syncRegisteredScriptsForAllowedSites() {
   // sync trackedSites with registered content scripts and permitted origins

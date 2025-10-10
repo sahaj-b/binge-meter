@@ -1,6 +1,6 @@
-import usePopupStore from "./store";
 import { sendClearGraceMessage } from "@lib/browserService";
 import { Button } from "../components/ui/button";
+import usePopupStore from "./store";
 
 export function GraceSection() {
   const isCurrentlyDistracting = usePopupStore(

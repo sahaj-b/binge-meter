@@ -10,17 +10,17 @@ export function Section({
   rightElement?: React.ReactNode;
 }) {
   if (!rightElement) {
-  return (
-    <div className="space-y-6 p-6 border rounded-lg bg-card/60">
-      <div>
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <p className="text-sm text-muted-foreground">{description}</p>
+    return (
+      <div className="space-y-6 p-6 border rounded-lg bg-card/60">
+        <div>
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+        {children}
       </div>
-      {children}
-    </div>
     );
   }
-  return(
+  return (
     <div className="space-y-6 p-6 border rounded-lg bg-card/60">
       <div
         className="flex items-center justify-between"
@@ -31,5 +31,5 @@ export function Section({
       </div>
       {children}
     </div>
-      );
+  );
 }

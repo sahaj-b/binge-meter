@@ -12,9 +12,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@ui/tooltip";
+import { Calendar, Star, Zap } from "lucide-react";
 import { aiModels } from "./aiModels";
 import { useStore } from "./store";
-import { Calendar, Star, Zap } from "lucide-react";
 
 export function ModelSelector() {
   const aiModel = useStore((state) => state.aiModel);

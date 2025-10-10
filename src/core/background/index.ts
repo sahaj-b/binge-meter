@@ -1,7 +1,7 @@
-import { setupListeners } from "./listeners";
-import { setupLifecycleEvents } from "./lifecycle";
 import { debugLog } from "@/shared/logger";
 import { getStorageData } from "@/shared/storage";
+import { setupLifecycleEvents } from "./lifecycle";
+import { setupListeners } from "./listeners";
 import {
   registerGlobalContentScript,
   syncRegisteredScriptsForAllowedSites,

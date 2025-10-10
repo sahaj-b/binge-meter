@@ -1,15 +1,15 @@
-import type { AnalyticsData } from "@/shared/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@ui/card";
-import { Label, Pie, PieChart } from "recharts";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@ui/chart";
-import { formatTimeMs } from "./utils";
-import { daysMap, type TimeRange } from "./Analytics";
 import { useMemo } from "react";
+import { Label, Pie, PieChart } from "recharts";
+import type { AnalyticsData } from "@/shared/types";
+import { daysMap, type TimeRange } from "./Analytics";
+import { formatTimeMs } from "./utils";
 
 export function TopDistractingSites({
   analyticsData,

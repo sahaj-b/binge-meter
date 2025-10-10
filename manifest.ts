@@ -6,7 +6,7 @@ export default defineManifest({
   version: "1.2.0",
   description:
     "Tracks time on distracting sites with a live on-screen timer. Features AI-powered classification, blocking & analytics",
-  // @ts-ignore
+  // @ts-expect-error
   browser_specific_settings: {
     gecko: {
       id: "binge-meter@idk.com",

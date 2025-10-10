@@ -1,6 +1,6 @@
-import { useStore } from "./store";
-import { Section } from "./Section";
 import { Label } from "@ui/label";
+import { Section } from "./Section";
+import { useStore } from "./store";
 import { TimeSelector } from "./TimeSelector";
 
 export function MiscSettings() {

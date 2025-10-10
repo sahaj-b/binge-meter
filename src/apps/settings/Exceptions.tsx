@@ -1,9 +1,9 @@
-import { useStore } from "./store";
-import { DynamicList } from "./DynamicList";
-import { Section } from "./Section";
-import type { ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
 import { HelpCircle } from "lucide-react";
+import type { ReactNode } from "react";
+import { DynamicList } from "./DynamicList";
+import { Section } from "./Section";
+import { useStore } from "./store";
 
 export function Exceptions() {
   const userRules = useStore((state) => state.userRules);
@@ -94,7 +94,10 @@ export function Exceptions() {
 function ListContainer({
   title,
   children,
-}: { title: string | ReactNode; children: React.ReactNode }) {
+}: {
+  title: string | ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className="basis-0 grow">
       <h3 className="text-lg mb-2">{title}</h3>

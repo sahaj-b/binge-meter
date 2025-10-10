@@ -15,8 +15,8 @@ import {
 } from "./messaging";
 import {
   registerGlobalContentScript,
-  unregisterGlobalContentScript,
   syncRegisteredScriptsForAllowedSites,
+  unregisterGlobalContentScript,
 } from "./scripting";
 import { updateActiveSession } from "./session";
 

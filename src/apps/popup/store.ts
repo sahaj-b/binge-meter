@@ -1,27 +1,27 @@
-import { create } from "zustand";
-import type { BlockingSettings, Metadata } from "@/shared/types";
 import {
-  sendToggleMessage,
-  getCurrentTab,
-  sendAddSiteMessage,
   checkSitePermission,
-  sendRemoveSiteMessage,
-  requestSitePermission,
-  markURLAs,
-  markSubredditAs,
+  getCurrentTab,
   markChannelAs,
+  markSubredditAs,
+  markURLAs,
   markURLAsDistracting,
+  requestSitePermission,
+  sendAddSiteMessage,
+  sendRemoveSiteMessage,
+  sendToggleMessage,
   sendUpdateBlockingSettingsMsg,
 } from "@lib/browserService";
+import { create } from "zustand";
+import { debugLog } from "@/shared/logger";
 import { getStorageData } from "@/shared/storage";
+import type { BlockingSettings, Metadata } from "@/shared/types";
 import {
-  isChannelDistracting,
   classifyMetadata,
+  isChannelDistracting,
   isSubredditDistracting,
   isUrlBlocked,
   matchUrl,
 } from "@/shared/utils";
-import { debugLog } from "@/shared/logger";
 
 interface PopupState {
   dailyTime: number;
@@ -280,7 +280,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
             return;
           }
         } else {
-          let extraMetadata: string | undefined = undefined;
+          let extraMetadata: string | undefined;
           if (metadata?.youtube?.videoTitle || metadata?.youtube?.channelName)
             extraMetadata = `Video Title: ${metadata?.youtube?.videoTitle}, Channel: ${metadata?.youtube?.channelName}`;
           if (markDistracting) await markURLAsDistracting(url, extraMetadata);

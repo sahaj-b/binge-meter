@@ -1,9 +1,9 @@
 import { Label } from "@ui/label";
 import { Slider } from "@ui/slider";
-import { ColorInput } from "./ColorInput";
-import { extractAlphaFromHex, updateHexOpacity } from "./utils";
 import { useEffect, useState } from "react";
+import { ColorInput } from "./ColorInput";
 import { useStore } from "./store";
+import { extractAlphaFromHex, updateHexOpacity } from "./utils";
 
 interface ColorSectionProps {
   type: "normal" | "warning" | "danger";

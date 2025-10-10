@@ -1,4 +1,15 @@
 import {
+  markChannelAs,
+  markSubredditAs,
+  markURLAs,
+  requestSitePermission,
+  sendAddSiteMessage,
+  sendRemoveSiteMessage,
+  sendResetTimeMessage,
+  sendUpdateBlockingSettingsMsg,
+} from "@lib/browserService";
+import { create } from "zustand";
+import {
   defaultOverlayConfig,
   getStorageData,
   setStorageData,
@@ -8,17 +19,6 @@ import type {
   OverlayConfig,
   UserRules,
 } from "@/shared/types";
-import { create } from "zustand";
-import {
-  requestSitePermission,
-  sendAddSiteMessage,
-  sendRemoveSiteMessage,
-  markURLAs,
-  markChannelAs,
-  markSubredditAs,
-  sendResetTimeMessage,
-  sendUpdateBlockingSettingsMsg,
-} from "@lib/browserService";
 import { matchUrl } from "@/shared/utils";
 
 type StoreData = {

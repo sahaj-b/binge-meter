@@ -1,5 +1,5 @@
-import { Switch } from "@ui/switch";
 import { Label } from "@ui/label";
+import { Switch } from "@ui/switch";
 import usePopupStore from "./store";
 
 export function TogglesSection() {

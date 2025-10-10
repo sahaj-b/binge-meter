@@ -1,8 +1,8 @@
+import { DurationPicker } from "@ui/duration-picker";
 import { Label } from "@ui/label";
 import { Switch } from "@ui/switch";
-import { DurationPicker } from "@ui/duration-picker";
-import { useStore } from "./store";
 import { Section } from "./Section";
+import { useStore } from "./store";
 
 export function OverlaySettings() {
   const updateConfig = useStore((state) => state.updateConfig);

@@ -1,5 +1,5 @@
 import { getStorageData } from "@/shared/storage";
-import type { UserRules, Metadata } from "@/shared/types";
+import type { Metadata, UserRules } from "@/shared/types";
 import { debugLog } from "./logger";
 
 export function sitePatterns(site: string): string[] {

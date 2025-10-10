@@ -1,9 +1,9 @@
+import { Button } from "@ui/button";
 import { Label } from "@ui/label";
 import { Slider } from "@ui/slider";
-import { Button } from "@ui/button";
 import { ColorSection } from "./ColorSection";
-import { useStore } from "./store";
 import { Section } from "./Section";
+import { useStore } from "./store";
 
 export function OverlayStyles() {
   const resetToDefaults = useStore((state) => state.resetStylesToDefault);
@@ -13,7 +13,10 @@ export function OverlayStyles() {
     return null;
   }
   return (
-    <Section title="Overlay Styles" description="Customize the appearance of the overlay" rightElement={
+    <Section
+      title="Overlay Styles"
+      description="Customize the appearance of the overlay"
+      rightElement={
         <Button
           variant="outline"
           size="sm"
@@ -22,8 +25,8 @@ export function OverlayStyles() {
         >
           Reset to default
         </Button>
-    }>
-
+      }
+    >
       <div className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">

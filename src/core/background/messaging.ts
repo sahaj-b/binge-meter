@@ -1,5 +1,5 @@
+import { debugLog } from "@/shared/logger";
 import { getStorageData, setStorageData } from "@/shared/storage";
-import { isUrlBlocked, matchUrl, sitePatterns } from "@/shared/utils";
 import type {
   BlockingSettings,
   Message,
@@ -7,11 +7,10 @@ import type {
   UserRules,
   UserRulesInput,
 } from "@/shared/types";
-
+import { isUrlBlocked, matchUrl, sitePatterns } from "@/shared/utils";
+import { getClassification } from "./classification";
 import { injectContentScript, registerContentScript } from "./scripting";
 import { updateActiveSession } from "./session";
-import { getClassification } from "./classification";
-import { debugLog } from "@/shared/logger";
 
 export async function checkSitePermission(site: string) {
   const permissionsToRequest = {

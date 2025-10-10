@@ -1,4 +1,3 @@
-import { TimeBarChart } from "./TimeBarChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@ui/card";
 import {
   Select,
@@ -8,6 +7,7 @@ import {
   SelectValue,
 } from "@ui/select";
 import { daysMap, type TimeRange } from "./Analytics";
+import { TimeBarChart } from "./TimeBarChart";
 
 export function TotalBingeTime({
   timeChartData,

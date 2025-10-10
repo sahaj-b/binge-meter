@@ -1,12 +1,12 @@
-import { Bar, BarChart, XAxis, YAxis, Cell } from "recharts";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@ui/chart";
-import { formatDate, formatTimeMs } from "./utils";
 import { useState } from "react";
+import { Bar, BarChart, Cell, XAxis, YAxis } from "recharts";
+import { formatDate, formatTimeMs } from "./utils";
 
 const chartConfig: ChartConfig = {
   time: {

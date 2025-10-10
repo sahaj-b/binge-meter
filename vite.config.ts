@@ -1,10 +1,10 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import manifest from "./manifest";
+import path from "node:path";
 import { crx } from "@crxjs/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 import zip from "vite-plugin-zip-pack";
-import path from "node:path";
+import manifest from "./manifest";
 
 // https://vite.dev/config/
 export default defineConfig(() => {

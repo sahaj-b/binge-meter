@@ -1,8 +1,8 @@
+import { debugLog } from "@/shared/logger";
 import { getStorageData, setStorageData } from "@/shared/storage";
 import type { Metadata } from "@/shared/types";
 import { classifyMetadata } from "@/shared/utils";
 import { callGeminiAPI } from "./aiService";
-import { debugLog } from "@/shared/logger";
 
 export async function getClassification(
   metadata: Metadata,

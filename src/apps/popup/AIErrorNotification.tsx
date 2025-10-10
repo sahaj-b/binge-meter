@@ -1,6 +1,6 @@
+import { AlertCircle, AlertTriangle, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { X, AlertTriangle, AlertCircle } from "lucide-react";
-import { getAIError, clearAIError } from "@/shared/storage";
+import { clearAIError, getAIError } from "@/shared/storage";
 import type { AIError } from "@/shared/types";
 import usePopupStore from "./store";
 

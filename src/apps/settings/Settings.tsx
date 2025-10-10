@@ -1,16 +1,16 @@
+import { Underline } from "@lib/utils";
+import { SettingsIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { TrackedSites } from "./TrackedSites";
+import { OverlayUI } from "@/core/content/overlay";
+import { AIClassification } from "./AIClassification";
+import { BlockingSection } from "./BlockingSection";
+import { Exceptions } from "./Exceptions";
+import { MiscSettings } from "./MiscSettings";
+import NavSideBar, { NAV_ITEMS } from "./NavSideBar";
 import { OverlaySettings } from "./OverlaySettings";
 import { OverlayStyles } from "./OverlayStyles";
-import { Exceptions } from "./Exceptions";
-import { OverlayUI } from "@/core/content/overlay";
 import { useStore } from "./store";
-import { AIClassification } from "./AIClassification";
-import { SettingsIcon } from "lucide-react";
-import { MiscSettings } from "./MiscSettings";
-import { BlockingSection } from "./BlockingSection";
-import { Underline } from "@lib/utils";
-import NavSideBar, { NAV_ITEMS } from "./NavSideBar";
+import { TrackedSites } from "./TrackedSites";
 
 export default function Settings() {
   const fetchSettings = useStore((state) => state.fetchSettings);
