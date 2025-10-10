@@ -13,11 +13,16 @@ export async function getClassification(
   if (classification !== null || !ai)
     return classification !== "productive" ? "distracting" : "productive";
 
-  const { aiEnabled, aiDisabledSites } = await getStorageData([
+  const { aiEnabled, aiDisabledSites, trackAllSites } = await getStorageData([
     "aiEnabled",
     "aiDisabledSites",
+    "trackAllSites",
   ]);
-  if (aiEnabled && !aiDisabledSites.some((site) => metadata.url.includes(site)))
+  if (
+    aiEnabled &&
+    (trackAllSites ||
+      !aiDisabledSites.some((site) => metadata.url.includes(site)))
+  )
     return await classifyByAI(metadata);
 
   // no user rules and AI is disabled

@@ -1,19 +1,24 @@
-import { updateActiveSession } from "./session";
+import { debugLog } from "@/shared/logger";
+import { setStorageData } from "@/shared/storage";
+import { setupDailyResetAlarm } from "./lifecycle";
 import {
+  addGracePeriod,
   addSite,
+  clearGracePeriod,
+  handleEvaluatePage,
   removeSite,
   revalidateCacheForAllTabs,
   revalidateCacheForTab,
   toggleOverlays,
-  handleEvaluatePage,
-  updateUserRule,
-  addGracePeriod,
-  clearGracePeriod,
   updateBlockingSettings,
+  updateUserRule,
 } from "./messaging";
-import { setupDailyResetAlarm } from "./lifecycle";
-import { setStorageData } from "@/shared/storage";
-import { debugLog } from "@/shared/logger";
+import {
+  registerGlobalContentScript,
+  unregisterGlobalContentScript,
+  syncRegisteredScriptsForAllowedSites,
+} from "./scripting";
+import { updateActiveSession } from "./session";
 
 export function setupListeners() {
   // stop sessions when tab closes
@@ -166,6 +171,55 @@ export function setupListeners() {
       case "REQUEST_GRACE_PERIOD":
         if (sender.tab?.id) addGracePeriod(message.duration ?? 0);
         break;
+
+      case "SET_TRACK_ALL_SITES":
+        if (message.enabled) {
+          chrome.permissions.request(
+            { origins: ["*://*/*"] },
+            async (granted) => {
+              if (granted) {
+                await registerGlobalContentScript();
+                chrome.tabs.query({}).then(async (tabs) => {
+                  for (const tab of tabs) {
+                    if (tab.id) {
+                      try {
+                        await chrome.tabs.sendMessage(tab.id, {
+                          type: "RE-INITIALIZE_OVERLAY",
+                        });
+                      } catch (_) {}
+                    }
+                  }
+                });
+                sendResponse({ success: true });
+              } else {
+                sendResponse({ success: false });
+              }
+            },
+          );
+        } else {
+          unregisterGlobalContentScript();
+          syncRegisteredScriptsForAllowedSites();
+          chrome.tabs.query({}).then(async (tabs) => {
+            const { trackedSites } = await chrome.storage.local.get([
+              "trackedSites",
+            ]);
+            for (const tab of tabs) {
+              if (
+                tab.id &&
+                tab.url &&
+                !trackedSites?.some((s: string) => tab.url!.includes(s))
+              ) {
+                try {
+                  await chrome.tabs.sendMessage(tab.id, {
+                    type: "DEACTIVATE_OVERLAY",
+                  });
+                } catch (_) {}
+              }
+            }
+          });
+          sendResponse({ success: true });
+        }
+        return true;
 
       case "DEBUG":
         debugLog(sender.tab?.id, message.message);

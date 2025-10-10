@@ -14,6 +14,7 @@ export type StorageData = {
   resetTime: { hours: number; minutes: number };
   blockingSettings: BlockingSettings;
   aiError: AIError | null;
+  trackAllSites: boolean;
 };
 
 export type BlockingSettings = {

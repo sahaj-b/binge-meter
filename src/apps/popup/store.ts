@@ -45,6 +45,7 @@ interface PopupState {
   gracePeriod: number;
   blockTimeLimit: number;
   hasAPIKey?: boolean;
+  trackAllSites: boolean;
 
   initialize: () => Promise<void>;
   updateDistractingStatuses: (metadata: Metadata) => Promise<void>;
@@ -80,6 +81,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
   isBlocked: false,
   gracePeriod: 0,
   blockTimeLimit: 0,
+  trackAllSites: false,
 
   initialize: async () => {
     set({ isLoading: true });
@@ -92,6 +94,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
         "aiEnabled",
         "blockingSettings",
         "geminiApiKey",
+        "trackAllSites",
       ]);
       set({
         dailyTime: data.dailyTime.total,
@@ -105,6 +108,7 @@ const usePopupStore = create<PopupState>((set, get) => ({
         gracePeriod: data.blockingSettings.gracePeriodUntil,
         blockTimeLimit: data.blockingSettings.timeLimit,
         hasAPIKey: !!data.geminiApiKey,
+        trackAllSites: data.trackAllSites ?? false,
       });
 
       const tab = await getCurrentTab();
@@ -114,20 +118,30 @@ const usePopupStore = create<PopupState>((set, get) => ({
         const isTracked = data.trackedSites.includes(site);
         const permission = await checkSitePermission(site);
 
+        debugLog(
+          "site:",
+          site,
+          "isTracked:",
+          isTracked,
+          "trackAllSites:",
+          data.trackAllSites,
+        );
+
         set({
           activeURL: url,
           currentSite: site,
-          isCurrentSiteTracked: isTracked,
+          isCurrentSiteTracked: isTracked || (data.trackAllSites && permission),
           hasPermission: permission,
         });
 
-        if (isTracked) {
+        if (isTracked || data.trackAllSites) {
           if (
             (site.endsWith("youtube.com") &&
               (url.pathname.startsWith("/watch") ||
                 url.pathname.startsWith("/@"))) ||
             (site.endsWith("reddit.com") && url.pathname.startsWith("/r/"))
           ) {
+            debugLog("Detected youtube/reddit page");
             if (tab.id) {
               const response = await chrome.tabs.sendMessage(tab.id, {
                 type: "SEND_METADATA",
@@ -137,11 +151,17 @@ const usePopupStore = create<PopupState>((set, get) => ({
                 debugLog("Metadata received:", response.metadata);
                 set({ metadata: response.metadata });
                 get().updateDistractingStatuses(response.metadata);
+              } else {
+                debugLog("No metadata received, setting distracting");
+                set({ isCurrentlyDistracting: true });
               }
             }
           } else {
-            const distracting =
-              (await classifyMetadata({ url: url.href })) !== "productive";
+            debugLog("Non-youtube/reddit page, classifying");
+            const classification = await classifyMetadata({ url: url.href });
+            debugLog("classifyMetadata result:", classification);
+            const distracting = classification !== "productive";
+            debugLog("isCurrentlyDistracting set to:", distracting);
             set({ isCurrentlyDistracting: distracting });
           }
         }
@@ -160,7 +180,10 @@ const usePopupStore = create<PopupState>((set, get) => ({
   },
 
   updateDistractingStatuses: async (metadata: Metadata) => {
-    const distracting = (await classifyMetadata(metadata)) !== "productive";
+    const classification = await classifyMetadata(metadata);
+    debugLog("classifyMetadata for metadata result:", classification);
+    const distracting = classification !== "productive";
+    debugLog("isCurrentlyDistracting set to:", distracting);
     set({ isCurrentlyDistracting: distracting });
 
     const isYoutube = metadata.youtube?.channelId;

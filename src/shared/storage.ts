@@ -1,9 +1,9 @@
 import type {
+  AIError,
   DailyTime,
-  UserRules,
   OverlayConfig,
   StorageData,
-  AIError,
+  UserRules,
 } from "./types";
 
 export const defaultOverlayConfig: OverlayConfig = {
@@ -46,6 +46,7 @@ export const defaultBlockingSettings = {
     "https://www.youtube.com/results?search_query=*",
   ],
   gracePeriodUntil: 0, // 0 means don't grace
+  hashedPassword: "",
 };
 
 export const defaultStorageData: StorageData = {
@@ -64,6 +65,7 @@ export const defaultStorageData: StorageData = {
   resetTime: { hours: 3, minutes: 0 }, // 3 AM daily reset
   blockingSettings: defaultBlockingSettings,
   aiError: null,
+  trackAllSites: false,
 };
 
 export async function getStorageData<K extends keyof StorageData>(

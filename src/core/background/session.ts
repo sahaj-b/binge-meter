@@ -7,13 +7,19 @@ let sessionLock = Promise.resolve();
 export function updateActiveSession(activeTabId: number | null) {
   const taskPromise = sessionLock
     .then(async () => {
-      const { dailyTime, trackedSites, activeSession, analyticsData } =
-        await getStorageData([
-          "dailyTime",
-          "trackedSites",
-          "activeSession",
-          "analyticsData",
-        ]);
+      const {
+        dailyTime,
+        trackedSites,
+        activeSession,
+        analyticsData,
+        trackAllSites,
+      } = await getStorageData([
+        "dailyTime",
+        "trackedSites",
+        "activeSession",
+        "analyticsData",
+        "trackAllSites",
+      ]);
       let newTotal = dailyTime.total;
       await chrome.alarms.clear("blockingLimitAlarm");
 
@@ -80,7 +86,11 @@ export function updateActiveSession(activeTabId: number | null) {
       if (activeTabId !== null) {
         try {
           const tab = await chrome.tabs.get(activeTabId);
-          if (tab.url && trackedSites.some((site) => tab.url!.includes(site))) {
+          if (
+            tab.url &&
+            (trackAllSites ||
+              trackedSites.some((site) => tab.url!.includes(site)))
+          ) {
             const timeLimitReached = await handleBlockingChecks(
               activeTabId,
               tab.url!,

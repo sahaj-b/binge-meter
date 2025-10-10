@@ -80,9 +80,13 @@ export async function classifyMetadata(
     !data.aiDisabledSites.some((site) => url.includes(site))
   ) {
     const aiEntry = data.aiCache.find(([uurl]) => uurl === url);
-    if (aiEntry) return aiEntry[1];
+    if (aiEntry) {
+      debugLog("AI cache hit for", url, ":", aiEntry[1]);
+      return aiEntry[1];
+    }
   }
 
+  debugLog("classifyMetadata returning null for", url);
   return null;
 }
 

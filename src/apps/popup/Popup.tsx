@@ -1,14 +1,14 @@
-import { useEffect } from "react";
 import { Button } from "@ui/button";
-import { Settings, BarChart3 } from "lucide-react";
-import usePopupStore from "./store";
-import CurrentSiteTracker from "./CurrentSiteTracker";
-import { ClassificationSection } from "./ClassificationSection";
+import { BarChart3, Settings } from "lucide-react";
+import { useEffect } from "react";
 import { openAnalyticsPage, openSettingsPage } from "../lib/browserService";
-import { BlockedSection } from "./BlockedSection";
-import { GraceSection } from "./GraceSection";
-import { TogglesSection } from "./TogglesSection";
 import { AIErrorNotification } from "./AIErrorNotification";
+import { BlockedSection } from "./BlockedSection";
+import { ClassificationSection } from "./ClassificationSection";
+import CurrentSiteTracker from "./CurrentSiteTracker";
+import { GraceSection } from "./GraceSection";
+import usePopupStore from "./store";
+import { TogglesSection } from "./TogglesSection";
 
 export default function Popup() {
   const isCurrentSiteTracked = usePopupStore(

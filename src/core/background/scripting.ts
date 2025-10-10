@@ -70,6 +70,25 @@ export async function injectContentScriptToAllTabs(site: string | string[]) {
   for (const tab of tabs) injectContentScript(tab.id);
 }
 
+export async function registerGlobalContentScript() {
+  const scripts: chrome.scripting.RegisteredContentScript[] = [
+    {
+      id: "all-sites",
+      matches: ["*://*/*"],
+      js: [contentScriptPath],
+      runAt: "document_end",
+      allFrames: false,
+    },
+  ];
+  await chrome.scripting.registerContentScripts(scripts);
+  debugLog("Registered global content script for all sites");
+}
+
+export async function unregisterGlobalContentScript() {
+  await chrome.scripting.unregisterContentScripts({ ids: ["all-sites"] });
+  debugLog("Unregistered global content script");
+}
+
 export async function injectContentScript(tabId?: number) {
   if (!tabId) return;
   try {

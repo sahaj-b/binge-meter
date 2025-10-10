@@ -21,16 +21,26 @@ export async function checkSitePermission(site: string) {
 }
 
 export async function revalidateCacheForAllTabs() {
-  const { trackedSites } = await getStorageData(["trackedSites"]);
-  if (!trackedSites || trackedSites.length === 0) return;
-  const allTabs = await chrome.tabs.query({});
-  for (const tab of allTabs) {
-    if (
-      tab.url &&
-      tab.id &&
-      trackedSites.some((site: string) => tab.url!.includes(site))
-    ) {
-      await revalidateCacheForTab(tab.id);
+  const { trackAllSites } = await getStorageData(["trackAllSites"]);
+  if (trackAllSites) {
+    const allTabs = await chrome.tabs.query({});
+    for (const tab of allTabs) {
+      if (tab.id) {
+        await revalidateCacheForTab(tab.id);
+      }
+    }
+  } else {
+    const { trackedSites } = await getStorageData(["trackedSites"]);
+    if (!trackedSites || trackedSites.length === 0) return;
+    const allTabs = await chrome.tabs.query({});
+    for (const tab of allTabs) {
+      if (
+        tab.url &&
+        tab.id &&
+        trackedSites.some((site: string) => tab.url!.includes(site))
+      ) {
+        await revalidateCacheForTab(tab.id);
+      }
     }
   }
 }
@@ -115,6 +125,20 @@ export async function handleEvaluatePage(
   if (!metadata?.url) return;
 
   debugLog(`Evaluating page for tab ${tabId}`, metadata);
+
+  // respect tracked sites when global tracking is off; deactivate if not tracked
+  const { trackAllSites, trackedSites } = await getStorageData([
+    "trackAllSites",
+    "trackedSites",
+  ]);
+  if (
+    !trackAllSites &&
+    !trackedSites.some((site: string) => metadata.url.includes(site))
+  ) {
+    await chrome.tabs.sendMessage(tabId, { type: "DEACTIVATE_OVERLAY" });
+    return;
+  }
+
   const classification = await getClassification(metadata, isFullEval);
   debugLog(`Page is ${classification}`);
 
@@ -299,18 +323,33 @@ export async function sendMsgToTrackedSites(
   message: Message,
   trackedSites?: string[],
 ) {
-  trackedSites =
-    trackedSites || (await getStorageData(["trackedSites"])).trackedSites;
-  const urlPatterns = trackedSites.flatMap((site) => sitePatterns(site));
-  const tabs = await chrome.tabs.query({
-    url: urlPatterns,
-  });
-  for (const tab of tabs) {
-    if (tab.id) {
-      try {
-        await chrome.tabs.sendMessage(tab.id, message);
-      } catch (e) {
-        console.error(`Error sending ${message.type} to tab ${tab.id}:`, e);
+  const { trackAllSites } = await getStorageData(["trackAllSites"]);
+  if (trackAllSites) {
+    // Send to all tabs
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.id) {
+        try {
+          await chrome.tabs.sendMessage(tab.id, message);
+        } catch (e) {
+          console.error(`Error sending ${message.type} to tab ${tab.id}:`, e);
+        }
+      }
+    }
+  } else {
+    trackedSites =
+      trackedSites || (await getStorageData(["trackedSites"])).trackedSites;
+    const urlPatterns = trackedSites.flatMap((site) => sitePatterns(site));
+    const tabs = await chrome.tabs.query({
+      url: urlPatterns,
+    });
+    for (const tab of tabs) {
+      if (tab.id) {
+        try {
+          await chrome.tabs.sendMessage(tab.id, message);
+        } catch (e) {
+          console.error(`Error sending ${message.type} to tab ${tab.id}:`, e);
+        }
       }
     }
   }

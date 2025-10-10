@@ -5,7 +5,7 @@ import { Input } from "@ui/input";
 import { Label } from "@ui/label";
 import { Switch } from "@ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
-import { HelpCircle, TriangleAlert } from "lucide-react";
+import { HelpCircle, LockKeyholeOpen, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { DynamicList } from "./DynamicList";
 import { Section } from "./Section";
@@ -95,9 +95,13 @@ export function BlockingSection() {
       <DialogContent className="max-w-md">
         <div className="flex flex-col gap-4">
           <h3 className="text-lg font-medium">Set Blocking Password</h3>
-          <p className="text-sm text-muted-foreground -mt-2">
+          <p className="text-sm text-muted-foreground -mt-2 mb-2">
             Will prevent you from changing blocking settings without entering
             it.
+          </p>
+          <p className="text-sm text-muted-foreground flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-md">
+            <TriangleAlert className="size-4 text-amber-500 opacity-70" /> If
+            you forget it, you'll need to re-install the extension to reset it.
           </p>
           <form onSubmit={handleSetPassword} className="flex flex-col gap-2">
             <Input
@@ -123,10 +127,6 @@ export function BlockingSection() {
               </DialogFooter>
             </div>
           </form>
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <TriangleAlert className="size-4 text-primary opacity-70" /> If you
-            forget it, you will need to re-install the extension to reset it.
-          </p>
         </div>
       </DialogContent>
     </Dialog>
@@ -134,7 +134,9 @@ export function BlockingSection() {
   const unlockDialog = (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">Unlock</Button>
+        <Button size="sm">
+          <LockKeyholeOpen /> Unlock
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <div className="flex flex-col gap-4">

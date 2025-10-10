@@ -37,6 +37,7 @@ type StoreData = {
   resetTime: { hours: number; minutes: number } | null;
   blockingSettings: BlockingSettings | null;
   miscError: string | null;
+  trackAllSites: boolean | null;
 };
 type StoreActions = {
   fetchSettings: () => Promise<void>;
@@ -69,6 +70,7 @@ type StoreActions = {
   updateBlockingSettings: (updates: Partial<BlockingSettings>) => Promise<void>;
   addBlockingException: (url: string) => Promise<void>;
   removeBlockingException: (url: string) => Promise<void>;
+  setTrackAllSites: (enabled: boolean) => Promise<void>;
 };
 
 type StoreType = StoreData & StoreActions;
@@ -89,6 +91,7 @@ const initialData: StoreData = {
   resetTime: null,
   blockingSettings: null,
   miscError: null,
+  trackAllSites: null,
 };
 
 export const useStore = create<StoreType>()((set, get) => ({
@@ -106,6 +109,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         "customPrompt",
         "resetTime",
         "blockingSettings",
+        "trackAllSites",
       ]);
       if (!data.overlayConfig) throw new Error("Overlay config not found");
       set({
@@ -119,6 +123,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         customPrompt: data.customPrompt,
         resetTime: data.resetTime,
         blockingSettings: data.blockingSettings,
+        trackAllSites: data.trackAllSites,
         error: null,
       });
       set((state) => ({
@@ -169,11 +174,12 @@ export const useStore = create<StoreType>()((set, get) => ({
   },
 
   saveConfig: async () => {
-    const { overlayConfig, aiEnabled, geminiApiKey } = get();
+    const { overlayConfig, aiEnabled, geminiApiKey, trackAllSites } = get();
     await setStorageData({
       overlayConfig: overlayConfig ?? undefined,
       aiEnabled: aiEnabled ?? undefined,
       geminiApiKey: geminiApiKey ?? undefined,
+      trackAllSites: trackAllSites ?? undefined,
     });
   },
 
@@ -271,6 +277,17 @@ export const useStore = create<StoreType>()((set, get) => ({
   setCustomPrompt: async (prompt) => {
     set({ customPrompt: prompt });
     await setStorageData({ customPrompt: prompt });
+  },
+
+  setTrackAllSites: async (enabled) => {
+    const response = await chrome.runtime.sendMessage({
+      type: "SET_TRACK_ALL_SITES",
+      enabled,
+    });
+    if (response.success) {
+      set({ trackAllSites: enabled });
+      await setStorageData({ trackAllSites: enabled });
+    }
   },
 
   setResetTime: async (time) => {

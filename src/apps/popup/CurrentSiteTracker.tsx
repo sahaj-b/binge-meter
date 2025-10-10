@@ -1,11 +1,3 @@
-import {
-  Plus,
-  Minus,
-  Loader2,
-  ShieldAlert,
-  AlertCircle,
-  HelpCircle,
-} from "lucide-react";
 import { Button } from "@ui/button";
 import {
   Tooltip,
@@ -13,6 +5,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@ui/tooltip";
+import {
+  AlertCircle,
+  HelpCircle,
+  Loader2,
+  Minus,
+  Plus,
+  ShieldAlert,
+} from "lucide-react";
 import usePopupStore from "./store";
 
 export default function CurrentSiteTracker() {
@@ -26,6 +26,7 @@ export default function CurrentSiteTracker() {
   const addSite = usePopupStore((state) => state.addSite);
   const removeSite = usePopupStore((state) => state.removeSite);
   const requestPermission = usePopupStore((state) => state.requestPermission);
+  const trackAllSites = usePopupStore((state) => state.trackAllSites);
 
   if (!currentSite) {
     return null;
@@ -70,7 +71,7 @@ export default function CurrentSiteTracker() {
           : "secondary"
       }
       onClick={handleClick}
-      disabled={isLoading}
+      disabled={isLoading || (isCurrentSiteTracked && trackAllSites)}
       className="min-w-26"
     >
       {buttonContent}
@@ -121,6 +122,17 @@ export default function CurrentSiteTracker() {
               <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
               <TooltipContent>
                 <p>Permission needed to track this site.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : isCurrentSiteTracked && trackAllSites ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>{buttonElement}</div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Track all sites is enabled.</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
