@@ -5,7 +5,12 @@ import { Input } from "@ui/input";
 import { Label } from "@ui/label";
 import { Switch } from "@ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
-import { HelpCircle, LockKeyholeOpen, TriangleAlert } from "lucide-react";
+import {
+  HelpCircle,
+  LockKeyhole,
+  LockKeyholeOpen,
+  TriangleAlert,
+} from "lucide-react";
 import { useState } from "react";
 import { DynamicList } from "./DynamicList";
 import { Section } from "./Section";
@@ -21,14 +26,14 @@ export function BlockingSection() {
     (state) => state.removeBlockingException,
   );
 
-  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [unlocked, setUnlocked] = useState(!blockingSettings?.hashedPassword);
 
   if (!blockingSettings) return null;
   async function handleSetPassword(e: React.FormEvent) {
     e.preventDefault();
-    setPasswordError(null);
+    setPasswordError("");
     const MIN_PASSWORD_LENGTH = 5;
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
@@ -56,7 +61,7 @@ export function BlockingSection() {
   }
   async function handleUnlock(e: React.FormEvent) {
     e.preventDefault();
-    setPasswordError(null);
+    setPasswordError("");
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     const password = (formData.get("password") as string)?.trim();
@@ -89,13 +94,14 @@ export function BlockingSection() {
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          {blockingSettings.hashedPassword ? "Change Password" : "Set Password"}
+          <LockKeyhole />
+          {blockingSettings.hashedPassword ? "Manage Password" : "Set Password"}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <div className="flex flex-col gap-4">
           <h3 className="text-lg font-medium">Set Blocking Password</h3>
-          <p className="text-sm text-muted-foreground -mt-2 mb-2">
+          <p className="text-sm text-muted-foreground -mt-2">
             Will prevent you from changing blocking settings without entering
             it.
           </p>
@@ -113,15 +119,27 @@ export function BlockingSection() {
               <p className="text-sm text-destructive">{passwordError}</p>
             )}
             <div className="flex gap-2">
-              <DialogFooter>
-                <Button type="submit" className="mt-2">
-                  Set Password
-                </Button>
-                <Button
-                  variant="outline"
-                  className="mt-2 ml-2"
-                  onClick={() => setDialogOpen(false)}
-                >
+              <DialogFooter className="mt-2">
+                <Button type="submit">Set Password</Button>
+                {/* IDK WHY ITS SETTING ERROR */}
+                {blockingSettings.hashedPassword ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-destructive hover:text-destructive"
+                    onClick={async () => {
+                      await updateBlockingSettings({
+                        hashedPassword: undefined,
+                      });
+                      setPasswordError("");
+                      setUnlocked(true);
+                      setDialogOpen(false);
+                    }}
+                  >
+                    Remove Password
+                  </Button>
+                ) : null}
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
               </DialogFooter>
