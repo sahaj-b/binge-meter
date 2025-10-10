@@ -1,12 +1,12 @@
+import { Input } from "@ui/input";
 import { Label } from "@ui/label";
 import { Switch } from "@ui/switch";
-import { Input } from "@ui/input";
 import { Textarea } from "@ui/textarea";
-import { useStore } from "./store";
-import { Section } from "./Section";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ui/tooltip";
 import { HelpCircle } from "lucide-react";
 import { ModelSelector } from "./ModelSelector";
+import { Section } from "./Section";
+import { useStore } from "./store";
 
 export function AIClassification() {
   const aiEnabled = useStore((state) => state.aiEnabled);
@@ -21,7 +21,6 @@ export function AIClassification() {
       <div className="flex items-center justify-between">
         <Label htmlFor="ai-enabled">Enable AI Classification</Label>
         <Switch
-          id="ai-enabled"
           checked={aiEnabled ?? false}
           onCheckedChange={(checked) => setAiEnabled(checked)}
         />
@@ -35,7 +34,7 @@ export function AIClassification() {
             <a
               target="_blank"
               rel="noreferrer"
-              href="https://aistudio.google.com/u/0/apikey"
+              href="https://aistudio.google.com/app/api-keys"
               className="underline"
             >
               AI Studio
@@ -44,7 +43,6 @@ export function AIClassification() {
         </div>
         <Input
           className="w-1/3"
-          id="gemini-api-key"
           type="password"
           value={geminiApiKey ?? ""}
           onChange={(e) => setApiKey(e.target.value)}
@@ -64,7 +62,6 @@ export function AIClassification() {
           </Tooltip>
         </Label>
         <Textarea
-          id="custom-prompt"
           placeholder="Example: 'All vlogs are productive, except for the ones from youtube channel XYZ'"
           value={customPrompt ?? ""}
           onChange={(e) => setCustomPrompt(e.target.value)}
