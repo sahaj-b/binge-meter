@@ -21,6 +21,7 @@ export type BlockingSettings = {
   timeLimit: number;
   urlExceptions: string[];
   gracePeriodUntil: number;
+  hashedPassword: string;
 };
 
 export type AnalyticsData = {

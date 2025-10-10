@@ -3,6 +3,7 @@ import { Slider } from "@ui/slider";
 import { Button } from "@ui/button";
 import { ColorSection } from "./ColorSection";
 import { useStore } from "./store";
+import { Section } from "./Section";
 
 export function OverlayStyles() {
   const resetToDefaults = useStore((state) => state.resetStylesToDefault);
@@ -12,12 +13,7 @@ export function OverlayStyles() {
     return null;
   }
   return (
-    <div className="space-y-6 p-6 border rounded-lg bg-card/60">
-      <div
-        className="flex items-center justify-between"
-        id="overlay-styles-header"
-      >
-        <h2 className="text-lg font-semibold">Overlay Styles</h2>
+    <Section title="Overlay Styles" description="Customize the appearance of the overlay" rightElement={
         <Button
           variant="outline"
           size="sm"
@@ -26,7 +22,7 @@ export function OverlayStyles() {
         >
           Reset to default
         </Button>
-      </div>
+    }>
 
       <div className="space-y-6">
         <div className="space-y-4">
@@ -79,6 +75,6 @@ export function OverlayStyles() {
           <ColorSection type="danger" colors={config.dangerColors} />
         </div>
       </div>
-    </div>
+    </Section>
   );
 }

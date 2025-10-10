@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
-import { useState } from "react";
 import { Button } from "@ui/button";
 import { Input } from "@ui/input";
-import { Trash2, Plus, Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 interface DynamicListProps {
   items: string[];
@@ -11,6 +11,7 @@ interface DynamicListProps {
   placeholder: string;
   error?: string | null;
   actions?: (item: string) => ReactNode;
+  disabled?: boolean;
 }
 
 export function DynamicList({
@@ -19,6 +20,7 @@ export function DynamicList({
   onRemoveItem,
   placeholder,
   actions,
+  disabled,
 }: DynamicListProps) {
   const [newItem, setNewItem] = useState("");
   const [isAddingLoading, setIsAddingLoading] = useState(false);
@@ -63,9 +65,13 @@ export function DynamicList({
             setNewItem(e.target.value);
           }}
           onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
-          disabled={isAddingLoading}
+          disabled={isAddingLoading || disabled}
         />
-        <Button onClick={handleAddItem} size="icon" disabled={isAddingLoading}>
+        <Button
+          onClick={handleAddItem}
+          size="icon"
+          disabled={isAddingLoading || disabled}
+        >
           {isAddingLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
@@ -94,7 +100,7 @@ export function DynamicList({
                 size="sm"
                 onClick={() => handleRemoveItem(item)}
                 className="hover:bg-destructive/10 hover:text-destructive"
-                disabled={removingLoadingSet.has(item)}
+                disabled={removingLoadingSet.has(item) || disabled}
               >
                 {removingLoadingSet.has(item) ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
