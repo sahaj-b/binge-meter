@@ -13,10 +13,10 @@ export async function checkSitePermission(site: string): Promise<boolean> {
   return chrome.permissions.contains(permissionsToRequest);
 }
 
-export async function requestSitePermission(site: string) {
+export async function requestSitePermission(site: string, raw?: boolean) {
   if (!site) return;
   const permissionsToRequest = {
-    origins: sitePatterns(site),
+    origins: raw ? [site] : sitePatterns(site),
   };
   // removing this coz firefox doesnt trust waiting this much for asking permission duh
   // if (await checkSitePermission(site)) {

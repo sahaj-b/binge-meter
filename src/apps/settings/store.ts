@@ -280,14 +280,13 @@ export const useStore = create<StoreType>()((set, get) => ({
   },
 
   setTrackAllSites: async (enabled) => {
-    const response = await chrome.runtime.sendMessage({
+    await requestSitePermission("*://*/*", true);
+    await chrome.runtime.sendMessage({
       type: "SET_TRACK_ALL_SITES",
       enabled,
     });
-    if (response.success) {
-      set({ trackAllSites: enabled });
-      await setStorageData({ trackAllSites: enabled });
-    }
+    set({ trackAllSites: enabled });
+    await setStorageData({ trackAllSites: enabled });
   },
 
   setResetTime: async (time) => {
@@ -314,6 +313,7 @@ export const useStore = create<StoreType>()((set, get) => ({
         matchedPattern = pattern;
         return true;
       }
+      return false;
     });
 
     if (alradyExists)

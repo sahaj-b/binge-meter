@@ -174,28 +174,19 @@ export function setupListeners() {
 
       case "SET_TRACK_ALL_SITES":
         if (message.enabled) {
-          chrome.permissions.request(
-            { origins: ["*://*/*"] },
-            async (granted) => {
-              if (granted) {
-                await registerGlobalContentScript();
-                chrome.tabs.query({}).then(async (tabs) => {
-                  for (const tab of tabs) {
-                    if (tab.id) {
-                      try {
-                        await chrome.tabs.sendMessage(tab.id, {
-                          type: "RE-INITIALIZE_OVERLAY",
-                        });
-                      } catch (_) {}
-                    }
-                  }
-                });
-                sendResponse({ success: true });
-              } else {
-                sendResponse({ success: false });
+          registerGlobalContentScript().then(() => {
+            chrome.tabs.query({}).then(async (tabs) => {
+              for (const tab of tabs) {
+                if (tab.id) {
+                  await chrome.tabs
+                    .sendMessage(tab.id, {
+                      type: "RE-INITIALIZE_OVERLAY",
+                    })
+                    .catch(() => {});
+                }
               }
-            },
-          );
+            });
+          });
         } else {
           unregisterGlobalContentScript();
           syncRegisteredScriptsForAllowedSites();
@@ -217,9 +208,8 @@ export function setupListeners() {
               }
             }
           });
-          sendResponse({ success: true });
         }
-        return true;
+        break;
 
       case "DEBUG":
         debugLog(sender.tab?.id, message.message);
