@@ -21,7 +21,7 @@ export async function callGeminiAPI(
     ],
   };
 
-  if (model === "gemini-2.5-flash") {
+  if (model.startsWith("gemini-3") || model.startsWith("gemma-4")) {
     requestBody = {
       contents: [
         {
@@ -34,7 +34,7 @@ export async function callGeminiAPI(
       ],
       generationConfig: {
         thinkingConfig: {
-          thinkingBudget: 0,
+          thinkingLevel: "MINIMAL",
         },
       },
     };
